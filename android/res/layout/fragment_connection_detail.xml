@@ -1,0 +1,93 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ConnectionDetailControlLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <Button
+        android:id="@+id/deleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="79dp"
+        android:text="@string/deleteConnectionButton"
+        tools:context=".ConnectionDetailFragment" />
+
+    <Button
+        android:id="@+id/nfcButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/deleteButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="22dp"
+        android:text="@string/associateNFCButton"
+        tools:context=".ConnectionDetailFragment" />
+
+    <TextView
+        android:id="@+id/connection_detail"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:padding="16dp"
+        tools:context=".ConnectionDetailFragment" />
+
+    <TextView
+        android:id="@+id/date_prompt"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/connection_detail"
+        android:padding="16dp"
+        android:text="@string/datePrompt"
+        tools:context=".ConnectionDetailFragment" />
+
+    <TextView
+        android:id="@+id/date_last_connected"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/date_prompt"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="false"
+        android:layout_toRightOf="@id/date_prompt"
+        android:padding="16dp"
+        android:text="Placeholder"
+        tools:context=".ConnectionDetailFragment" />
+
+    <TextView
+        android:id="@+id/passwordPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/date_prompt"
+        android:layout_below="@+id/date_prompt"
+        android:layout_marginTop="15dp"
+        android:text="@string/passwordPrompt"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <EditText
+        android:id="@+id/password_field"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/date_last_connected"
+        android:layout_alignBaseline="@+id/passwordPrompt"
+        android:layout_marginLeft="18dp"
+        android:ems="10"
+        android:inputType="textPassword" >
+
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/crypt_field"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:ems="10" />
+
+</RelativeLayout>

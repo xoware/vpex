@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# set up error "handling"
+# (not really handling anything, just bombing if any command fails)
+set -e
+set -o pipefail
+
+set -x
+
+install_needed()
+{
+  hash $1 2>&- || { echo >&2 "$1 not found and needs to be installed."; 
+return 0; }
+  echo "Good, you have $1."
+  return 1
+}
+
+
+if [ `id -un` != "root" ]; then
+	echo "Error: this script must be run as root."
+	exit 1
+fi
+
+echo "Testing OS..."
+if [ `uname -s` != "Linux" ]; then
+	echo "Error: builds are only supported under a Linux-based OS."
+	echo "(Note: the \`macbuild' script contains setup instructions for building the"
+	echo "VPEx client on Macs.)"
+	exit 1
+else
+	echo "Good, you are running Linux."
+fi
+if grep -iq ubuntu /etc/issue ; then
+	echo "Good, you are running Ubuntu."
+else
+	echo "Error: currently Ubuntu is the only supported build environment."
+	exit 1
+fi
+
+# needs build essentials
+if ! dpkg --list | grep -q build-essential; then
+  aptitude -y install build-essential
+fi
+
+# special tweaks for a 64bit system
+if [ `arch` = 'x86_64' ]; then
+  echo "64-bit system detected.  Installing needed 32-bit compatibility stuff."
+  echo "(Note: 64-bit build systems have not been thoroughly tested.)"
+  aptitude -y install libc6-dev-i386 gcc-multilib
+fi
+
+# curl is needed to fetch source packages
+if install_needed curl; then
+  aptitude -y install curl
+fi
+
+# unzip is used by install scripts to extract sources from .zip's
+if install_needed unzip; then
+  aptitude -y install unzip
+fi
+
+# scons is used by nsis
+if install_needed scons; then
+  aptitude -y install scons
+fi
+
+# 7z is used to extract sources from certain archive files
+if install_needed 7z; then
+  aptitude -y install p7zip-full
+fi
+
+# mingw32 is used to cross-compile Windows binaries
+if install_needed i586-mingw32msvc-gcc; then
+  aptitude -y install mingw32 mingw32-binutils mingw32-runtime
+fi
+
+# autoconf is used by some source packages to generate Configure scripts
+if install_needed autoreconf; then
+  aptitude -y install autoconf
+fi

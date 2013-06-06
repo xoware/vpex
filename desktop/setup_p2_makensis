@@ -1,0 +1,22 @@
+wget http://sourceforge.net/projects/nsis/files/NSIS%202/2.46/nsis-2.46-src.tar.bz2
+wget http://sourceforge.net/projects/nsis/files/NSIS%202/2.46/nsis-2.46.zip
+[ ! -d ./build.dir ] && exit 1
+cd build.dir
+unzip ../nsis-2.46.zip
+mkdir nsis-2.46/share
+cd nsis-2.46/share
+ln -s ../ nsis
+cd -
+cd out
+ln -s ../nsis-2.46 
+cd -
+apt-get install zlib1g-devel
+myt=$(mktemp)
+myd=$(pwd)
+cd $myt
+tar -xf nsis-2.46-src.tar.bz2
+cd nsis-2.46-src
+scons SKIPSTUBS=all SKIPPLUGINS=all SKIPUTILS=all SKIPMISC=all NSIS_CONFIG_CONST_DATA=no PREFIX=$myd/build.dir/nsis-2.46/ install-compiler
+cd $myd
+/bin/rm -rf $myt
+cd ..

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# set up error "handling"
+# (not really handling anything, just bombing if any command fails)
+set -e
+set -o pipefail
+
+if [ ! -f update_windows_vpex ]; then
+	echo "ERROR: this script must be run from the base of the vpex repo"
+	exit 1
+fi
+
+if [ ! -f ../../ui/vpex/installers/VPExConnectionManager.pkg ]; then
+	echo "ERROR: the ui repo must be checked out to the same directory as the vpex repo"
+	exit 1
+fi
+
+if [ ! -f macbuild.dir/out/VPExConnectionManager.pkg ]; then
+	echo "ERROR: either you didn't build the vpex installer, or the build has failed."
+	echo "       Could not find the output product!"
+	exit 1
+fi
+
+rm -f ../../ui/vpex/installers/VPExConnectionManager.pkg && cp macbuild.dir/out/VPExConnectionManager.pkg ../../ui/vpex/installers/VPExConnectionManager.pkg
+rm -f ../../ui/vpex/share/installers/mac/installer/build && cp macbuild.dir/out/build ../../ui/vpex/share/installers/mac/installer/build
+cd ../../ui/vpex && git add installers/VPExConnectionManager.pkg share/installers/mac/installer/build && git commit -m "Update to latest Mac VPEx Connection Manager"

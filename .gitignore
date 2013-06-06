@@ -1,0 +1,11 @@
+.apdisk
+*build.dir
+vpexinst.exe
+typescript
+*.o
+*.exe
+*.dll
+.*.swp
+*.res
+*.DS_Store
+*DownloadCache

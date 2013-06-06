@@ -1,0 +1,5 @@
+<h3>VPEx Connection Manager<br>for Android</h3>
+Version 0.1 alpha<br>
+Copyright 2012 XOWare, Inc.<br>
+<b>www.xoware.com</b><br>
+1-800-555-1234

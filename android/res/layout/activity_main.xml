@@ -1,0 +1,96 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <RelativeLayout
+        android:id="@+id/statusLayout2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp" >
+
+        <TextView
+            android:id="@+id/statusPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="12dp"
+            android:textSize="18sp"
+            android:text="@string/text_status_prompt" />
+
+        <TextView
+            android:id="@+id/statusIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/statusPrompt"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/statusPrompt"
+            android:text="@string/text_status_down"
+            android:textSize="18sp"
+            android:textColor="#FF0000" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/connectionChooser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/statusLayout2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp" >
+
+        <TextView
+            android:id="@+id/choosePrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="12dp"
+            android:textSize="14sp"
+            android:text="@string/text_choose_prompt" />
+
+        <Spinner
+            android:id="@+id/vpexConnectionList"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/choosePrompt"
+            android:layout_toRightOf="@id/choosePrompt" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/connectButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/connectionChooser"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:text="@string/connect_button" />
+
+    <RelativeLayout
+        android:id="@+id/logLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/connectButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp" >
+        
+        <ScrollView
+            android:id="@+id/logScroller"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="19dp" >
+
+            <EditText
+                android:id="@+id/logWindow"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="textMultiLine|textNoSuggestions" >
+            </EditText>
+        </ScrollView>
+    </RelativeLayout>
+
+</RelativeLayout>

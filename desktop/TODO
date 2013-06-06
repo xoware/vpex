@@ -1,0 +1,12 @@
+VPEx Connection Manager:
+
+* Improve openvpn process handling
+  Right now, the VPEx Connection manager basically runs openvpn in a separate
+  shell process.  This means that its output is relegated to a DOS box
+  (and in fact is completely hidden on the Mac).  Also the way we stop
+  openvpn is kludgy (basically we run a shell script/batch file that
+  killall's it).  We should really internalize the handling of the
+  openvpn process, basically using the wxWidgets equivalent of popen(),
+  etc. so that we can capture the output of openvpn and direct it to the
+  (currently mostly useless) Log window.  Also if we are managing the
+  processes, we can stop the openvpn process ourselves.
