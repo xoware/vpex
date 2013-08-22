@@ -153,12 +153,20 @@ echo "### Making a working copy of the MINGW32 build environment..."
 echo ""
 
 cp -a /usr/i586-mingw32msvc/ $BUILDDIR/mingw32
-cat /usr/share/doc/mingw32-runtime/mingwm10.dll.gz | gunzip > $BUILDDIR/mingw32/lib/mingwm10.dll
+mkdir -p $BUILDDIR/mingw32/lib/
+if [ -e /usr/share/doc/mingw32-runtime/mingwm10.dll.gz ]; then
+	cat /usr/share/doc/mingw32-runtime/mingwm10.dll.gz | gunzip > $BUILDDIR/mingw32/lib/mingwm10.dll
+elif [ -e /usr/i586-mingw32msvc/usr/bin/mingwm10.dll ]; then
+	cp -vf /usr/i586-mingw32msvc/usr/bin/mingwm10.dll $BUILDDIR/mingw32/lib/mingwm10.dll
+fi;
+
+mkdir -p $BUILDDIR/mingw32/bin/
 for BIN in /usr/bin/i586-mingw32msvc-*
 do
+	echo $BIN
 	BASEBIN=`basename $BIN`
 	rm -f $BUILDDIR/mingw32/bin/$BASEBIN
-	ln -sf $BIN $BUILDDIR/mingw32/bin/$BASEBIN
+	ln -sfv $BIN $BUILDDIR/mingw32/bin/$BASEBIN
 done
 
 echo ""
@@ -220,7 +228,7 @@ cd $BUILDDIR/wxMSW-${WXWIDGETS_VERSION} && ./configure --prefix=$BUILDDIR/mingw3
 
 echo ""
 echo "Building..."
-make
+make -j5
 
 echo ""
 echo "Installing..."
@@ -274,6 +282,10 @@ cp $BUILDDIR/openvpn-src/src/openvpn-2.1.3/windest/sbin/*.exe $BUILDDIR/out/inst
 for LIB in libeay32.dll libpkcs11-helper-1.dll libssl32.dll; do
 	cp $BUILDDIR/mingw32/lib/$LIB $BUILDDIR/out/installer.tmp
 done
+
+
+LIBGCC_DIR=`dirname \`i586-mingw32msvc-g++ -print-libgcc-file-name\``
+cp -af $LIBGCC_DIR/*.dll $BUILDDIR/out/installer.tmp
 
 echo ""
 echo "### Extracting prebuilt TAP driver"
