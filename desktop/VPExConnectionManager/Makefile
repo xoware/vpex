@@ -3,10 +3,12 @@ DEBUG?="NO"
 CC=$(BUILDDIR)/mingw32/bin/i586-mingw32msvc-g++
 WINDRES=$(BUILDDIR)/mingw32/bin/i586-mingw32msvc-windres
 WX_CFLAGS=$(shell $(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --cxxflags | sed -e 's/-mthreads//g')
-CFLAGS=-g $(DEBUG_FLAG) $(WX_CFLAGS)  -Wno-deprecated
+CFLAGS=-g $(DEBUG_FLAG) $(WX_CFLAGS)  -Wno-deprecated -Wall
 
 WX_LDFLAGS=$(shell $(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --libs | sed -e 's/-mthreads//g')
 LDFLAGS=-g $(DEBUG_FLAG) -static-libgcc -static-libstdc++  -L$(BUILDDIR)/mingw32/lib $(WX_LDFLAGS) -liphlpapi
+LIBGCC_DIR=$(shell dirname `i586-mingw32msvc-g++ -print-libgcc-file-name`)
+
 
 all:			VPExConnectionManager.exe
 
@@ -65,6 +67,7 @@ install:		VPExConnectionManager.exe
 			cp connect.wav $(PREFIX)/connect.wav
 			cp disconnect.wav $(PREFIX)/disconnect.wav
 			cp $(BUILDDIR)/mingw32/lib/mingwm10.dll $(PREFIX)/mingwm10.dll
+			cp -v $(LIBGCC_DIR)/*.dll $(PREFIX)
 			for FILE in wxbase28*_gcc_custom.dll wxbase28*_net_gcc_custom.dll wxbase28*_xml_gcc_custom.dll wxmsw28*_adv_gcc_custom.dll wxmsw28*_aui_gcc_custom.dll wxmsw28*_core_gcc_custom.dll wxmsw28*_html_gcc_custom.dll wxmsw28*_qa_gcc_custom.dll wxmsw28*_richtext_gcc_custom.dll wxmsw28*_xrc_gcc_custom.dll ; do cp $(BUILDDIR)/mingw32/lib/$$FILE $(PREFIX) ; done
 
 clean:
