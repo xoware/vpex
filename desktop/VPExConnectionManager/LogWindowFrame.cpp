@@ -133,7 +133,7 @@ void LogWindowFrame::ReadVPExOutput(const wxString& line, bool isErrorStream)
 	char *p = cstring, *q = buf;
 	strncpy(cstring, (const char*)line.mb_str(wxConvUTF8), 1023);
 	p = cstring;
-	while (p != NULL && *p != NULL)  {
+	while (p && *p)  {
 		if (*p == '\n')  {
 			*q = '\0';
 			this->AddLogItem(buf);
