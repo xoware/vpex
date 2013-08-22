@@ -1,7 +1,12 @@
+DEBUG?="NO"
+
 CC=$(BUILDDIR)/mingw32/bin/i586-mingw32msvc-g++
 WINDRES=$(BUILDDIR)/mingw32/bin/i586-mingw32msvc-windres
-CFLAGS=-g $(DEBUG_FLAG) `$(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --cxxflags | sed -e 's/-mthreads//g'` -Wno-deprecated
-LDFLAGS=-g $(DEBUG_FLAG) -static-libgcc -L$(BUILDDIR)/mingw32/lib `$(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --libs | sed -e 's/-mthreads//g'` -liphlpapi
+WX_CFLAGS=$(shell $(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --cxxflags | sed -e 's/-mthreads//g')
+CFLAGS=-g $(DEBUG_FLAG) $(WX_CFLAGS)  -Wno-deprecated
+
+WX_LDFLAGS=$(shell $(BUILDDIR)/mingw32/bin/wx-config --debug=$(DEBUG) --libs | sed -e 's/-mthreads//g')
+LDFLAGS=-g $(DEBUG_FLAG) -static-libgcc -static-libstdc++  -L$(BUILDDIR)/mingw32/lib $(WX_LDFLAGS) -liphlpapi
 
 all:			VPExConnectionManager.exe
 
