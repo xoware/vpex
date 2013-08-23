@@ -13,11 +13,11 @@ LIBGCC_DIR=$(shell dirname `i586-mingw32msvc-g++ -print-libgcc-file-name`)
 all:			VPExConnectionManager.exe
 
 VPExConnectionManager.exe:		VPExConnectionManager.o VPExConnectionManager.res FindProcByName.o \
-				LogWindowFrame.o ManagementFrame.o VPExProcess.o PipedProcess.o NetUtils.o cJSON.o \
+				LogWindowFrame.o ManagementFrame.o VPExProcess.o PipedProcess.o NetUtils.o  \
 				IPCClient.o IPCClientConnection.o IPCServer.o IPCServerConnection.o
 			$(CC) -o VPExConnectionManager.exe VPExConnectionManager.o \
 				VPExConnectionManager.res FindProcByName.o LogWindowFrame.o ManagementFrame.o \
-				VPExProcess.o PipedProcess.o NetUtils.o cJSON.o \
+				VPExProcess.o PipedProcess.o NetUtils.o \
 				IPCClient.o IPCClientConnection.o IPCServer.o IPCServerConnection.o \
 				$(LDFLAGS)
 
@@ -45,8 +45,8 @@ PipedProcess.o:	PipedProcess.cpp PipedProcess.h
 NetUtils.o:		NetUtils.cpp NetUtils.h
 			$(CC) $(CFLAGS) -c NetUtils.cpp
 
-cJSON.o:		cJSON.c cJSON.h
-			$(CC) $(CFLAGS) -c cJSON.c
+#cJSON.o:		cJSON.c cJSON.h
+#			$(CC) $(CFLAGS) -c cJSON.c
 
 IPCClient.o:		IPCClient.cpp IPCClient.h IPCClientConnection.h ipcsetup.h
 			$(CC) $(CFLAGS) -c IPCClient.cpp
