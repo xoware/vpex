@@ -73,7 +73,7 @@
 #include "NetUtils.h"
 #include "VPExConnectionManager.h"
 #include "IPCClient.h"
-#include "IPCClientConnection.h"
+
 #include "IPCServer.h"
 //#include "IPCServerConnection.h"
 //#include "ipcsetup.h"
@@ -499,6 +499,7 @@ void MyFrame::LaunchVpexConnection(const wxString &connectionName, const wxStrin
 	//cmdString << "\"";
 #endif
 
+	wxLogDebug(cmdString);
 /*
 	wxMessageDialog *dialog = new wxMessageDialog(NULL, cmdString, wxT("HEY YOU!"), wxOK | wxICON_EXCLAMATION | wxSTAY_ON_TOP);
 	wxYield();
@@ -506,7 +507,7 @@ void MyFrame::LaunchVpexConnection(const wxString &connectionName, const wxStrin
 	*/
 	
 	vpexProcess = new VPExProcess(logWindowFrame);
-	vpexProcessPid = wxExecute(cmdString, wxEXEC_ASYNC, vpexProcess);
+	vpexProcessPid = wxExecute(cmdString, wxEXEC_ASYNC , vpexProcess);
 	
 	if (vpexProcessPid == 0)  {
 		wxString errorMsg = _T("Could not start VPEx connection.");
