@@ -1,7 +1,7 @@
-#ifndef __APPLE__
+#if defined(__WINDOWS__) || defined(__WIN32__) || defined(_WIN64)  || defined(_WIN32)
 #include <windows.h>
 #include <tlhelp32.h>
-#include <iostream.h>
+#include <iostream>
 
 #include "FindProcByName.h"
 

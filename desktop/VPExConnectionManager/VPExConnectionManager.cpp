@@ -40,6 +40,7 @@
 #include "vpex.xpm"
 #endif
 
+#include <iostream>
 #include <wx/splash.h>
 #include <wx/process.h>
 #include <wx/timer.h>
@@ -55,13 +56,15 @@
 #include <wx/filefn.h>
 #include <wx/stdpaths.h>
 
-#ifdef __WINDOWS__
-#define PATHSEP _("\\")
-#endif
-
-#ifdef __WXMAC__
-#include <ApplicationServices/ApplicationServices.h>
-#define PATHSEP _("/")
+#if defined(__WINDOWS__) || defined(__WIN32__) || defined(_WIN64)  || defined(_WIN32)
+	#define PATHSEP _("\\")
+#elif defined (__WXMAC__) || defined (__APPLE_)
+	#include <ApplicationServices/ApplicationServices.h>
+	#define PATHSEP _("/")
+#elif defined(__unix)
+	#define PATHSEP _("/")
+#else
+	#error "OS not detected"
 #endif
 
 #include "LogWindowFrame.h"
@@ -70,10 +73,10 @@
 #include "NetUtils.h"
 #include "VPExConnectionManager.h"
 #include "IPCClient.h"
-#include "IPCClientConnection.h"
+
 #include "IPCServer.h"
-#include "IPCServerConnection.h"
-#include "ipcsetup.h"
+//#include "IPCServerConnection.h"
+//#include "ipcsetup.h"
 
 #include "version.h"
 
@@ -137,6 +140,9 @@ IMPLEMENT_APP(MyApp)
 
 bool MyApp::OnInit()
 {
+	printf("Startup.. Compiled "  __DATE__ " " __TIME__ "\n");
+	wxLogDebug("Staring up.   Compiled " __DATE__ " " __TIME__);
+
 /*
 #ifdef __WXMAC__
 	ProcessSerialNumber PSN;
@@ -158,7 +164,7 @@ bool MyApp::OnInit()
 		if (m_checker->IsAnotherRunning())  {
 			wxString errorMsg = _T("Another instance of this program is already running.");
 			wxMessageDialog *dialog = new wxMessageDialog(NULL, errorMsg, wxT("Error"), wxOK | wxICON_EXCLAMATION | wxSTAY_ON_TOP);
-			int response = dialog->ShowModal();
+			dialog->ShowModal();
 			// brutal hack
 			exit(0);
 		}
@@ -168,9 +174,10 @@ bool MyApp::OnInit()
     wxInitAllImageHandlers();
     wxBitmap bitmap;
     wxString splashPath = wxStandardPaths::Get().GetResourcesDir() << PATHSEP << _("splash.png");
+    wxSplashScreen* splash = NULL;
     if (bitmap.LoadFile(splashPath, wxBITMAP_TYPE_PNG))
     {
-        wxSplashScreen* splash = new wxSplashScreen(bitmap,
+        splash = new wxSplashScreen(bitmap,
                 wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
                 2000, NULL, -1, wxDefaultPosition, wxDefaultSize,
                 wxFRAME_NO_TASKBAR|wxSIMPLE_BORDER|wxSTAY_ON_TOP);
@@ -253,7 +260,7 @@ void MyApp::HandleVpexFile(const wxString &fileName)
 			errorMsg << configPath << _T(".");
 			wxMessageDialog *dialog = new wxMessageDialog(NULL, errorMsg, wxT("Error"), wxOK | wxICON_EXCLAMATION | wxSTAY_ON_TOP);
 			wxYield();
-			int response = dialog->ShowModal();
+			dialog->ShowModal();
 			exit(0);
 		}
 	}
@@ -477,20 +484,22 @@ void MyFrame::LaunchVpexConnection(const wxString &connectionName, const wxStrin
 	wxString cmdString = _T("\"");
 	cmdString << wxStandardPaths::Get().GetPluginsDir() << _("\\OPENVPN.EXE\" --config ");
 	cmdString << connectionName << _T(".CONF --askpass ");
-#else
-#ifdef __WXMAC__
+#elif defined(__WXMAC__) || defined(__unix)
 	// app is in GetExecutablePath, but strip off the last part and replace it with openvpn
 	// config file gets stashed in GetUserDataDir
 	wxString cmdString = wxStandardPaths::Get().GetPluginsDir() << _("/openvpn --config ");
 	cmdString << connectionName;
 	cmdString << _(".conf --askpass ");
 #endif
-#endif
+	
+	
+	
 	cmdString << tempFilePath;
 #ifdef __WINDOWS__
 	//cmdString << "\"";
 #endif
 
+	wxLogDebug(cmdString);
 /*
 	wxMessageDialog *dialog = new wxMessageDialog(NULL, cmdString, wxT("HEY YOU!"), wxOK | wxICON_EXCLAMATION | wxSTAY_ON_TOP);
 	wxYield();
@@ -498,7 +507,7 @@ void MyFrame::LaunchVpexConnection(const wxString &connectionName, const wxStrin
 	*/
 	
 	vpexProcess = new VPExProcess(logWindowFrame);
-	vpexProcessPid = wxExecute(cmdString, wxEXEC_ASYNC, vpexProcess);
+	vpexProcessPid = wxExecute(cmdString, wxEXEC_ASYNC , vpexProcess);
 	
 	if (vpexProcessPid == 0)  {
 		wxString errorMsg = _T("Could not start VPEx connection.");
@@ -654,10 +663,8 @@ void MyFrame::OnStartStop(wxCommandEvent& WXUNUSED(event))
 	    // see if openvpn is running
 	#ifdef __WINDOWS__
 	    if (FindProcByName("openvpn.exe"))  {
-	#else
-	#ifdef __WXMAC__
+	#elif defined(__WXMAC__) || defined(__unix)
 	    if (FindProcByName("openvpn"))  {
-	#endif
 	#endif
 	        // openvpn running.  kill it.
 		TerminateVpexConnection();
@@ -755,7 +762,8 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
     wxString msg;
     msg.Printf(_T("VPEx Connection Manager\n")
 	       _T(VERSION_STRING)
-               _T("\n(C) 2012 XOWare, Inc.  All rights reserved.\n")
+               _T("\n(C) 2013 XOWare, Inc.  All rights reserved.\n")
+	       _T("\nBuilt " __DATE__ " " __TIME__ "\n")
                _T("Written using %s")
 #ifdef wxBETA_NUMBER
                _T(" (beta %d)")
@@ -829,10 +837,8 @@ void UpdateTimer::Notify()
 	static char buf[128];
 #ifdef __WINDOWS__
     if (FindProcByName("openvpn.exe"))  {
-#else
-#ifdef __WXMAC__
+#elif defined(__WXMAC__) || defined(__unix)
     if (FindProcByName("openvpn"))  {
-#endif
 #endif
         frame->statusDisplay->SetStatusText(_T("VPEx Connection Status: UP"));
         frame->btnStartStop->SetLabel(_T("Stop VPEx Connection"));

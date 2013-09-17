@@ -2,7 +2,15 @@ CC=g++
 CFLAGS=-g `wx-config --cxxflags` -Wno-deprecated -Wno-write-strings
 LDFLAGS=-g `wx-config --libs`
 
+VERSION=$(shell grep ^VERSION ../../VERSION | cut -d: -f2)
+BUILD=$(shell grep ^BUILD ../../VERSION | cut -d: -f2)
+
 all:			VPExConnectionManager
+
+version.h: ../../VERSION
+	echo "#define VERSION_STRING \"Version $(VERSION) Build $(BUILD)\"" > version.h
+	echo "#define VERSION $(VERSION)" >> version.h
+	echo "#define BUILD $(BUILD)" >> version.h
 
 VPExConnectionManager:		VPExConnectionManager.o FindProcByName.o \
 				LogWindowFrame.o VPExExecutor.o MyProcess.o NetUtils.o cJSON.o
@@ -42,4 +50,4 @@ install:		VPExConnectionManager.exe
 			for FILE in wxbase28_gcc_custom.dll wxbase28_net_gcc_custom.dll wxbase28_xml_gcc_custom.dll wxmsw28_adv_gcc_custom.dll wxmsw28_aui_gcc_custom.dll wxmsw28_core_gcc_custom.dll wxmsw28_html_gcc_custom.dll wxmsw28_qa_gcc_custom.dll wxmsw28_richtext_gcc_custom.dll wxmsw28_xrc_gcc_custom.dll ; do cp $(BUILDDIR)/mingw32/lib/$$FILE $(PREFIX)/$$FILE ; done
 
 clean:
-			rm -f *.exe *.o *.res
+			rm -f *.exe *.o *.res version.h

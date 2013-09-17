@@ -16,8 +16,7 @@
 #define ID_TOPIC        10009
 #define ID_HOSTNAME        10010
 
-// Define a new application
-class IPCClientConnection;
+#include "IPCClientConnection.h"
 
 class IPCClient: public wxClient {
 public:
