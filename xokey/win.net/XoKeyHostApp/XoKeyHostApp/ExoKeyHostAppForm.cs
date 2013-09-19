@@ -6,13 +6,24 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Win32;
+
 
 namespace XoKeyHostApp
 {
     public partial class ExoKeyHostAppForm : Form
     {
+
         public ExoKeyHostAppForm()
         {
+
+          //  Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION", "WindowsFormsApplication1.exe", value);
+            //Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",  "WindowsFormsApplication1.vshost.exe", value);
+
+            // set browser emulation to IE9 http://msdn.microsoft.com/en-us/library/ee330730(v=vs.85).aspx
+            
+         //   Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",    System.AppDomain.CurrentDomain.FriendlyName, 10000);
+
             InitializeComponent();
 
             // Subscribe to Event(s) with the WindowsInterop Class
@@ -21,11 +32,46 @@ namespace XoKeyHostApp
 
             WindowsInterop.ConnectToDialogWillBeShown +=
                 new GenericDelegate<String, String, Boolean>(this.WindowsInterop_ConnectToDialogWillBeShown);
-            
+           // System.Drawing.Icon ico = Properties.Resources.
+           // this.Icon = ico;
+        }
+        private void check_registry()
+        {
+            const int IE_Val = 10000;
+            int val = (int) Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",
+                        System.AppDomain.CurrentDomain.FriendlyName, 0);
+            __Log_Msg(0, LogMsg.Priority.Debug, "FEATURE_BROWSER_EMULATION " + val.ToString());
+            var ieVersion = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Internet Explorer").GetValue("Version");
+            __Log_Msg(0, LogMsg.Priority.Debug, "ieVersion " + ieVersion.ToString());
+            __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser.version " + webBrowser1.Version.ToString());
+
+            if (val != IE_Val)
+            {
+                // set browser emulation http://msdn.microsoft.com/en-us/library/ee330730(v=vs.85).aspx
+                Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",
+                 System.AppDomain.CurrentDomain.FriendlyName, IE_Val);
+                val = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",
+                        System.AppDomain.CurrentDomain.FriendlyName, 0);
+                if (val == IE_Val)
+                {
+                    MessageBox.Show("Registry updated on 1st run, restart app");
+                }
+                else
+                {
+                    MessageBox.Show("Error updating registry");
+                }
+
+
+            }
+ 
         }
         private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
         {
-            __Log_Msg(0, LogMsg.Priority.Debug, "Startup");
+            __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
+            check_registry();
+            Set_Debug(Properties.Settings.Default.Debug);
+            if (!Properties.Settings.Default.Debug)
+                Navigate();
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
         {
@@ -71,12 +117,19 @@ namespace XoKeyHostApp
             // show the "Connect To ..." dialog to the user
             return true;
         }
+        private void Set_Debug(bool value)
+        {
+            debugToolStripMenuItem.Checked = value;
+            Go_button.Visible = value;
+            Location_textBox.Visible = value;
+        }
+
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
         {
             debugToolStripMenuItem.Checked = !debugToolStripMenuItem.Checked;  // toggle
-
-            Go_button.Visible = debugToolStripMenuItem.Checked;
-            Location_textBox.Visible = debugToolStripMenuItem.Checked;
+            Set_Debug(debugToolStripMenuItem.Checked);
+            Properties.Settings.Default.Debug = debugToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
         }
 
         public void Add_Log_Entry(LogMsg Msg)
@@ -100,13 +153,67 @@ namespace XoKeyHostApp
 
 
         }
+        private void saveLogExportFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog Save_File_Dialog = new SaveFileDialog();
 
+            Save_File_Dialog.Filter = "csv files (*.csv)|*.csv ";
+            Save_File_Dialog.FilterIndex = 1;
+            Save_File_Dialog.RestoreDirectory = true;
+
+            if (Save_File_Dialog.ShowDialog() == DialogResult.OK)
+            {
+                System.IO.Stream File_Stream;
+                if ((File_Stream = Save_File_Dialog.OpenFile()) != null)
+                {
+                    lock (Log_dataGridView)
+                    {
+                        for (int i = (Log_dataGridView.RowCount - 1); i >= 0; i--)
+                        {
+                            String Buffer;
+
+                            try
+                            {
+                                // time
+                                Buffer = Log_dataGridView.Rows[i].Cells[(int)Date_Time_Col.Index].Value.ToString() + "\t";
+
+                                // code
+                                Buffer += Log_dataGridView.Rows[i].Cells[(int)Code_Col.Index].Value.ToString() + "\t";
+
+                                // level
+                                Buffer += (string)Log_dataGridView.Rows[i].Cells[(int)Level_Col.DisplayIndex].Value.ToString() + "\t";
+
+                                // message
+                                Buffer += (string)Log_dataGridView.Rows[i].Cells[(int)Message_Col.Index].Value.ToString() + "\r\n";
+
+                                byte[] data = new UTF8Encoding(true).GetBytes(Buffer);
+                                File_Stream.Write(data, 0, data.Length);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Write log exception " + ex.Message);
+                            }
+                        }
+                    }
+
+                    File_Stream.Close();
+                    MessageBox.Show("File saved to " + Save_File_Dialog.FileName);
+                }
+                else
+                {
+                    File_Stream = null;
+                    MessageBox.Show("Error creating export file");
+                }
+
+            }
+
+        }
         private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
         {
             Location_textBox.Text = webBrowser1.Url.ToString();
         }
 
-        private void Go_button_Click(object sender, EventArgs e)
+        private void Navigate()
         {
             String address = Location_textBox.Text;
 
@@ -124,8 +231,13 @@ namespace XoKeyHostApp
             }
             catch (System.UriFormatException)
             {
+                __Log_Msg(0, LogMsg.Priority.Error, "URI Format Error");
                 return;
             }
+        }
+        private void Go_button_Click(object sender, EventArgs e)
+        {
+            Navigate();
         }
 
         private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -136,9 +248,9 @@ namespace XoKeyHostApp
         private void webBrowser1_ProgressChanged(object sender, WebBrowserProgressChangedEventArgs e)
         {
             System.Text.StringBuilder messageBoxCS = new System.Text.StringBuilder();
-            messageBoxCS.AppendFormat("{0} = {1}", "CurrentProgress", e.CurrentProgress);
+            messageBoxCS.AppendFormat("{0} = {1} ", "CurrentProgress", e.CurrentProgress);
             messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "MaximumProgress", e.MaximumProgress);
+            messageBoxCS.AppendFormat(" {0} = {1}", "MaximumProgress", e.MaximumProgress);
             messageBoxCS.AppendLine();
             __Log_Msg(0, LogMsg.Priority.Debug, "ProgressChanged Event"+ messageBoxCS.ToString());
         }

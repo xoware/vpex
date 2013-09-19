@@ -31,6 +31,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -41,10 +43,10 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.PopupErrors_checkBox = new System.Windows.Forms.CheckBox();
             this.Log_dataGridView = new System.Windows.Forms.DataGridView();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Code = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Level = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Message = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Date_Time_Col = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Code_Col = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Level_Col = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Message_Col = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Location_textBox = new System.Windows.Forms.TextBox();
             this.Go_button = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -72,7 +74,8 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.exitToolStripMenuItem});
+            this.exitToolStripMenuItem,
+            this.exportLogToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
             this.fileToolStripMenuItem.Text = "File";
@@ -80,8 +83,23 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(102, 24);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
             this.exitToolStripMenuItem.Text = "Exit";
+            // 
+            // exportLogToolStripMenuItem
+            // 
+            this.exportLogToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToFileToolStripMenuItem});
+            this.exportLogToolStripMenuItem.Name = "exportLogToolStripMenuItem";
+            this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
+            this.exportLogToolStripMenuItem.Text = "Export Log";
+            // 
+            // saveToFileToolStripMenuItem
+            // 
+            this.saveToFileToolStripMenuItem.Name = "saveToFileToolStripMenuItem";
+            this.saveToFileToolStripMenuItem.Size = new System.Drawing.Size(154, 24);
+            this.saveToFileToolStripMenuItem.Text = "Save to File";
+            this.saveToFileToolStripMenuItem.Click += new System.EventHandler(this.saveLogExportFileToolStripMenuItem_Click);
             // 
             // toolsToolStripMenuItem
             // 
@@ -133,7 +151,7 @@
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(1079, 405);
             this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "tabPage1";
+            this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // webBrowser1
@@ -175,43 +193,43 @@
             // 
             this.Log_dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.Log_dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Time,
-            this.Code,
-            this.Level,
-            this.Message});
+            this.Date_Time_Col,
+            this.Code_Col,
+            this.Level_Col,
+            this.Message_Col});
             this.Log_dataGridView.Location = new System.Drawing.Point(0, 53);
             this.Log_dataGridView.Name = "Log_dataGridView";
             this.Log_dataGridView.RowTemplate.Height = 24;
             this.Log_dataGridView.Size = new System.Drawing.Size(1079, 380);
             this.Log_dataGridView.TabIndex = 0;
             // 
-            // Time
+            // Date_Time_Col
             // 
-            this.Time.HeaderText = "Time";
-            this.Time.Name = "Time";
-            this.Time.ReadOnly = true;
-            this.Time.Width = 175;
+            this.Date_Time_Col.HeaderText = "Time";
+            this.Date_Time_Col.Name = "Date_Time_Col";
+            this.Date_Time_Col.ReadOnly = true;
+            this.Date_Time_Col.Width = 175;
             // 
-            // Code
+            // Code_Col
             // 
-            this.Code.HeaderText = "Code";
-            this.Code.Name = "Code";
-            this.Code.ReadOnly = true;
-            this.Code.Width = 50;
+            this.Code_Col.HeaderText = "Code";
+            this.Code_Col.Name = "Code_Col";
+            this.Code_Col.ReadOnly = true;
+            this.Code_Col.Width = 50;
             // 
-            // Level
+            // Level_Col
             // 
-            this.Level.HeaderText = "Level";
-            this.Level.Name = "Level";
-            this.Level.ReadOnly = true;
-            this.Level.Width = 75;
+            this.Level_Col.HeaderText = "Level";
+            this.Level_Col.Name = "Level_Col";
+            this.Level_Col.ReadOnly = true;
+            this.Level_Col.Width = 75;
             // 
-            // Message
+            // Message_Col
             // 
-            this.Message.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Message.HeaderText = "Message";
-            this.Message.Name = "Message";
-            this.Message.ReadOnly = true;
+            this.Message_Col.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Message_Col.HeaderText = "Message";
+            this.Message_Col.Name = "Message_Col";
+            this.Message_Col.ReadOnly = true;
             // 
             // Location_textBox
             // 
@@ -221,7 +239,7 @@
             this.Location_textBox.Name = "Location_textBox";
             this.Location_textBox.Size = new System.Drawing.Size(861, 22);
             this.Location_textBox.TabIndex = 2;
-            this.Location_textBox.Text = "https://10.64.1.8/ui/login.html";
+            this.Location_textBox.Text = "https://192.168.255.1/ui/login.html";
             // 
             // Go_button
             // 
@@ -262,7 +280,7 @@
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "ExoKeyHostAppForm";
-            this.Text = "Form1";
+            this.Text = "XoKey";
             this.Load += new System.EventHandler(this.ExoKeyHostAppForm_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -294,13 +312,15 @@
         private System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
         private System.Windows.Forms.CheckBox PopupErrors_checkBox;
         private System.Windows.Forms.DataGridView Log_dataGridView;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Time;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Code;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Level;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Message;
         private System.Windows.Forms.Button Go_button;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Date_Time_Col;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Code_Col;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Level_Col;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Message_Col;
+        private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToFileToolStripMenuItem;
     }
 }
 
