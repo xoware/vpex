@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace Xoware.SocksServerLib {
 
 ///<summary>Implements the SOCKS5 protocol.</summary>
-internal sealed class Socks5Handler : SocksHandler {
+internal class Socks5Handler : SocksHandler {
 
     private IPEndPoint Client_UDP_Port;
 
@@ -319,7 +319,7 @@ internal sealed class Socks5Handler : SocksHandler {
 						RemoteIP = IPAddress.Parse(Query[4].ToString() + "." + Query[5].ToString() + "." + Query[6].ToString() + "." + Query[7].ToString());
 						RemotePort = Query[8] * 256 + Query[9];
 					} else if( Query[3] == 3) {
-						RemoteIP = Dns.Resolve(Encoding.ASCII.GetString(Query, 5, Query[4])).AddressList[0];
+						RemoteIP = Dns.GetHostEntry(Encoding.ASCII.GetString(Query, 5, Query[4])).AddressList[0];
 						RemotePort = Query[4] + 5;
 						RemotePort = Query[RemotePort] * 256 + Query[RemotePort + 1];
 					}
@@ -354,7 +354,7 @@ internal sealed class Socks5Handler : SocksHandler {
 						RemotePort = Query[8] * 256 + Query[9];
 					} else if( Query[3] == 3) {
                         // DNS address
-						RemoteIP = Dns.Resolve(Encoding.ASCII.GetString(Query, 5, Query[4])).AddressList[0];
+						RemoteIP = Dns.GetHostEntry(Encoding.ASCII.GetString(Query, 5, Query[4])).AddressList[0];
 						RemotePort = Query[4] + 5;
 						RemotePort = Query[RemotePort] * 256 + Query[RemotePort + 1];
 					}
@@ -419,11 +419,14 @@ internal sealed class Socks5Handler : SocksHandler {
 	protected override void Dispose(byte Value) {
 		byte [] ToSend;
 		try {
+            IPEndPoint RemEP = (IPEndPoint)RemoteConnection.RemoteEndPoint;
+            byte[] AddrBytes = RemEP.Address.GetAddressBytes();
+
 			ToSend = new byte[]{5, Value, 0, 1,
-						(byte)(((IPEndPoint)RemoteConnection.LocalEndPoint).Address.Address % 256),
-						(byte)(Math.Floor((decimal)(((IPEndPoint)RemoteConnection.LocalEndPoint).Address.Address % 65536) / 256)),
-						(byte)(Math.Floor((decimal)(((IPEndPoint)RemoteConnection.LocalEndPoint).Address.Address % 16777216) / 65536)),
-						(byte)(Math.Floor((decimal)((IPEndPoint)RemoteConnection.LocalEndPoint).Address.Address / 16777216)),
+						(byte) AddrBytes[0],
+		                (byte) AddrBytes[1],
+		                (byte) AddrBytes[2],
+		                (byte) AddrBytes[3],
 						(byte)(Math.Floor((decimal)((IPEndPoint)RemoteConnection.LocalEndPoint).Port / 256)),
 						(byte)(((IPEndPoint)RemoteConnection.LocalEndPoint).Port % 256)};
 		} catch {

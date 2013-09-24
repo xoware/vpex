@@ -74,7 +74,7 @@ internal sealed class Socks4Handler : SocksHandler {
 				Username = Encoding.ASCII.GetString(Request, 7, Ret - 7);
 				if (Request[3] == 0 && Request[4] == 0 && Request[5] == 0 && Request[6] != 0) {// Use remote DNS
 					Ret = Array.IndexOf(Request, (byte)0, Ret + 1);
-					RemoteIP = Dns.Resolve(Encoding.ASCII.GetString(Request, Username.Length + 8, Ret - Username.Length - 8)).AddressList[0];
+					RemoteIP = Dns.GetHostEntry(Encoding.ASCII.GetString(Request, Username.Length + 8, Ret - Username.Length - 8)).AddressList[0];
 				} else { //Do not use remote DNS
 					RemoteIP = IPAddress.Parse(Request[3].ToString() + "." + Request[4].ToString() + "." + Request[5].ToString() + "." + Request[6].ToString());
 				}
@@ -82,7 +82,8 @@ internal sealed class Socks4Handler : SocksHandler {
 				RemoteConnection.BeginConnect(new IPEndPoint(RemoteIP, RemotePort), new AsyncCallback(this.OnConnected), RemoteConnection);
 			} else if (Request[0] == 2) { // BIND
 				byte [] Reply = new byte[8];
-				long LocalIP = Listener.GetLocalExternalIP().Address;
+				//long LocalIP = Listener.GetLocalExternalIP().Address;
+                byte[] LocalAddrBytes = Listener.GetLocalExternalIP().GetAddressBytes();
 				AcceptSocket = new Socket(IPAddress.Any.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 				AcceptSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
 				AcceptSocket.Listen(50);
@@ -91,10 +92,10 @@ internal sealed class Socks4Handler : SocksHandler {
 				Reply[1] = 90;  //Everything is ok :)
                 Reply[2] = (byte)(Math.Floor((decimal)((IPEndPoint)AcceptSocket.LocalEndPoint).Port / 256));  //Port/1
 				Reply[3] = (byte)(((IPEndPoint)AcceptSocket.LocalEndPoint).Port % 256);  //Port/2
-                Reply[4] = (byte)(Math.Floor((decimal)(LocalIP % 256)));  //IP Address/1
-                Reply[5] = (byte)(Math.Floor((decimal)(LocalIP % 65536) / 256));  //IP Address/2
-                Reply[6] = (byte)(Math.Floor((decimal)(LocalIP % 16777216) / 65536));  //IP Address/3
-                Reply[7] = (byte)(Math.Floor((decimal)LocalIP / 16777216));  //IP Address/4
+                Reply[4] = LocalAddrBytes[0];  //IP Address/1
+                Reply[5] = LocalAddrBytes[1];  //IP Address/2
+                Reply[6] = LocalAddrBytes[2];  //IP Address/3
+                Reply[7] = LocalAddrBytes[3];  //IP Address/4
 				Connection.BeginSend(Reply, 0, Reply.Length, SocketFlags.None, new AsyncCallback(this.OnStartAccept), Connection);
 			}
 		} catch {
@@ -116,12 +117,14 @@ internal sealed class Socks4Handler : SocksHandler {
 	protected override void Dispose(byte Value) {
 		byte [] ToSend;
 		try {
-            ToSend = new byte[]{0, Value, (byte)(Math.Floor((decimal)((IPEndPoint)RemoteConnection.RemoteEndPoint).Port / 256)),
-		                                   (byte)(((IPEndPoint)RemoteConnection.RemoteEndPoint).Port % 256),
-		                                   (byte)(Math.Floor((decimal)(((IPEndPoint)RemoteConnection.RemoteEndPoint).Address.Address % 256))),
-		                                   (byte)(Math.Floor((decimal)(((IPEndPoint)RemoteConnection.RemoteEndPoint).Address.Address % 65536) / 256)),
-		                                   (byte)(Math.Floor((decimal)(((IPEndPoint)RemoteConnection.RemoteEndPoint).Address.Address % 16777216) / 65536)),
-		                                   (byte)(Math.Floor((decimal)((IPEndPoint)RemoteConnection.RemoteEndPoint).Address.Address / 16777216))};
+            IPEndPoint RemEP = (IPEndPoint)RemoteConnection.RemoteEndPoint;
+            byte[] AddrBytes = RemEP.Address.GetAddressBytes();
+            ToSend = new byte[]{0, Value, (byte)(Math.Floor((decimal)RemEP.Port / 256)),
+		                                   (byte)(((IPEndPoint)RemEP).Port % 256),
+		                                   (byte) AddrBytes[0],
+		                                   (byte) AddrBytes[1],
+		                                   (byte) AddrBytes[2],
+		                                   (byte) AddrBytes[3]};
 		} catch {
 			ToSend = new byte[]{0, 91, 0, 0, 0, 0, 0, 0};
 		}
