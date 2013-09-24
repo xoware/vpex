@@ -187,7 +187,7 @@ public abstract class Listener : IDisposable{
 	///<remarks>If this computer does not have any configured IP address, this method returns the IP address 0.0.0.0.</remarks>
 	public static IPAddress GetLocalExternalIP() {
 		try {
-			IPHostEntry he = Dns.Resolve(Dns.GetHostName());
+			IPHostEntry he = Dns.GetHostEntry(Dns.GetHostName());
 			for (int Cnt = 0; Cnt < he.AddressList.Length; Cnt++) {
 				if (IsRemoteIP(he.AddressList[Cnt]))
 					return he.AddressList[Cnt];
@@ -201,8 +201,9 @@ public abstract class Listener : IDisposable{
 	///<param name="IP">The IP address to check.</param>
 	///<returns>True if the specified IP address is a remote address, false otherwise.</returns>
 	protected static bool IsRemoteIP(IPAddress IP) {
-        byte First = (byte)Math.Floor((decimal)IP.Address % 256);
-        byte Second = (byte)Math.Floor((decimal)(IP.Address % 65536) / 256);
+        byte[] AddrBytes = IP.GetAddressBytes();
+        byte First = AddrBytes[0];
+        byte Second = AddrBytes[1];
 		//Not 10.x.x.x And Not 172.16.x.x <-> 172.31.x.x And Not 192.168.x.x
 		//And Not Any And Not Loopback And Not Broadcast
 		return (First != 10) &&
@@ -216,8 +217,9 @@ public abstract class Listener : IDisposable{
 	///<param name="IP">The IP address to check.</param>
 	///<returns>True if the specified IP address is a local address, false otherwise.</returns>
 	protected static bool IsLocalIP(IPAddress IP) {
-        byte First = (byte)Math.Floor((decimal)IP.Address % 256);
-        byte Second = (byte)Math.Floor((decimal)(IP.Address % 65536) / 256);
+        byte[] AddrBytes = IP.GetAddressBytes();
+        byte First = AddrBytes[0];
+        byte Second = AddrBytes[1];
 		//10.x.x.x Or 172.16.x.x <-> 172.31.x.x Or 192.168.x.x
 		return (First == 10) ||
 			(First == 172 && (Second >= 16 && Second <= 31)) ||
@@ -228,7 +230,7 @@ public abstract class Listener : IDisposable{
 	///<remarks>If this computer does not have any configured IP address, this method returns the IP address 0.0.0.0.</remarks>
 	public static IPAddress GetLocalInternalIP() {
 		try {
-			IPHostEntry he = Dns.Resolve(Dns.GetHostName());
+			IPHostEntry he = Dns.GetHostEntry(Dns.GetHostName());
 			for (int Cnt = 0; Cnt < he.AddressList.Length; Cnt++) {
 				if (IsLocalIP(he.AddressList[Cnt]))
 					return he.AddressList[Cnt];
