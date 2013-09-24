@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocksServerLib", "SocksServerLib\SocksServerLib.csproj", "{FD3B4260-995C-4115-9A29-7DBDFED2803A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocksTest", "SocksServerTest\SocksTest.csproj", "{058D6729-4334-43C7-8C2E-680061989C98}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD3B4260-995C-4115-9A29-7DBDFED2803A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD3B4260-995C-4115-9A29-7DBDFED2803A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD3B4260-995C-4115-9A29-7DBDFED2803A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD3B4260-995C-4115-9A29-7DBDFED2803A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{058D6729-4334-43C7-8C2E-680061989C98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{058D6729-4334-43C7-8C2E-680061989C98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{058D6729-4334-43C7-8C2E-680061989C98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{058D6729-4334-43C7-8C2E-680061989C98}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
