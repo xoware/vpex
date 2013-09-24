@@ -305,9 +305,12 @@ internal sealed class Socks5Handler : SocksHandler {
             IPAddress RemoteIP = null;
             int RemotePort = 0;
             byte[] Reply = new byte[10];
-            long LocalIP = Listener.GetLocalExternalIP().Address;
-            IPEndPoint ep = Connection.RemoteEndPoint as IPEndPoint;
-            Debug.WriteLine("ProcessQuery Connection From " + Connection.RemoteEndPoint.ToString() + " " + ep.Port);
+  //          long LocalIP = Listener.GetLocalExternalIP().Address;
+            IPEndPoint RemoteEP = Connection.RemoteEndPoint as IPEndPoint;
+            IPEndPoint LocalEP = Connection.LocalEndPoint as IPEndPoint;
+            byte[] LocalAddrBytes = LocalEP.Address.GetAddressBytes();
+            Debug.WriteLine("ProcessQuery Connection From " + RemoteEP.ToString() + " " + RemoteEP.Port//
+                + " On " + LocalEP.ToString());
 
 			switch(Query[1]) {
 				case 1: //CONNECT
@@ -332,12 +335,13 @@ internal sealed class Socks5Handler : SocksHandler {
 					Reply[1] = 0;  //Everything is ok :)
 					Reply[2] = 0;  //Reserved
 					Reply[3] = 1;  //We're going to send a IPv4 address
-					Reply[4] = (byte)(Math.Floor((decimal)(LocalIP % 256)));  //IP Address/1
-					Reply[5] = (byte)(Math.Floor((decimal)(LocalIP % 65536) / 256));  //IP Address/2
-					Reply[6] = (byte)(Math.Floor((decimal)(LocalIP % 16777216) / 65536));  //IP Address/3
-					Reply[7] = (byte)(Math.Floor((decimal)LocalIP / 16777216));  //IP Address/4
-					Reply[8] = (byte)(Math.Floor((decimal)((IPEndPoint)AcceptSocket.LocalEndPoint).Port / 256));  //Port/1
-					Reply[9] = (byte)(((IPEndPoint)AcceptSocket.LocalEndPoint).Port % 256);  //Port/2
+                    Reply[4] = LocalAddrBytes[0];  //IP Address/1
+					Reply[5] = LocalAddrBytes[1];  //IP Address/2
+					Reply[6] = LocalAddrBytes[2];  //IP Address/3
+					Reply[7] = LocalAddrBytes[3];  //IP Address/4
+					Reply[8] = (byte) ((((IPEndPoint)AcceptSocket.LocalEndPoint).Port >> 8) & 0xFF);  //Port/1
+					Reply[9] = (byte) (((IPEndPoint)AcceptSocket.LocalEndPoint).Port & 0xFF);  //Port/2
+
                     Connection.BeginSend(Reply, 0, Reply.Length, SocketFlags.None, new AsyncCallback(this.OnStartAccept), Connection);
 					break;
 				case 3: //ASSOCIATE
@@ -358,22 +362,22 @@ internal sealed class Socks5Handler : SocksHandler {
                     RemoteConnection = new Socket(RemoteIP.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                     RemoteConnection.Bind(new IPEndPoint(IPAddress.Any, 0));
 
-
                     // Fixme  Put this only on listening interface IP
                     AcceptSocket = new Socket(IPAddress.Any.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-					AcceptSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
-			//		AcceptSocket.Listen(50);
+
+                    // Bind to the same interface address that we recieved the incomming TCP socks connection
+                    AcceptSocket.Bind(new IPEndPoint(LocalEP.Address, 0));
+
 					Reply[0] = 5;  //Version 5
-					Reply[1] = 0;  //Everything is ok :)
+					Reply[1] = 0;  //reserved
 					Reply[2] = 0;  //Reserved
 					Reply[3] = 1;  //We're going to send a IPv4 address
-					Reply[4] = (byte)(Math.Floor((decimal)(LocalIP % 256)));  //IP Address/1
-					Reply[5] = (byte)(Math.Floor((decimal)(LocalIP % 65536) / 256));  //IP Address/2
-					Reply[6] = (byte)(Math.Floor((decimal)(LocalIP % 16777216) / 65536));  //IP Address/3
-					Reply[7] = (byte)(Math.Floor((decimal)LocalIP / 16777216));  //IP Address/4
-					Reply[8] = (byte)(Math.Floor((decimal)((IPEndPoint)AcceptSocket.LocalEndPoint).Port / 256));  //Port/1
-					Reply[9] = (byte)(((IPEndPoint)AcceptSocket.LocalEndPoint).Port % 256);  //Port/2
-
+                    Reply[4] = LocalAddrBytes[0];  //IP Address/1
+					Reply[5] = LocalAddrBytes[1];  //IP Address/2
+					Reply[6] = LocalAddrBytes[2];  //IP Address/3
+					Reply[7] = LocalAddrBytes[3];  //IP Address/4
+					Reply[8] = (byte) ((((IPEndPoint)AcceptSocket.LocalEndPoint).Port >> 8) & 0xFF);  //Port/1
+					Reply[9] = (byte) (((IPEndPoint)AcceptSocket.LocalEndPoint).Port & 0xFF);  //Port/2
                     
                     Connection.BeginSend(Reply, 0, Reply.Length, SocketFlags.None, new AsyncCallback(this.OnStartRecv), Connection);
                     System.Diagnostics.Debug.WriteLine("UDP Associate finished");
