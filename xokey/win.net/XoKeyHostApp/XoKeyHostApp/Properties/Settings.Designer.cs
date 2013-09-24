@@ -34,5 +34,17 @@ namespace XoKeyHostApp.Properties {
                 this["Debug"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("7777")]
+        public int Socks_Port {
+            get {
+                return ((int)(this["Socks_Port"]));
+            }
+            set {
+                this["Socks_Port"] = value;
+            }
+        }
     }
 }

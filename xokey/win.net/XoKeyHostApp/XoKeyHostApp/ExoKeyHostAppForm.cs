@@ -4,15 +4,24 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.IO;
 using System.Text;
+using System.Net;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
 using Microsoft.Win32;
+
 
 
 namespace XoKeyHostApp
 {
     public partial class ExoKeyHostAppForm : Form
     {
+        private string Session_Cookie = "";
+        private IPAddress XoKey_IP = IPAddress.Parse("192.168.255.1");
+        BackgroundWorker bw = null;
+        Xoware.SocksServerLib.SocksListener Socks_Listener = null;
 
         public ExoKeyHostAppForm()
         {
@@ -34,6 +43,13 @@ namespace XoKeyHostApp
                 new GenericDelegate<String, String, Boolean>(this.WindowsInterop_ConnectToDialogWillBeShown);
            // System.Drawing.Icon ico = Properties.Resources.
            // this.Icon = ico;
+
+            ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
+        }
+
+        public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors)
+        {   // Accept all SSL certs
+            return true;
         }
         private void check_registry()
         {
@@ -211,6 +227,7 @@ namespace XoKeyHostApp
         private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
         {
             Location_textBox.Text = webBrowser1.Url.ToString();
+            __Log_Msg(0, LogMsg.Priority.Debug, "Navigated:" + webBrowser1.Url.ToString());
         }
 
         private void Navigate()
@@ -248,15 +265,124 @@ namespace XoKeyHostApp
         private void webBrowser1_ProgressChanged(object sender, WebBrowserProgressChangedEventArgs e)
         {
             System.Text.StringBuilder messageBoxCS = new System.Text.StringBuilder();
+            /*
             messageBoxCS.AppendFormat("{0} = {1} ", "CurrentProgress", e.CurrentProgress);
             messageBoxCS.AppendLine();
             messageBoxCS.AppendFormat(" {0} = {1}", "MaximumProgress", e.MaximumProgress);
             messageBoxCS.AppendLine();
             __Log_Msg(0, LogMsg.Priority.Debug, "ProgressChanged Event"+ messageBoxCS.ToString());
+             */
+            if (e.MaximumProgress > 0)
+                toolStripProgressBar1.Value = (int)Math.Round((double)(e.CurrentProgress / e.MaximumProgress) * 100);
+            else
+                toolStripProgressBar1.Value = 100;
         }
 
+        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser1_DocumentCompleted" + e.Url.ToString());
+            if (webBrowser1.Document.Cookie != null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Debug, "Cookie: " + webBrowser1.Document.Cookie.ToString());
+                Session_Cookie = webBrowser1.Document.Cookie;
+                if (bw == null)
+                {
+                    bw = new BackgroundWorker();
+                    bw.DoWork += Background_Init_Socks;
+                    bw.RunWorkerAsync();
+                }
+            }
+        }
 
+        private void Ping_For_Client_IP()
+        {
+            WebRequest wr = WebRequest.Create("https://"+ XoKey_IP.ToString() + "/api/Ping");
+            wr.Method = "GET";
+            WebResponse response = wr.GetResponse();
+            __Log_Msg(0, LogMsg.Priority.Debug, "Ping_For_Client_IP: status=" + ((HttpWebResponse)response).StatusDescription);
 
+            // Get the stream containing content returned by the server.
+            Stream dataStream = response.GetResponseStream();
+            // Open the stream using a StreamReader for easy access.
+//            StreamReader reader = new StreamReader(dataStream);
+            // Read the content.
+  //          string responseFromServer = reader.ReadToEnd();
+  //          __Log_Msg(0, LogMsg.Priority.Debug, "Ping_For_Client_IP: responseFromServer=" + responseFromServer);
+
+            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.PingResponse));
+            object objResp = jsonSerializer.ReadObject(dataStream);
+            XoKeyApi.PingResponse ping_response = objResp as XoKeyApi.PingResponse;
+
+            if (ping_response != null && ping_response.client_ip.Length > 4)
+            {
+                XoKey_IP = IPAddress.Parse(ping_response.client_ip);
+            }
+      //      reader.Close(); // cleanup
+            response.Close(); // cleanup;
+        }
+
+        private bool CheckAvailableServerPort(int port)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "Checking Port: " + port);
+            bool isAvailable = true;
+
+            // Evaluate current system tcp connections. This is the same information provided
+            // by the netstat command line application, just in .Net strongly-typed object
+            // form.  We will look through the list, and if our port we would like to use
+            // in our TcpClient is occupied, we will set isAvailable to false.
+            System.Net.NetworkInformation.IPGlobalProperties ipGlobalProperties = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpListeners();
+
+            foreach (IPEndPoint endpoint in tcpConnInfoArray)
+            {
+                if (endpoint.Port == port)
+                {
+                    isAvailable = false;
+                    break;
+                }
+            }
+
+            __Log_Msg(0, LogMsg.Priority.Debug, "Port " + port + " available = " + isAvailable);
+            return isAvailable;
+        }
+        private void Background_Init_Socks(object sender, DoWorkEventArgs e)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "Starting BackgroundWorker");
+            Ping_For_Client_IP();
+            if (XoKey_IP == IPAddress.Any)
+            {
+                __Log_Msg(1, LogMsg.Priority.Error, "IP address not detected");
+            }
+            else
+            {
+                
+            }
+
+            try
+            {
+                if (Socks_Listener == null)
+                {
+                    int port = Properties.Settings.Default.Socks_Port;
+                    if (CheckAvailableServerPort(port))
+                    {
+                        //Socks_Listener = new Xoware.SocksServerLib.SocksListener(XoKey_IP, port);
+                        Socks_Listener = new Xoware.SocksServerLib.SocksListener(port);
+                        Socks_Listener.Start();
+
+                    }
+                    else
+                    {
+                        __Log_Msg(1, LogMsg.Priority.Error, "Port " + port + " NOT AVAILABLE");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                __Log_Msg(1, LogMsg.Priority.Error, "Unable to start SOCKS server on Port " + port + " Addr:" + XoKey_IP.ToString());
+            }
+               
+            
+        }
    
     }
 }

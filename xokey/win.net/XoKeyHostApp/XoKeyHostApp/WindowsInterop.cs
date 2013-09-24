@@ -111,8 +111,10 @@ namespace XoKeyHostApp
                     HookType.WH_CALLWNDPROCRET,
                         WindowsInterop._WH_CALLWNDPROCRET_PROC,
                             IntPtr.Zero,
-                                (uint)AppDomain.GetCurrentThreadId());
+                          //   (uint) System.Threading.Thread.CurrentThread.ManagedThreadId); // doesn't work
+                               (uint)AppDomain.GetCurrentThreadId());
 
+                
                 // NB: Visual Studio will likely be upset about 
                 // the use of the Obsolete 'GetCurrentThreadId()' function
                 // however, unless the app is running on fibres 
