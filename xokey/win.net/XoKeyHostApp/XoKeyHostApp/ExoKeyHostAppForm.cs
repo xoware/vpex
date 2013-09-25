@@ -439,6 +439,13 @@ namespace XoKeyHostApp
                
             
         }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutBox1 box = new AboutBox1();
+
+            box.ShowDialog();
+        }
    
     }
 }

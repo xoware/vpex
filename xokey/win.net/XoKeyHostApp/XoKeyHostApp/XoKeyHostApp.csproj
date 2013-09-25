@@ -72,6 +72,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AboutBox1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutBox1.Designer.cs">
+      <DependentUpon>AboutBox1.cs</DependentUpon>
+    </Compile>
     <Compile Include="ExoKeyHostAppForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +91,10 @@
     <Compile Include="SharedDelegates.cs" />
     <Compile Include="StringConstants.cs" />
     <Compile Include="WindowsInterop.cs" />
+    <Compile Include="XoKey.cs" />
+    <EmbeddedResource Include="AboutBox1.resx">
+      <DependentUpon>AboutBox1.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ExoKeyHostAppForm.resx">
       <DependentUpon>ExoKeyHostAppForm.cs</DependentUpon>
     </EmbeddedResource>
