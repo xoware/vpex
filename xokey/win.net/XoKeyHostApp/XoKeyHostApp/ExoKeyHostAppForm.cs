@@ -20,6 +20,7 @@ namespace XoKeyHostApp
     {
         private string Session_Cookie = "";
         private IPAddress XoKey_IP = IPAddress.Parse("192.168.255.1");
+        private IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
         BackgroundWorker bw = null;
         Xoware.SocksServerLib.SocksListener Socks_Listener = null;
 
@@ -277,7 +278,22 @@ namespace XoKeyHostApp
             else
                 toolStripProgressBar1.Value = 100;
         }
+        private Cookie Cookie_Str_To_Cookie(String Cook_Str)
+        {
 
+            string []vals = Cook_Str.Split('=');
+
+            if (vals.Length != 2)
+            {
+                __Log_Msg(0, LogMsg.Priority.Error, "Parsing cookie string" + Cook_Str);
+                return null;
+
+            }
+            Cookie cook = new Cookie(vals[0], vals[1]);
+            cook.Domain = XoKey_IP.ToString();
+            cook.Path = "/";
+            return cook;
+        }
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser1_DocumentCompleted" + e.Url.ToString());
@@ -315,13 +331,53 @@ namespace XoKeyHostApp
 
             if (ping_response != null && ping_response.client_ip.Length > 4)
             {
-                XoKey_IP = IPAddress.Parse(ping_response.client_ip);
+                Client_USB_IP = IPAddress.Parse(ping_response.client_ip);
             }
       //      reader.Close(); // cleanup
             response.Close(); // cleanup;
         }
+        private void Set_XoKey_Socks_Server()
+        {
+            try
+            {
+                HttpWebRequest wr = (HttpWebRequest ) WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/SetSocksServer?host="
+                        + Client_USB_IP.ToString() + "&port=" + Properties.Settings.Default.Socks_Port);
+                wr.Method = "GET";
+                wr.CookieContainer = new CookieContainer();
+                Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
+                wr.CookieContainer.Add(cook);
 
-        private bool CheckAvailableServerPort(int port)
+                WebResponse response = wr.GetResponse();
+                __Log_Msg(0, LogMsg.Priority.Debug, "Set_XoKey_Socks_Server: status=" + ((HttpWebResponse)response).StatusDescription);
+
+                // Get the stream containing content returned by the server.
+                Stream dataStream = response.GetResponseStream();
+
+                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.RespMsg));
+                object objResp = jsonSerializer.ReadObject(dataStream);
+                XoKeyApi.RespMsg resp_msg = objResp as XoKeyApi.RespMsg;
+
+                if (resp_msg.ack.status != 0)
+                {
+                    __Log_Msg(1, LogMsg.Priority.Error, "Set_XoKey_Socks_Server: Error setting SOCKS proxy");
+                }
+                else
+                {
+                    __Log_Msg(1, LogMsg.Priority.Debug, "Set_XoKey_Socks_Server: Set SOCKS proxy OK");
+                }
+
+
+                response.Close(); // cleanup;
+            }
+            catch (Exception ex)
+            {
+                __Log_Msg(1, LogMsg.Priority.Error, "Set_XoKey_Socks_Server: Exception setting SOCKS proxy " + ex.Message.ToString());
+                throw;
+            }
+        }
+      
+
+        private bool Check_Available_Server_Port(int port)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "Checking Port: " + port);
             bool isAvailable = true;
@@ -363,12 +419,12 @@ namespace XoKeyHostApp
                 if (Socks_Listener == null)
                 {
                     int port = Properties.Settings.Default.Socks_Port;
-                    if (CheckAvailableServerPort(port))
+                    if (Check_Available_Server_Port(port))
                     {
                         //Socks_Listener = new Xoware.SocksServerLib.SocksListener(XoKey_IP, port);
                         Socks_Listener = new Xoware.SocksServerLib.SocksListener(port);
                         Socks_Listener.Start();
-
+                        Set_XoKey_Socks_Server();
                     }
                     else
                     {
@@ -378,7 +434,7 @@ namespace XoKeyHostApp
             }
             catch (Exception ex)
             {
-                __Log_Msg(1, LogMsg.Priority.Error, "Unable to start SOCKS server on Port " + port + " Addr:" + XoKey_IP.ToString());
+                __Log_Msg(1, LogMsg.Priority.Error, "Unable to start SOCKS server on Port " + Properties.Settings.Default.Socks_Port + " Addr:" + XoKey_IP.ToString());
             }
                
             

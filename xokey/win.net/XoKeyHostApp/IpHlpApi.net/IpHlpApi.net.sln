@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IpHlpApi.net", "IpHlpApi.net.csproj", "{29BF8A5E-6326-4D76-AAF1-9362FA03EC45}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{29BF8A5E-6326-4D76-AAF1-9362FA03EC45}.Debug.ActiveCfg = Debug|.NET
+		{29BF8A5E-6326-4D76-AAF1-9362FA03EC45}.Debug.Build.0 = Debug|.NET
+		{29BF8A5E-6326-4D76-AAF1-9362FA03EC45}.Release.ActiveCfg = Release|.NET
+		{29BF8A5E-6326-4D76-AAF1-9362FA03EC45}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
