@@ -19,7 +19,8 @@ internal class Socks5Handler : SocksHandler {
 	///<param name="AuthList">The authentication list to use when clients connect.</param>
 	///<exception cref="ArgumentNullException"><c>Callback</c> is null.</exception>
 	///<remarks>If the AuthList parameter is null, no authentication will be required when a client connects to the proxy server.</remarks>
-	public Socks5Handler(Socket ClientConnection, NegotiationCompleteDelegate Callback, AuthenticationList AuthList) : base(ClientConnection, Callback) {
+    public Socks5Handler(Socket ClientConnection, NegotiationCompleteDelegate Signaler, AuthenticationList AuthList) : base(ClientConnection, Signaler)
+    {
 		this.AuthList = AuthList;
 	}
 	///<summary>Initializes a new instance of the Socks5Handler class.</summary>
@@ -245,32 +246,48 @@ internal class Socks5Handler : SocksHandler {
     }
     private void SetupClientRecv()
     {
-        SocketAsyncEventArgs sockClientEventArg = new SocketAsyncEventArgs();
-        byte[] udpRecvBuffer = new byte[1024 * 10]; // 10K buffer incase of jumbo packet
-        sockClientEventArg.SetBuffer(udpRecvBuffer, 0, udpRecvBuffer.Length);
-        sockClientEventArg.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // TODO can this be more secure if we know IP?
-        sockClientEventArg.Completed += OnClientRecv;
-        if (!AcceptSocket.ReceiveMessageFromAsync(sockClientEventArg))
+        try
         {
-            Debug.WriteLine("!ReceiveMessageFromAsync client");
-            OnClientRecv(null, sockClientEventArg);
+            SocketAsyncEventArgs sockClientEventArg = new SocketAsyncEventArgs();
+            byte[] udpRecvBuffer = new byte[1024 * 10]; // 10K buffer incase of jumbo packet
+            sockClientEventArg.SetBuffer(udpRecvBuffer, 0, udpRecvBuffer.Length);
+            sockClientEventArg.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // TODO can this be more secure if we know IP?
+            sockClientEventArg.Completed += OnClientRecv;
+            if (!AcceptSocket.ReceiveMessageFromAsync(sockClientEventArg))
+            {
+                Debug.WriteLine("!ReceiveMessageFromAsync client");
+                OnClientRecv(null, sockClientEventArg);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Note, this happens when we were disposed of. when TCP controlling connection was closed
+            Debug.WriteLine("SetupClientRecv Ex:" + ex.Message);
         }
     }
 
     private void SetupServerRecv()
     {
-        SocketAsyncEventArgs sockServerEventArg = new SocketAsyncEventArgs();
-
-        byte[] udpServerRecvBuffer = new byte[1024 * 10]; // 10K buffer incase of jumbo packet
-        
-        // set buffer with 10 byte header space for encapsulation
-        sockServerEventArg.SetBuffer(udpServerRecvBuffer, 10, udpServerRecvBuffer.Length-10);
-        sockServerEventArg.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // TODO can this be more secure if we know IP?
-        sockServerEventArg.Completed += OnServerRecv;
-        if (!RemoteConnection.ReceiveMessageFromAsync(sockServerEventArg))
+        try
         {
-            Debug.WriteLine("!ReceiveMessageFromAsync server");
-            OnServerRecv(null, sockServerEventArg);
+            SocketAsyncEventArgs sockServerEventArg = new SocketAsyncEventArgs();
+
+            byte[] udpServerRecvBuffer = new byte[1024 * 10]; // 10K buffer incase of jumbo packet
+
+            // set buffer with 10 byte header space for encapsulation
+            sockServerEventArg.SetBuffer(udpServerRecvBuffer, 10, udpServerRecvBuffer.Length - 10);
+            sockServerEventArg.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // TODO can this be more secure if we know IP?
+            sockServerEventArg.Completed += OnServerRecv;
+            if (!RemoteConnection.ReceiveMessageFromAsync(sockServerEventArg))
+            {
+                Debug.WriteLine("!ReceiveMessageFromAsync server");
+                OnServerRecv(null, sockServerEventArg);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Note, this happens when we were disposed of. when TCP controlling connection was closed
+            Debug.WriteLine("SetupServerRecv Ex:" + ex.Message);
         }
     }
     ///<summary </summary>
@@ -279,6 +296,7 @@ internal class Socks5Handler : SocksHandler {
     {
         try
         {
+          
             if (Connection.EndSend(ar) <= 0)
             {
                 Debug.WriteLine("OnStartRecv EndSend Err");
@@ -291,7 +309,7 @@ internal class Socks5Handler : SocksHandler {
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(ex.ToString());
+            Debug.WriteLine("OnStartRecv:" +ex.ToString());
             Dispose(false);
         }
     }
@@ -381,6 +399,7 @@ internal class Socks5Handler : SocksHandler {
                     
                     Connection.BeginSend(Reply, 0, Reply.Length, SocketFlags.None, new AsyncCallback(this.OnStartRecv), Connection);
                     System.Diagnostics.Debug.WriteLine("UDP Associate finished");
+                    Connection.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnRecvRequest), Connection);
 
                     break;
 				default:

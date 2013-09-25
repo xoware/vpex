@@ -15,11 +15,26 @@ namespace SocksTest
 
             try
             {
-
+                ConsoleKeyInfo key;
                 SocksListener server = new SocksListener(6666);
                 Console.WriteLine("starting");
                 server.Start();
-                Console.WriteLine("done");
+
+                do
+                {
+                    System.Threading.Thread.Sleep(10);
+                    Console.WriteLine("Status (Press Key to sample or Q to quit):");
+                    int Num_Clients = server.GetClientCount();
+                    Console.WriteLine("Check_Socks_Clients Num_Clients=" + Num_Clients);
+
+                    for (int i = 0; i < Num_Clients; i++)
+                    {
+                        Xoware.SocksServerLib.Client client = server.GetClientAt(i);
+                        Console.WriteLine("client i=" + i + " " + client.ToString());
+                    }
+
+                    key = Console.ReadKey();
+                } while (key.KeyChar != 'q' && key.KeyChar != 'Q');
                 Console.ReadLine();
             }
             catch (Exception ex)
