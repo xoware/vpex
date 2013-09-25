@@ -204,20 +204,6 @@ internal class Socks5Handler : SocksHandler {
             }
             byte[] addrBytes = ep.Address.GetAddressBytes();
 
-          //  byte[] socksEncapBuff = new byte[ea.BytesTransferred+10];
-            /*
-            socksEncapBuff[0] = 0; // reserved
-            socksEncapBuff[1] = 0; // reserved
-            socksEncapBuff[2] = 0; // Fragmentation  ToDo  implement this if neeed
-            socksEncapBuff[3] = 1;  // Address type  (1 == IPV4)
-            socksEncapBuff[4] = addrBytes[0];
-            socksEncapBuff[5] = addrBytes[1];
-            socksEncapBuff[6] = addrBytes[2];
-            socksEncapBuff[7] = addrBytes[3];
-            socksEncapBuff[8] = (byte)((ep.Port >> 8) & 0xFF);
-            socksEncapBuff[9] = (byte)(ep.Port & 0xFF);
-                         */
-
             ea.Buffer[0] = 0; // reserved
             ea.Buffer[1] = 0; // reserved
             ea.Buffer[2] = 0; // Fragmentation  ToDo  implement this if neeed
@@ -230,9 +216,6 @@ internal class Socks5Handler : SocksHandler {
             ea.Buffer[9] = (byte)(ep.Port & 0xFF);
 
             Debug.WriteLine("OnServerRecv Send " + (ea.BytesTransferred + 10) + " Bytes To:" + Client_UDP_Port.ToString());
-            // Is there a way to do this with pointers to avoid the copy?
-     //       Array.Copy(ea.Buffer,0, socksEncapBuff, 10, ea.BytesTransferred);     
-     //       AcceptSocket.SendTo(socksEncapBuff, ea.BytesTransferred + 10, SocketFlags.None, Client_UDP_Port);
             AcceptSocket.SendTo(ea.Buffer, ea.BytesTransferred + 10, SocketFlags.None, Client_UDP_Port);
 
             next_packet:
@@ -313,8 +296,6 @@ internal class Socks5Handler : SocksHandler {
             Dispose(false);
         }
     }
-
-
 
 	///<summary>Processes a received query.</summary>
 	///<param name="Query">The query to process.</param>
