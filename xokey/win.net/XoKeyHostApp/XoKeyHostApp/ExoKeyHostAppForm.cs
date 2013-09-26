@@ -300,6 +300,11 @@ namespace XoKeyHostApp
 
             box.ShowDialog();
         }
+
+        private void ExoKeyHostAppForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            xokey.Dispose();
+        }
    
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Threading;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -13,7 +15,7 @@ using System.Windows.Forms;
 
 namespace XoKeyHostApp
 {
-    public class XoKey
+    public class XoKey : IDisposable
     {
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         private readonly Object event_locker = new Object();
@@ -22,6 +24,10 @@ namespace XoKeyHostApp
         private IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
         BackgroundWorker bw = null;
         Xoware.SocksServerLib.SocksListener Socks_Listener = null;
+        System.Timers.Timer Check_State_Timer;
+        IPEndPoint Server_IPEndPoint = null;
+        Boolean Traffic_Routed_To_XoKey = false;
+        Boolean Disposing = false;
 
         public XoKey(Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -29,10 +35,25 @@ namespace XoKeyHostApp
                 Log_Msg_Send_Event += Log_Event_Handler;
 
             Send_Log_Msg("XoKey Startup");
+
+            Check_State_Timer = new System.Timers.Timer(1000);
+            Check_State_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Check_State_Timer_Expired);
+            Check_State_Timer.Start();
+        }
+        public void Dispose()
+        {
+            Disposing = true;
+            Check_State_Timer.Enabled = false;
+            Check_State_Timer.Dispose();
+            if (Traffic_Routed_To_XoKey)
+            {
+                Remove_Routes();
+            }
         }
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
         {
-            System.Diagnostics.Debug.WriteLine("Send_Log_Msg");
+            if (Disposing)
+                return;
             lock (event_locker)
             {
                 if (Log_Msg_Send_Event == null)
@@ -119,6 +140,84 @@ namespace XoKeyHostApp
 
             Send_Log_Msg(0, LogMsg.Priority.Debug, "Port " + port + " available = " + isAvailable);
             return isAvailable;
+        }
+        private void Run_Route_Cmd(String Command)
+        {
+            System.Diagnostics.Process proc;
+            proc = new Process();
+            string Route_Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
+            proc.StartInfo.FileName = Route_Path +"\\route ";
+            proc.StartInfo.Arguments = Command;
+            Send_Log_Msg(proc.StartInfo.FileName + " " + Command);
+            Debug.WriteLine(proc.StartInfo.FileName + " " + Command);
+
+            // Set UseShellExecute to false for redirection.
+            proc.StartInfo.UseShellExecute = false;
+
+            // Redirect the standard output of the sort command.   
+            // This stream is read asynchronously using an event handler.
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.CreateNoWindow = true;
+            //Output = new StringBuilder("");
+
+            // Set our event handler to asynchronously read the sort output.
+            proc.OutputDataReceived += new System.Diagnostics.DataReceivedEventHandler(RouteOutputHandler);
+
+            // Redirect standard input as well.  This stream 
+            // is used synchronously.
+            proc.StartInfo.RedirectStandardInput = true;
+
+            // Start the process.
+            proc.Start();
+
+
+            // Start the asynchronous read of the sort output stream.
+            proc.BeginOutputReadLine();
+            proc.WaitForExit(3210);
+        }
+        private void RouteOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            // Collect the command output. 
+      //      if (!String.IsNullOrEmpty(outLine.Data))
+            {
+               // numOutputLines++;
+
+                // Add the text to the collected output.
+             //   Output.Append(Environment.NewLine +  "[" + numOutputLines.ToString() + "] - " + outLine.Data);
+                Send_Log_Msg("Route Output:" + outLine.Data);
+            }
+        }
+        private void Remove_Routes()
+        {
+
+            Run_Route_Cmd("DELETE " + Server_IPEndPoint.Address.ToString() + " 0.0.0.0");
+            Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+            Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+
+        }
+
+        private void Load_Routes()
+        {
+            if (Server_IPEndPoint == null || Server_IPEndPoint.Address == IPAddress.Any)
+            {
+                Send_Log_Msg("Load_Routes: Invalid Server IP", LogMsg.Priority.Info);
+                return;
+            }
+            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " 0.0.0.0");
+            Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+            Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+
+            Traffic_Routed_To_XoKey = true;
+        }
+        private void Set_Sever_IPEndpoint(IPEndPoint Server)
+        {
+            if (Server == null)
+                return;
+            if (Server_IPEndPoint != null && (Server_IPEndPoint.Equals(Server) || Server_IPEndPoint.Address.Equals(Server.Address)))
+                return;  // do nothing, as already set
+
+            Server_IPEndPoint = Server;
+            Load_Routes();
         }
         private void Background_Init_Socks(object sender, DoWorkEventArgs e)
         {
@@ -211,6 +310,61 @@ namespace XoKeyHostApp
             {
                 Send_Log_Msg(1, LogMsg.Priority.Error, "Set_XoKey_Socks_Server: Exception setting SOCKS proxy " + ex.Message.ToString());
                 throw;
+            }
+        }
+        private void Check_Socks_Clients()
+        {
+            if (Socks_Listener == null)
+                return;
+
+            
+            int Num_Clients = Socks_Listener.GetClientCount();
+         //   Send_Log_Msg("Check_Socks_Clients Num_Clients=" + Num_Clients, LogMsg.Priority.Debug);
+
+            for (int i = 0; i < Num_Clients; i++) {
+                Xoware.SocksServerLib.Client client = Socks_Listener.GetClientAt(i);
+                Xoware.SocksServerLib.SocksClient sc = (Xoware.SocksServerLib.SocksClient)client;
+                IPEndPoint ServerEP = sc.GetSeverRemoteEndpoint();
+                if (ServerEP == null)
+                    continue; // No socks endpoint
+                if (Server_IPEndPoint == null || !Server_IPEndPoint.Equals(ServerEP)
+                    && !Server_IPEndPoint.Address.Equals(ServerEP.Address))
+                {
+                    Send_Log_Msg("client i=" + i + " " + client.ToString()
+                        + " Server: " + sc.GetSeverRemoteEndpoint().ToString()
+                        + " Client " + sc.GetClientRemoteEndpoint().ToString()
+                        , LogMsg.Priority.Debug);
+                    Set_Sever_IPEndpoint(ServerEP);
+                }
+
+                
+          
+            }
+
+           
+
+        }
+        private void Check_State_Timer_Expired(object source, System.Timers.ElapsedEventArgs e)
+        {
+
+
+
+            try
+            {
+                Check_State_Timer.Enabled = false;  // avoid timer overrun
+                // Send_Log_Msg("Check_State_Timer_Expired", LogMsg.Priority.Debug);
+
+                Check_Socks_Clients();
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(1, LogMsg.Priority.Error, "Check_State_Timer_Expired: Exception " + ex.Message.ToString() 
+                    + " : " + ex.StackTrace);
+
+            }
+            finally
+            {
+                Check_State_Timer.Enabled = true;
             }
         }
       
