@@ -99,7 +99,7 @@ internal abstract class SocksHandler {
 	///<summary>Gets or sets the connection with the remote host.</summary>
 	///<value>A Socket representing the connection between the proxy server and the remote host.</value>
 	///<exception cref="ArgumentNullException">The specified value is null.</exception>
-	protected Socket RemoteConnection {
+	public Socket RemoteConnection {
 		get {
 			return m_RemoteConnection;
 		}
@@ -112,7 +112,7 @@ internal abstract class SocksHandler {
 	}
 	///<summary>Gets or sets the socket that is used to accept incoming connections.</summary>
 	///<value>A Socket that is used to accept incoming connections.</value>
-	protected Socket AcceptSocket {
+	public Socket AcceptSocket {
 		get {
 			return m_AcceptSocket;
 		}
@@ -120,6 +120,26 @@ internal abstract class SocksHandler {
 			m_AcceptSocket = value;
 		}
 	}
+    public IPEndPoint RemoteServerEndPoint
+    {
+        get {
+            return m_ServerRemoteEndPoint;
+        }
+        set {
+            m_ServerRemoteEndPoint = value;
+        }
+    }
+    public IPEndPoint RemoteClientEndPoint
+    {
+        get
+        {
+            return m_ClientRemoteEndPoint;
+        }
+        set
+        {
+            m_ClientRemoteEndPoint = value;
+        }
+    }
 	///<summary>Gets or sets the IP address of the requested remote server.</summary>
 	///<value>An IPAddress object specifying the address of the requested remote server.</value>
 	protected IPAddress RemoteBindIP {
@@ -237,6 +257,8 @@ internal abstract class SocksHandler {
 	private IPAddress m_RemoteBindIP;
 	/// <summary>Holds the address of the method to call when the SOCKS negotiation is complete.</summary>
 	private NegotiationCompleteDelegate Signaler;
+    private IPEndPoint m_ServerRemoteEndPoint;
+    private IPEndPoint m_ClientRemoteEndPoint;
 }
 
 }

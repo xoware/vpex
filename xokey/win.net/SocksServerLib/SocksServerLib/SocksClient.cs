@@ -59,6 +59,22 @@ public sealed class SocksClient : Client {
 			m_Handler = value;
 		}
 	}
+    public IPEndPoint GetSeverRemoteEndpoint()
+    {
+        if (Handler == null)
+            return null;
+
+
+        return Handler.RemoteServerEndPoint;
+    }
+    public IPEndPoint GetClientRemoteEndpoint()
+    {
+        if (Handler == null)
+            return null;
+
+        return Handler.RemoteClientEndPoint;
+    }
+
 	///<summary>Gets or sets the SOCKS handler to be used when communicating with the client.</summary>
 	///<value>The SocksHandler to be used when communicating with the client.</value>
 	public bool MustAuthenticate {

@@ -31,11 +31,14 @@ namespace SocksTest
                     {
                         Xoware.SocksServerLib.Client client = server.GetClientAt(i);
                         Console.WriteLine("client i=" + i + " " + client.ToString());
+                        Xoware.SocksServerLib.SocksClient sc = (Xoware.SocksServerLib.SocksClient) client;
+                        Console.WriteLine("client i=" + i + " Server: " + sc.GetSeverRemoteEndpoint().ToString()
+                            + " Client " + sc.GetClientRemoteEndpoint().ToString());
                     }
 
                     key = Console.ReadKey();
                 } while (key.KeyChar != 'q' && key.KeyChar != 'Q');
-                Console.ReadLine();
+            //    Console.ReadLine();
             }
             catch (Exception ex)
             {

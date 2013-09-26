@@ -174,7 +174,7 @@ internal class Socks5Handler : SocksHandler {
                 return;
             }
 
-            Client_UDP_Port = ea.RemoteEndPoint as IPEndPoint;
+            RemoteClientEndPoint = Client_UDP_Port = ea.RemoteEndPoint as IPEndPoint;
 
                            
             IPEndPoint RemoteIpEndPoint = new IPEndPoint(Dest, dport);
@@ -194,7 +194,7 @@ internal class Socks5Handler : SocksHandler {
     {
         try
         {
-            IPEndPoint ep = ea.RemoteEndPoint as IPEndPoint;
+            IPEndPoint ep = ea.RemoteEndPoint as IPEndPoint;  
 
             Debug.WriteLine("OnServerRecv Recieved From Server " + ea.BytesTransferred + " Bytes from: " + ea.RemoteEndPoint.ToString());
 
@@ -215,6 +215,7 @@ internal class Socks5Handler : SocksHandler {
             ea.Buffer[8] = (byte)((ep.Port >> 8) & 0xFF);
             ea.Buffer[9] = (byte)(ep.Port & 0xFF);
 
+            RemoteServerEndPoint = ea.RemoteEndPoint as IPEndPoint;
             Debug.WriteLine("OnServerRecv Send " + (ea.BytesTransferred + 10) + " Bytes To:" + Client_UDP_Port.ToString());
             AcceptSocket.SendTo(ea.Buffer, ea.BytesTransferred + 10, SocketFlags.None, Client_UDP_Port);
 
@@ -380,6 +381,8 @@ internal class Socks5Handler : SocksHandler {
                     
                     Connection.BeginSend(Reply, 0, Reply.Length, SocketFlags.None, new AsyncCallback(this.OnStartRecv), Connection);
                     System.Diagnostics.Debug.WriteLine("UDP Associate finished");
+
+                    // Call this, to recive more from client, just to capture socket closing
                     Connection.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnRecvRequest), Connection);
 
                     break;
