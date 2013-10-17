@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using CefSharp.WinForms;
 
 
 
@@ -21,6 +22,8 @@ namespace XoKeyHostApp
         
 
         XoKey xokey;
+        private readonly WebView web_view;
+
 
         public ExoKeyHostAppForm()
         {
@@ -44,7 +47,12 @@ namespace XoKeyHostApp
            // this.Icon = ico;
 
             ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
+
+            web_view = new WebView("https://github.com/perlun/CefSharp", new CefSharp.BrowserSettings());
+            web_view.Dock = DockStyle.Fill;
+            tabPage1.Controls.Add(web_view);
         }
+
 
         public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors)
         {   // Accept all SSL certs
@@ -58,7 +66,7 @@ namespace XoKeyHostApp
             __Log_Msg(0, LogMsg.Priority.Debug, "FEATURE_BROWSER_EMULATION " + val.ToString());
             var ieVersion = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Internet Explorer").GetValue("Version");
             __Log_Msg(0, LogMsg.Priority.Debug, "ieVersion " + ieVersion.ToString());
-            __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser.version " + webBrowser1.Version.ToString());
+       //     __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser.version " + webBrowser1.Version.ToString());
 
             if (val != IE_Val)
             {
@@ -226,8 +234,8 @@ namespace XoKeyHostApp
         }
         private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
         {
-            Location_textBox.Text = webBrowser1.Url.ToString();
-            __Log_Msg(0, LogMsg.Priority.Debug, "Navigated:" + webBrowser1.Url.ToString());
+       //     Location_textBox.Text = webBrowser1.Url.ToString();
+      //      __Log_Msg(0, LogMsg.Priority.Debug, "Navigated:" + webBrowser1.Url.ToString());
         }
 
         private void Navigate()
@@ -244,12 +252,17 @@ namespace XoKeyHostApp
             __Log_Msg(0, LogMsg.Priority.Debug, "Navigate:" + address);
             try
             {
-                webBrowser1.Navigate(new Uri(address));
+                web_view.Load(address);
+                //webBrowser1.Navigate(new Uri(address));
             }
             catch (System.UriFormatException)
             {
                 __Log_Msg(0, LogMsg.Priority.Error, "URI Format Error");
                 return;
+            }
+            catch (System.Exception ex)
+            {
+                __Log_Msg(1, LogMsg.Priority.Error, ex.Message);
             }
         }
         private void Go_button_Click(object sender, EventArgs e)
@@ -277,7 +290,7 @@ namespace XoKeyHostApp
             else
                 toolStripProgressBar1.Value = 100;
         }
-        
+        /*
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "webBrowser1_DocumentCompleted" + e.Url.ToString());
@@ -288,7 +301,7 @@ namespace XoKeyHostApp
   
             }
         }
-
+        */
     
 
         

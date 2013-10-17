@@ -177,8 +177,9 @@ namespace XoKeyHostApp
         }
         private void RouteOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
-            // Collect the command output. 
-      //      if (!String.IsNullOrEmpty(outLine.Data))
+            // Collect the command output.
+            
+            if (!String.IsNullOrEmpty(outLine.Data))
             {
                // numOutputLines++;
 
