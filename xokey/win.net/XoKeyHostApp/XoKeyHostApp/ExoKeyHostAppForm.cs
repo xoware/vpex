@@ -31,7 +31,7 @@ namespace XoKeyHostApp
           //  Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION", "WindowsFormsApplication1.exe", value);
             //Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",  "WindowsFormsApplication1.vshost.exe", value);
 
-            // set browser emulation to IE9 http://msdn.microsoft.com/en-us/library/ee330730(v=vs.85).aspx
+            
             
          //   Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",    System.AppDomain.CurrentDomain.FriendlyName, 10000);
 
@@ -48,9 +48,15 @@ namespace XoKeyHostApp
 
             ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
 
-            web_view = new WebView("https://github.com/perlun/CefSharp", new CefSharp.BrowserSettings());
+            web_view = new WebView(Location_textBox.Text, new CefSharp.BrowserSettings());
             web_view.Dock = DockStyle.Fill;
             tabPage1.Controls.Add(web_view);
+            web_view.ConsoleMessage += web_view_ConsoleMessage;
+        }
+
+        void web_view_ConsoleMessage(object sender, CefSharp.ConsoleMessageEventArgs e)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "Console: " + e.Message);
         }
 
 
@@ -58,8 +64,11 @@ namespace XoKeyHostApp
         {   // Accept all SSL certs
             return true;
         }
+        /*
         private void check_registry()
-        {
+        { 
+            
+            // set browser emulation to IE10 http://msdn.microsoft.com/en-us/library/ee330730(v=vs.85).aspx
             const int IE_Val = 10000;
             int val = (int) Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",
                         System.AppDomain.CurrentDomain.FriendlyName, 0);
@@ -88,14 +97,15 @@ namespace XoKeyHostApp
             }
  
         }
+         **/
         private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
-            check_registry();
+           // check_registry();
             Set_Debug(Properties.Settings.Default.Debug);
             xokey = new XoKey(Recv_Log_Msg);
-            if (!Properties.Settings.Default.Debug)
-                Navigate();
+         //   if (!Properties.Settings.Default.Debug)
+         //       Navigate();
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
         {
@@ -146,6 +156,7 @@ namespace XoKeyHostApp
             debugToolStripMenuItem.Checked = value;
             Go_button.Visible = value;
             Location_textBox.Visible = value;
+
         }
 
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
@@ -253,7 +264,6 @@ namespace XoKeyHostApp
             try
             {
                 web_view.Load(address);
-                //webBrowser1.Navigate(new Uri(address));
             }
             catch (System.UriFormatException)
             {
@@ -316,7 +326,23 @@ namespace XoKeyHostApp
 
         private void ExoKeyHostAppForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            xokey.Dispose();
+     //       web_view.Dispose();
+            if (xokey != null)
+            {
+                xokey.Dispose();
+                xokey = null;
+            }
+            this.Dispose();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void devToolsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            web_view.ShowDevTools();
         }
    
     }

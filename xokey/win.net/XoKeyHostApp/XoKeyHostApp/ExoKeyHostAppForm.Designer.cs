@@ -52,6 +52,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
+            this.devToolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -83,15 +84,16 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
             this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // exportLogToolStripMenuItem
             // 
             this.exportLogToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveToFileToolStripMenuItem});
             this.exportLogToolStripMenuItem.Name = "exportLogToolStripMenuItem";
-            this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
+            this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
             this.exportLogToolStripMenuItem.Text = "Export Log";
             // 
             // saveToFileToolStripMenuItem
@@ -104,7 +106,8 @@
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.debugToolStripMenuItem});
+            this.debugToolStripMenuItem,
+            this.devToolsToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -112,7 +115,7 @@
             // debugToolStripMenuItem
             // 
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(123, 24);
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
             this.debugToolStripMenuItem.Text = "Debug";
             this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
             // 
@@ -266,6 +269,13 @@
             this.toolStripProgressBar1.Name = "toolStripProgressBar1";
             this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 19);
             // 
+            // devToolsToolStripMenuItem
+            // 
+            this.devToolsToolStripMenuItem.Name = "devToolsToolStripMenuItem";
+            this.devToolsToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
+            this.devToolsToolStripMenuItem.Text = "Dev Tools";
+            this.devToolsToolStripMenuItem.Click += new System.EventHandler(this.devToolsToolStripMenuItem_Click);
+            // 
             // ExoKeyHostAppForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -321,6 +331,7 @@
         private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
+        private System.Windows.Forms.ToolStripMenuItem devToolsToolStripMenuItem;
     }
 }
 
