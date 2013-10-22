@@ -49,14 +49,14 @@ namespace XoKeyHostApp
 
             ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
 
-            web_view = new WebView(Location_textBox.Text, Get_Chrome_Settings());
+            web_view = new WebView("", Get_Chrome_Settings());
             web_view.Dock = DockStyle.Fill;
             tabPage1.Controls.Add(web_view);
             web_view.ConsoleMessage += web_view_ConsoleMessage;
             web_view.LoadCompleted += web_view_LoadCompleted;
             web_view.LocationChanged += web_view_LocationChanged; 
-    
         }
+        
 
         void web_view_LocationChanged(object sender, EventArgs e)
         {
@@ -144,15 +144,19 @@ namespace XoKeyHostApp
  
         }
          **/
+        private void EK_Address_Change_Handler(IPAddress addr)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "EK_Address_Change_Handler ip= "+ addr.ToString());
+            Load_Url("https://" + addr.ToString() + "/ui/login.html");
+        }
         private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
            // check_registry();
             Set_Debug(Properties.Settings.Default.Debug);
-            xokey = new XoKey(Recv_Log_Msg);
-         //   if (!Properties.Settings.Default.Debug)
-         //       Navigate();
-
+            xokey = new XoKey(invoke => Invoke(invoke), Recv_Log_Msg);
+            xokey.EK_IP_Address_Detected += EK_Address_Change_Handler;
+            xokey.Startup();
             Search_For_ExoKey();
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
@@ -268,12 +272,12 @@ namespace XoKeyHostApp
             foreach (var device in collection)            
             {
 
-                Console.WriteLine(device.ToString());
+//                Console.WriteLine(device.ToString());
                 PropertyDataCollection properties = device.Properties;
                 foreach (PropertyData property in properties)
                 {
-                    Console.WriteLine("Name=" + property.Name + " Value = " +
-                        (property.Value == null ? "null" :property.Value.ToString()));
+//                    Console.WriteLine("Name=" + property.Name + " Value = " +
+//                        (property.Value == null ? "null" :property.Value.ToString()));
 
                     if (property.Value != null)
                     {
@@ -366,7 +370,18 @@ namespace XoKeyHostApp
        //     Location_textBox.Text = webBrowser1.Url.ToString();
       //      __Log_Msg(0, LogMsg.Priority.Debug, "Navigated:" + webBrowser1.Url.ToString());
         }
-
+        public void Load_Url(string address)
+        {
+            try
+            {
+                web_view.Load(address);
+            }
+            catch (System.UriFormatException)
+            {
+                __Log_Msg(0, LogMsg.Priority.Error, "URI Format Error");
+                return;
+            }
+        }
         private void Navigate()
         {
             String address = Location_textBox.Text;

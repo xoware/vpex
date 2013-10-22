@@ -18,28 +18,45 @@ using System.Runtime.InteropServices;
 
 namespace XoKeyHostApp
 {
+    public delegate void EK_IP_Address_Detected_Handler(IPAddress ip);
+
     public class XoKey : IDisposable
     {
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
+        public event EK_IP_Address_Detected_Handler EK_IP_Address_Detected = null;
         private readonly Object event_locker = new Object();
         private string Session_Cookie = "";
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
-        BackgroundWorker bw = null;
+
         Xoware.SocksServerLib.SocksListener Socks_Listener = null;
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
         private volatile Boolean Disposing = false;
         UdpClient Mcast_UDP_Client = null;
+        private BackgroundWorker bw = new BackgroundWorker();
+        private readonly Action<Action> gui_invoke;
 
-        public XoKey(Log_Msg_Handler Log_Event_Handler = null)
+        public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
             if (Log_Event_Handler != null)
                 Log_Msg_Send_Event += Log_Event_Handler;
 
             Send_Log_Msg("XoKey Startup");
+            this.gui_invoke = gui_invoke;
 
+ 
+        }
+        public void Startup()
+        {
+            bw.DoWork += new DoWorkEventHandler(startup_DoWork);
+            bw.RunWorkerAsync();
+        }
+        private void startup_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+       //   Send_Log_Msg("Worker Startup");
             Check_State_Timer = new System.Timers.Timer(1000);
             Check_State_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Check_State_Timer_Expired);
             Check_State_Timer.Start();
@@ -98,6 +115,11 @@ namespace XoKeyHostApp
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected" + New_IP.ToString());
                 XoKey_IP = New_IP;
+
+                Open_Firewall();
+
+                if (EK_IP_Address_Detected != null)
+                    EK_IP_Address_Detected(XoKey_IP);
             }
             SetupClientRecv();
         }
@@ -178,7 +200,6 @@ namespace XoKeyHostApp
 
         public void Stop()
         {
-          
 
             Log_Msg_Send_Event = null;
 
@@ -249,6 +270,45 @@ namespace XoKeyHostApp
             Send_Log_Msg(0, LogMsg.Priority.Debug, "Port " + port + " available = " + isAvailable);
             return isAvailable;
         }
+        private void Run_NetSh_Cmd(String Command)
+        {
+            System.Diagnostics.Process proc;
+            proc = new Process();
+            string NetSh_Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
+            proc.StartInfo.FileName = NetSh_Path + "\\netsh ";
+            proc.StartInfo.Arguments = Command;
+            Send_Log_Msg(proc.StartInfo.FileName + " " + Command);
+            Debug.WriteLine(proc.StartInfo.FileName + " " + Command);
+
+            // Set UseShellExecute to false for redirection.
+            proc.StartInfo.UseShellExecute = false;
+
+            // Redirect the standard output of the sort command.   
+            // This stream is read asynchronously using an event handler.
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.CreateNoWindow = true;
+            //Output = new StringBuilder("");
+
+            // Set our event handler to asynchronously read the sort output.
+            proc.OutputDataReceived += new System.Diagnostics.DataReceivedEventHandler(NetShOutputHandler);
+
+            // Redirect standard input as well.  This stream 
+            // is used synchronously.
+            proc.StartInfo.RedirectStandardInput = true;
+
+            // Start the process.
+            proc.Start();
+
+
+            // Start the asynchronous read of the sort output stream.
+            proc.BeginOutputReadLine();
+            proc.WaitForExit(3210);
+        }
+        private void Open_Firewall()
+        {
+            Run_NetSh_Cmd("advfirewall firewall add rule name=\"ExoKeyHost\" dir=in action=allow program=\""
+                    + System.AppDomain.CurrentDomain.FriendlyName +"\" enable=yes");
+        }
         private void Run_Route_Cmd(String Command)
         {
             System.Diagnostics.Process proc;
@@ -282,6 +342,19 @@ namespace XoKeyHostApp
             // Start the asynchronous read of the sort output stream.
             proc.BeginOutputReadLine();
             proc.WaitForExit(3210);
+        }
+        private void NetShOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            // Collect the command output.
+
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                // numOutputLines++;
+
+                // Add the text to the collected output.
+                //   Output.Append(Environment.NewLine +  "[" + numOutputLines.ToString() + "] - " + outLine.Data);
+                Send_Log_Msg("NetSh Output:" + outLine.Data);
+            }
         }
         private void RouteOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
