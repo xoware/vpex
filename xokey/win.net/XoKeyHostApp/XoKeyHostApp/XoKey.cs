@@ -12,6 +12,9 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
+
 
 namespace XoKeyHostApp
 {
@@ -20,14 +23,15 @@ namespace XoKeyHostApp
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         private readonly Object event_locker = new Object();
         private string Session_Cookie = "";
-        private IPAddress XoKey_IP = IPAddress.Parse("192.168.255.1");
-        private IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
+        private volatile IPAddress XoKey_IP = IPAddress.Parse("192.168.255.1");
+        private volatile IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
         BackgroundWorker bw = null;
         Xoware.SocksServerLib.SocksListener Socks_Listener = null;
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
-        Boolean Disposing = false;
+        private volatile Boolean Disposing = false;
+        UdpClient Mcast_UDP_Client = null;
 
         public XoKey(Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -39,6 +43,7 @@ namespace XoKeyHostApp
             Check_State_Timer = new System.Timers.Timer(1000);
             Check_State_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Check_State_Timer_Expired);
             Check_State_Timer.Start();
+            StartMultiCastReciever();
         }
         public void Dispose()
         {
@@ -50,6 +55,103 @@ namespace XoKeyHostApp
                 Remove_Routes();
             }
         }
+        private McastHeartBeatData ByteArr2McastHeartBeatData(byte[] bytes)
+        {
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            McastHeartBeatData stuff = (McastHeartBeatData)Marshal.PtrToStructure(
+                handle.AddrOfPinnedObject(), typeof(McastHeartBeatData));
+            handle.Free();
+            return stuff;
+        }
+
+
+        /*
+        protected void OnClientRecv(object sender, SocketAsyncEventArgs ea)
+        {
+            try
+            {
+                McastHeartBeatData hbeat_data;
+                var info = ea.ReceiveMessageFromPacketInfo;
+                Debug.WriteLine("Data recieved from client " + ea.RemoteEndPoint.ToString());
+
+                hbeat_data = ByteArr2McastHeartBeatData(ea.Buffer);
+                ea.Dispose();
+                SetupClientRecv(); // recv next packet
+            }
+            catch (Exception ex)
+            {
+                // Note, this happens when we were disposed of. when TCP controlling connection was closed
+                Debug.WriteLine("OnClientRecv Ex:" + ex.Message);
+            }
+        }
+         * */
+        public void ReceiveCallback(IAsyncResult ar)
+        {
+     //       UdpClient u = (UdpClient)((System.Net.Sockets.UdpClient. UdpState)(ar.AsyncState)).u;
+       //     IPEndPoint e = (IPEndPoint)((UdpState)(ar.AsyncState)).e;
+            IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
+            Byte[] bytes = Mcast_UDP_Client.EndReceive(ar, ref localEp);
+            McastHeartBeatData hbeat_data = ByteArr2McastHeartBeatData(bytes);
+            Console.WriteLine("Received: {0}", bytes);
+            SetupClientRecv();
+        }
+        private void SetupClientRecv()
+        {
+            if (Disposing)
+                return;
+
+            try
+            {
+                /*
+                SocketAsyncEventArgs sockClientEventArg = new SocketAsyncEventArgs();
+                byte[] udpRecvBuffer = new byte[1024 * 10]; // 10K buffer incase of jumbo packet
+                sockClientEventArg.SetBuffer(udpRecvBuffer, 0, udpRecvBuffer.Length);
+                sockClientEventArg.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // TODO can this be more secure if we know IP?
+                sockClientEventArg.Completed += OnClientRecv;
+                if (!Mcast_UDP_Client.ReceiveMessageFromAsync(sockClientEventArg))
+                {
+                    Debug.WriteLine("!ReceiveMessageFromAsync client");
+                    OnClientRecv(null, sockClientEventArg);
+                }*/
+                Mcast_UDP_Client.BeginReceive(new AsyncCallback(ReceiveCallback), Mcast_UDP_Client);
+            }
+            catch (Exception ex)
+            {
+                // Note, this happens when we were disposed of. when TCP controlling connection was closed
+                Debug.WriteLine("SetupClientRecv Ex:" + ex.Message);
+            }
+        }
+        private void StartMultiCastReciever()
+        {
+            try
+            {
+                Mcast_UDP_Client = new UdpClient(1500, AddressFamily.InterNetwork);
+
+                IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
+//                Mcast_UDP_Client.Bind(localEp);
+
+                IPAddress multicastaddress = IPAddress.Parse("239.255.255.255");
+                Mcast_UDP_Client.JoinMulticastGroup(multicastaddress);
+
+                SetupClientRecv();
+         /*
+                while (!Disposing)
+                {
+                    McastHeartBeatData hbeat_data;
+                    Byte[] data = Mcast_UDP_Client.Receive(ref localEp);
+                    Send_Log_Msg(1, LogMsg.Priority.Debug, "Recieved " + data.Length + " Bytes");
+                    hbeat_data = ByteArr2McastHeartBeatData(data);
+                }
+          */
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(1, LogMsg.Priority.Error, "MultiCastReciever ex "
+                    + ex.Message.ToString());
+            }
+
+        }
+
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
         {
             if (Disposing)
