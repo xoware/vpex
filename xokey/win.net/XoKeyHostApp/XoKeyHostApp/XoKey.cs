@@ -23,7 +23,7 @@ namespace XoKeyHostApp
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         private readonly Object event_locker = new Object();
         private string Session_Cookie = "";
-        private volatile IPAddress XoKey_IP = IPAddress.Parse("192.168.255.1");
+        private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
         BackgroundWorker bw = null;
         Xoware.SocksServerLib.SocksListener Socks_Listener = null;
@@ -92,7 +92,13 @@ namespace XoKeyHostApp
             IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
             Byte[] bytes = Mcast_UDP_Client.EndReceive(ar, ref localEp);
             McastHeartBeatData hbeat_data = ByteArr2McastHeartBeatData(bytes);
-            Console.WriteLine("Received: {0}", bytes);
+            IPAddress New_IP = IPAddress.Parse(bytes[8] +"."+ bytes[9] +"."+ bytes[10] + "." + bytes[11]);
+          //  Console.WriteLine("Received: {0}", bytes);
+            if (!New_IP.Equals(XoKey_IP))
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected" + New_IP.ToString());
+                XoKey_IP = New_IP;
+            }
             SetupClientRecv();
         }
         private void SetupClientRecv()

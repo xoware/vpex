@@ -10,6 +10,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using System.Management;
 using Microsoft.Win32;
 using CefSharp.WinForms;
 
@@ -23,7 +24,7 @@ namespace XoKeyHostApp
 
         XoKey xokey;
         private readonly WebView web_view;
-
+        private bool USB_Dev_ID_Found = false;
 
         public ExoKeyHostAppForm()
         {
@@ -48,16 +49,61 @@ namespace XoKeyHostApp
 
             ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
 
-            web_view = new WebView(Location_textBox.Text, new CefSharp.BrowserSettings());
+            web_view = new WebView(Location_textBox.Text, Get_Chrome_Settings());
             web_view.Dock = DockStyle.Fill;
             tabPage1.Controls.Add(web_view);
             web_view.ConsoleMessage += web_view_ConsoleMessage;
+            web_view.LoadCompleted += web_view_LoadCompleted;
+            web_view.LocationChanged += web_view_LocationChanged; 
+    
+        }
+
+        void web_view_LocationChanged(object sender, EventArgs e)
+        {
+            __Log_Msg(0, LogMsg.Priority.Debug, "LocationChanged: " + web_view.Location + "  e:" + e.ToString() );
+        }
+
+        void web_view_LoadCompleted(object sender, CefSharp.LoadCompletedEventArgs url)
+        {
+            if (url.Url.Contains("cef-error"))
+            {
+                __Log_Msg(0, LogMsg.Priority.Debug, "Error loading UI");
+            }
+            __Log_Msg(0, LogMsg.Priority.Debug, "LoadCompleted: " + url.Url);
+            web_view.ExecuteScript("console.log('XOEvent:Cookie:' +document.cookie);");
+            // disable right click
+            web_view.ExecuteScript("window.oncontextmenu = function() { return false; };");
+
+            
+        }
+
+        void Parse_Console_Log_Event(String Event_Msg)
+        {
+            const String Cookie_Marker = "XOEvent:Cookie:";
+
+            if (Event_Msg.IndexOf(Cookie_Marker) == 0)
+            {
+                
+                xokey.Set_Session_Cookie(Event_Msg.Substring(Cookie_Marker.Length));
+            }
         }
 
         void web_view_ConsoleMessage(object sender, CefSharp.ConsoleMessageEventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "Console: " + e.Message);
+            if (e.Message.IndexOf("XOEvent:") != -1)
+            {
+                Parse_Console_Log_Event(e.Message);
+            }
         }
+
+        CefSharp.BrowserSettings Get_Chrome_Settings()
+        {
+            CefSharp.BrowserSettings settings = new CefSharp.BrowserSettings();
+
+            return settings;
+        }
+
 
 
         public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors)
@@ -106,6 +152,8 @@ namespace XoKeyHostApp
             xokey = new XoKey(Recv_Log_Msg);
          //   if (!Properties.Settings.Default.Debug)
          //       Navigate();
+
+            Search_For_ExoKey();
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
         {
@@ -187,6 +235,76 @@ namespace XoKeyHostApp
             //Log_dataGridView.Invoke(new Update_Log_Data_Grid_Callback(Update_Log_Data_Grid) );
 
 
+        }
+        private void Search_For_ExoKey()
+        {
+            Search_USB_Devices();
+            while (!USB_Dev_ID_Found)
+            {
+                DialogResult result = MessageBox.Show("Please Insert ExoKey, wait for startup and click Retry, or abort to exit",
+                    "ExoKey not found on USB port",
+                    MessageBoxButtons.AbortRetryIgnore);
+
+                if (result == System.Windows.Forms.DialogResult.Cancel || result == System.Windows.Forms.DialogResult.Abort)
+                {
+                    this.Close();
+                    break;
+                }
+                if (result == System.Windows.Forms.DialogResult.Ignore)
+                {
+                    break;
+                }
+                 Search_USB_Devices();
+            }
+
+        }
+        private void Search_USB_Devices()
+        {
+
+            ManagementObjectCollection collection;
+            using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBControllerDevice")) // Win32_USBDevice Win32_USBHub
+                collection = searcher.Get();
+
+            foreach (var device in collection)            
+            {
+
+                Console.WriteLine(device.ToString());
+                PropertyDataCollection properties = device.Properties;
+                foreach (PropertyData property in properties)
+                {
+                    Console.WriteLine("Name=" + property.Name + " Value = " +
+                        (property.Value == null ? "null" :property.Value.ToString()));
+
+                    if (property.Value != null)
+                    {
+                        if (property.Value.ToString().Contains("VID_0525&PID_A4A2")) {
+                            System.Diagnostics.Debug.WriteLine("Found: VID_0525&PID_A4A2");
+                            USB_Dev_ID_Found = true;
+                        }
+                    }
+                    /*
+                    foreach (QualifierData q in property.Qualifiers)
+                    {
+    
+                        Console.WriteLine("Name="+  property.Name +" qualifier="+ q.Name.ToString() + " Val=" + q.Value.ToString());
+
+                    }
+                    Console.WriteLine();
+                     **/
+                }
+       
+                /*
+                devices.Add(new USBDeviceInfo(
+                (string)device.GetPropertyValue("DeviceID"),
+                (string)device.GetPropertyValue("PNPDeviceID"),
+                (string)device.GetPropertyValue("Description")
+                ));
+                 * */
+            }
+            collection.Dispose();
+
+     
+         //   return devices;
         }
         private void saveLogExportFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
