@@ -14,6 +14,7 @@ using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Xoware;
 
 
 namespace XoKeyHostApp
@@ -35,8 +36,10 @@ namespace XoKeyHostApp
         Boolean Traffic_Routed_To_XoKey = false;
         private volatile Boolean Disposing = false;
         UdpClient Mcast_UDP_Client = null;
-        private BackgroundWorker bw = new BackgroundWorker();
+        private BackgroundWorker startup_bw = new BackgroundWorker();
+        private BackgroundWorker socks_bw = new BackgroundWorker();
         private readonly Action<Action> gui_invoke;
+        private Xoware.RoutingLib.RoutingTableRow default_route = null;
 
         public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -50,8 +53,8 @@ namespace XoKeyHostApp
         }
         public void Startup()
         {
-            bw.DoWork += new DoWorkEventHandler(startup_DoWork);
-            bw.RunWorkerAsync();
+            startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
+            startup_bw.RunWorkerAsync();
         }
         private void startup_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -119,7 +122,10 @@ namespace XoKeyHostApp
                 Open_Firewall();
 
                 if (EK_IP_Address_Detected != null)
+                {
                     EK_IP_Address_Detected(XoKey_IP);
+                   //Ping_For_Client_IP();
+                }
             }
             SetupClientRecv();
         }
@@ -162,15 +168,7 @@ namespace XoKeyHostApp
                 Mcast_UDP_Client.JoinMulticastGroup(multicastaddress);
 
                 SetupClientRecv();
-         /*
-                while (!Disposing)
-                {
-                    McastHeartBeatData hbeat_data;
-                    Byte[] data = Mcast_UDP_Client.Receive(ref localEp);
-                    Send_Log_Msg(1, LogMsg.Priority.Debug, "Recieved " + data.Length + " Bytes");
-                    hbeat_data = ByteArr2McastHeartBeatData(data);
-                }
-          */
+
             }
             catch (Exception ex)
             {
@@ -369,10 +367,15 @@ namespace XoKeyHostApp
                 Send_Log_Msg("Route Output:" + outLine.Data);
             }
         }
-        private void Remove_Routes()
+        private void Remove_Routes(IPEndPoint Old_Server = null)
         {
+            if (Old_Server == null)
+            {
+                Old_Server = Server_IPEndPoint;
+            }
 
-            Run_Route_Cmd("DELETE " + Server_IPEndPoint.Address.ToString() + " 0.0.0.0");
+
+            Run_Route_Cmd("DELETE " + Old_Server.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
             Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
 
@@ -385,7 +388,10 @@ namespace XoKeyHostApp
                 Send_Log_Msg("Load_Routes: Invalid Server IP", LogMsg.Priority.Info);
                 return;
             }
-            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " 0.0.0.0");
+            default_route = Xoware.RoutingLib.Routing.GetDefaultRoute();
+
+            // Remove_Routes();
+            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
             Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
 
@@ -403,9 +409,9 @@ namespace XoKeyHostApp
         }
         private void Background_Init_Socks(object sender, DoWorkEventArgs e)
         {
-            Send_Log_Msg("Starting BackgroundWorker", LogMsg.Priority.Debug);
-            Ping_For_Client_IP();
-            if (XoKey_IP == IPAddress.Any)
+            Send_Log_Msg("Starting Background_Init_Socks", LogMsg.Priority.Debug);
+           
+            if (XoKey_IP == null &&  XoKey_IP == IPAddress.Any)
             {
                 Send_Log_Msg(1, LogMsg.Priority.Error, "IP address not detected");
             }
@@ -447,18 +453,19 @@ namespace XoKeyHostApp
                 return;
 
             Session_Cookie = Cookie;
-            if (bw == null)
-            {
-                bw = new BackgroundWorker();
-                bw.DoWork += Background_Init_Socks;
-                bw.RunWorkerAsync();
-            }
+
+ 
+            socks_bw.DoWork += Background_Init_Socks;
+            socks_bw.RunWorkerAsync();
+
         }
 
         private void Set_XoKey_Socks_Server()
         {
             try
             {
+                Ping_For_Client_IP();
+
                 HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/SetSocksServer?host="
                         + Client_USB_IP.ToString() + "&port=" + Properties.Settings.Default.Socks_Port);
                 wr.Method = "GET";

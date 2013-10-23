@@ -194,6 +194,10 @@
       <Project>{fd3b4260-995c-4115-9a29-7dbdfed2803a}</Project>
       <Name>SocksServerLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Routing\Routing.csproj">
+      <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
+      <Name>Routing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\XoKeyApi\XoKeyApi.csproj">
       <Project>{e69aadfb-5f5b-4259-acfb-7eeb8677e4f6}</Project>
       <Name>XoKeyApi</Name>
