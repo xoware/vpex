@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace XoKeyHostApp
 {
-    [StructLayout(LayoutKind.Explicit, Size = 56, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Size = 28, Pack = 1)]
     public struct McastHeartBeatData
     {
         [MarshalAs(UnmanagedType.U4)]

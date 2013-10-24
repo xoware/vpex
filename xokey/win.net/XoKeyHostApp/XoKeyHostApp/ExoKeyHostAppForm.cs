@@ -245,6 +245,8 @@ namespace XoKeyHostApp
             Search_USB_Devices();
             while (!USB_Dev_ID_Found)
             {
+                break; // FIXME remove this
+
                 DialogResult result = MessageBox.Show("Please Insert ExoKey, wait for startup and click Retry, or abort to exit",
                     "ExoKey not found on USB port",
                     MessageBoxButtons.AbortRetryIgnore);
