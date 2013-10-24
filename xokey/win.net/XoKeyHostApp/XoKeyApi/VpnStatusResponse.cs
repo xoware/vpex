@@ -8,13 +8,16 @@ using System.Runtime.Serialization.Json;
 
 namespace XoKeyApi
 {
-    public class PingResponse
+    public class VpnStatusResponse
     {
- 
-        [DataMember(Name = "client_ip")]
-        public string client_ip { get; set; }
+
+        [DataMember(Name = "active_vpn")]
+        public VpnKey active_vpn { get; set; }
+
 
         [DataMember(Name = "ack")]
         public MsgAck ack;
+
+
     }
 }

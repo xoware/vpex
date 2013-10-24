@@ -8,12 +8,8 @@ using System.Runtime.Serialization.Json;
 
 namespace XoKeyApi
 {
-    public class PingResponse
+    public class RespMsg
     {
- 
-        [DataMember(Name = "client_ip")]
-        public string client_ip { get; set; }
-
         [DataMember(Name = "ack")]
         public MsgAck ack;
     }
