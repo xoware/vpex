@@ -159,9 +159,9 @@
     <Content Include="libGLESv2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="CefSharp.dll">
+    <None Include="CefSharp.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
     <Content Include="vpex.ico" />
   </ItemGroup>
   <ItemGroup>
