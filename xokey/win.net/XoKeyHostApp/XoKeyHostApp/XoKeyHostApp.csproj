@@ -92,7 +92,6 @@
     <Compile Include="ExoKeyHostAppForm.Designer.cs">
       <DependentUpon>ExoKeyHostAppForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ExoKeyMultiCastRecieiver.cs" />
     <Compile Include="LogMsg.cs" />
     <Compile Include="McastHeartBeatData.cs" />
     <Compile Include="Program.cs" />
