@@ -637,6 +637,8 @@ namespace XoKeyHostApp
 
             try
             {
+                if (Disposing)
+                    return;
                 Check_State_Timer.Enabled = false;  // avoid timer overrun
                 // Send_Log_Msg("Check_State_Timer_Expired", LogMsg.Priority.Debug);
 
@@ -652,7 +654,8 @@ namespace XoKeyHostApp
             }
             finally
             {
-                Check_State_Timer.Enabled = true;
+                if (!Disposing)
+                    Check_State_Timer.Enabled = true;
             }
         }
       
