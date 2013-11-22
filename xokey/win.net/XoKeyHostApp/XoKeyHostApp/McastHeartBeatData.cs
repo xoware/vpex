@@ -25,5 +25,27 @@ namespace XoKeyHostApp
         [MarshalAs(UnmanagedType.U4)]
         [FieldOffset(12)]
         public uint Addr_Prefix;
+
+        [MarshalAs(UnmanagedType.U4)]
+        [FieldOffset(16)]
+        public uint Product_ID;
+
+
+        [MarshalAs(UnmanagedType.U4)]
+        [FieldOffset(20)]
+        public uint unixtime;
+
+        [MarshalAs(UnmanagedType.U8)]
+        [FieldOffset(24)]
+        public UInt64 Rand;
+
+        [MarshalAs(UnmanagedType.U8)]
+        [FieldOffset(32)]
+        public UInt64 Signature0;
+
+        [MarshalAs(UnmanagedType.U8)]
+        [FieldOffset(40)]
+        public UInt64 Signature1;
+
     }
 }
