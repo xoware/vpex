@@ -41,6 +41,7 @@ namespace XoKeyHostApp
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
+        Boolean Firewall_Opened = false;
         private volatile Boolean Disposing = false;
       //  UdpClient Mcast_UDP_Client = null;
         private BackgroundWorker startup_bw = new BackgroundWorker();
@@ -123,7 +124,7 @@ namespace XoKeyHostApp
 
             IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
             Byte[] bytes = udp_client.EndReceive(ar, ref localEp);
-            if (bytes.Length != 16) {
+            if (bytes.Length != 48) {
                 // Invalid packet
                 goto queue_next;
             }
@@ -133,6 +134,11 @@ namespace XoKeyHostApp
             if (hbeat_data.Magic != 0xDEADBEEF)
             {
                 // Invalid packet
+                goto queue_next;
+            }
+
+            if (hbeat_data.Product_ID != 2)
+            {
                 goto queue_next;
             }
 
@@ -392,8 +398,14 @@ namespace XoKeyHostApp
         }
         private void Open_Firewall()
         {
+            if (Firewall_Opened == true)
+                return;
+
+
             Run_NetSh_Cmd("advfirewall firewall add rule name=\"ExoKeyHost\" dir=in action=allow program=\""
                     + System.AppDomain.CurrentDomain.FriendlyName +"\" enable=yes");
+
+            Firewall_Opened = true;
         }
         private void Run_Route_Cmd(String Command)
         {
