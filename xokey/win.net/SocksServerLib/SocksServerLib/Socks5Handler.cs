@@ -12,6 +12,7 @@ namespace Xoware.SocksServerLib {
 internal class Socks5Handler : SocksHandler {
 
     private IPEndPoint Client_UDP_Port;
+    public int Debug_Level = 0;
 
 	///<summary>Initializes a new instance of the Socks5Handler class.</summary>
 	///<param name="ClientConnection">The connection with the client.</param>
@@ -138,7 +139,9 @@ internal class Socks5Handler : SocksHandler {
            // byte[] address = info.Address.GetAddressBytes();
             UInt16 offset = 0;
             UInt16 dport;
-            Debug.WriteLine("Data recieved from client " + ea.RemoteEndPoint.ToString());
+
+            if (this.Debug_Level > 0)
+                Debug.WriteLine("Data recieved from client " + ea.RemoteEndPoint.ToString());
 
             if (ea.BytesTransferred < 10)
             {
@@ -165,7 +168,8 @@ internal class Socks5Handler : SocksHandler {
                 Dest = new IPAddress(IPv4Addr);
                 dport = (UInt16)((ea.Buffer[8] << 8) | (byte)ea.Buffer[9]);
                 offset = 10;
-                Debug.WriteLine("OnClientRecv Dest=" + Dest.ToString() + " Port=" + dport);
+                if (this.Debug_Level > 0)
+                    Debug.WriteLine("OnClientRecv Dest=" + Dest.ToString() + " Port=" + dport);
             }
             else
             {
@@ -194,9 +198,10 @@ internal class Socks5Handler : SocksHandler {
     {
         try
         {
-            IPEndPoint ep = ea.RemoteEndPoint as IPEndPoint;  
+            IPEndPoint ep = ea.RemoteEndPoint as IPEndPoint;
 
-            Debug.WriteLine("OnServerRecv Recieved From Server " + ea.BytesTransferred + " Bytes from: " + ea.RemoteEndPoint.ToString());
+            if (this.Debug_Level > 0)
+                Debug.WriteLine("OnServerRecv Recieved From Server " + ea.BytesTransferred + " Bytes from: " + ea.RemoteEndPoint.ToString());
 
             if (ea.BytesTransferred < 1)
             {
@@ -216,7 +221,8 @@ internal class Socks5Handler : SocksHandler {
             ea.Buffer[9] = (byte)(ep.Port & 0xFF);
 
             RemoteServerEndPoint = ea.RemoteEndPoint as IPEndPoint;
-            Debug.WriteLine("OnServerRecv Send " + (ea.BytesTransferred + 10) + " Bytes To:" + Client_UDP_Port.ToString());
+            if (this.Debug_Level > 0)
+                Debug.WriteLine("OnServerRecv Send " + (ea.BytesTransferred + 10) + " Bytes To:" + Client_UDP_Port.ToString());
             AcceptSocket.SendTo(ea.Buffer, ea.BytesTransferred + 10, SocketFlags.None, Client_UDP_Port);
 
             next_packet:
