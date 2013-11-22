@@ -51,13 +51,10 @@
             this.Location_textBox = new System.Windows.Forms.TextBox();
             this.Go_button = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Log_dataGridView)).BeginInit();
-            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -68,7 +65,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1087, 28);
+            this.menuStrip1.Size = new System.Drawing.Size(1064, 28);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -151,7 +148,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 64);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1087, 576);
+            this.tabControl1.Size = new System.Drawing.Size(1064, 384);
             this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
@@ -159,7 +156,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1079, 547);
+            this.tabPage1.Size = new System.Drawing.Size(1056, 355);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -239,9 +236,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.Location_textBox.Location = new System.Drawing.Point(219, 36);
             this.Location_textBox.Name = "Location_textBox";
-            this.Location_textBox.Size = new System.Drawing.Size(861, 22);
+            this.Location_textBox.Size = new System.Drawing.Size(838, 22);
             this.Location_textBox.TabIndex = 2;
-            this.Location_textBox.Text = "https://192.168.255.1/ui/login.html";
+            this.Location_textBox.Text = "https://192.168.255.1/ek/login.html";
             // 
             // Go_button
             // 
@@ -255,33 +252,20 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1,
-            this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 640);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 451);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1087, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(1064, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
-            // 
-            // toolStripStatusLabel1
-            // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(180, 20);
-            this.toolStripStatusLabel1.Text = "Web_toolStripStatusLabel";
-            // 
-            // toolStripProgressBar1
-            // 
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 19);
             // 
             // ExoKeyHostAppForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(1087, 665);
+            this.ClientSize = new System.Drawing.Size(1064, 473);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.Go_button);
             this.Controls.Add(this.Location_textBox);
@@ -299,8 +283,6 @@
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Log_dataGridView)).EndInit();
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -323,14 +305,12 @@
         private System.Windows.Forms.DataGridView Log_dataGridView;
         private System.Windows.Forms.Button Go_button;
         private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Date_Time_Col;
         private System.Windows.Forms.DataGridViewTextBoxColumn Code_Col;
         private System.Windows.Forms.DataGridViewTextBoxColumn Level_Col;
         private System.Windows.Forms.DataGridViewTextBoxColumn Message_Col;
         private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToFileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripMenuItem devToolsToolStripMenuItem;
     }
 }

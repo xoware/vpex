@@ -100,6 +100,7 @@ namespace XoKeyHostApp
         CefSharp.BrowserSettings Get_Chrome_Settings()
         {
             CefSharp.BrowserSettings settings = new CefSharp.BrowserSettings();
+            settings.WebSecurityDisabled = true;
 
             return settings;
         }
@@ -419,22 +420,23 @@ namespace XoKeyHostApp
         {
 
         }
-
+        /*
         private void webBrowser1_ProgressChanged(object sender, WebBrowserProgressChangedEventArgs e)
         {
             System.Text.StringBuilder messageBoxCS = new System.Text.StringBuilder();
-            /*
+   
             messageBoxCS.AppendFormat("{0} = {1} ", "CurrentProgress", e.CurrentProgress);
             messageBoxCS.AppendLine();
             messageBoxCS.AppendFormat(" {0} = {1}", "MaximumProgress", e.MaximumProgress);
             messageBoxCS.AppendLine();
             __Log_Msg(0, LogMsg.Priority.Debug, "ProgressChanged Event"+ messageBoxCS.ToString());
-             */
+  
             if (e.MaximumProgress > 0)
                 toolStripProgressBar1.Value = (int)Math.Round((double)(e.CurrentProgress / e.MaximumProgress) * 100);
             else
                 toolStripProgressBar1.Value = 100;
         }
+    */
         /*
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
