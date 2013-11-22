@@ -244,7 +244,7 @@ internal abstract class SocksHandler {
 	/// <summary>Holds the value of the Username property.</summary>
 	private string m_Username;
 	/// <summary>Holds the value of the Buffer property.</summary>
-	private byte [] m_Buffer = new byte[1024];
+	private byte [] m_Buffer = new byte[2046];
 	/// <summary>Holds the value of the Bytes property.</summary>
 	private byte [] m_Bytes;
 	/// <summary>Holds the value of the RemoteConnection property.</summary>
