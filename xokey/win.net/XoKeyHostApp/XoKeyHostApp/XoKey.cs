@@ -296,7 +296,8 @@ namespace XoKeyHostApp
             {
                 return;
             }
-
+            if (XoKey_IP == null)
+                return;
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/GetVpnStatus");
             wr.Method = "GET";
