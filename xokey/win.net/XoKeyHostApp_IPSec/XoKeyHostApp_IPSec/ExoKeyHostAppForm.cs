@@ -13,6 +13,8 @@ using System.Windows.Forms;
 using System.Management;
 using Microsoft.Win32;
 using CefSharp.WinForms;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 
 
@@ -25,6 +27,9 @@ namespace XoKeyHostApp
         XoKey xokey;
         private readonly WebView web_view;
         private bool USB_Dev_ID_Found = false;
+        List<NetworkInterface> Interface_List;
+        NetworkInterface Exokey_Interface = null;
+        NetworkInterface Internet_Interface = null;
 
         public ExoKeyHostAppForm()
         {
@@ -150,15 +155,170 @@ namespace XoKeyHostApp
             __Log_Msg(0, LogMsg.Priority.Debug, "EK_Address_Change_Handler ip= "+ addr.ToString());
             Load_Url("https://" + addr.ToString() + "/ui/login.html");
         }
+
+        public static void DisableICS()
+        {
+            var currentShare = IcsManager.GetCurrentlySharedConnections();
+            if (!currentShare.Exists)
+            {
+                Console.WriteLine("Internet Connection Sharing is already disabled");
+                return;
+            }
+            Console.WriteLine("Internet Connection Sharing will be disabled:");
+            Console.WriteLine(currentShare);
+            IcsManager.ShareConnection(null, null);
+        }
+         void EnableICS(string shared, string home, bool force)
+        {
+            var connectionToShare = IcsManager.FindConnectionByIdOrName(shared);
+            if (connectionToShare == null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Error,  "Connection (Internet) not found:" + shared);
+                return;
+            }
+            var homeConnection = IcsManager.FindConnectionByIdOrName(home);
+            if (homeConnection == null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Error,  "Connection (ExoKey) not found: {0}"+ home);
+                return;
+            }
+
+            var currentShare = IcsManager.GetCurrentlySharedConnections();
+            if (currentShare.Exists)
+            {
+                __Log_Msg(0, LogMsg.Priority.Info, "Internet Connection Sharing is already enabled:");
+                Console.WriteLine(currentShare);
+                if (!force)
+                {
+                    __Log_Msg(0, LogMsg.Priority.Info, "Please disable it if you want to configure sharing for other connections");
+                    return;
+                }
+                __Log_Msg(0, LogMsg.Priority.Info, "Sharing will be disabled first.");
+            }
+
+            IcsManager.ShareConnection(connectionToShare, homeConnection);
+        }
+        private void Load_Internet_Interfaces()
+        {
+            try
+            {
+                DisableICS();
+            }
+            catch
+            {
+
+            }
+
+            // Create a UDP client, so we can figure out what interface has a route to the internet. 
+            UdpClient u = new UdpClient("8.8.8.8", 53);
+            IPAddress localAddr = ((IPEndPoint)u.Client.LocalEndPoint).Address; // This bound address is internet facing
+
+
+            NetworkInterface Def_Intf =  NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault();
+            Interface_List = new  List<NetworkInterface>();
+            Intf_comboBox.Items.Clear();
+            Exokey_Interface = null; // init
+            Internet_Interface = null;
+            int i = 0;
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+              
+              //  var connection = IcsManager.GetConnectionById(nic.Id);
+            //    var properties = IcsManager.GetProperties(connection);
+              //  var configuration = IcsManager.GetConfiguration(connection);
+                /*
+                var record = new
+                                 {
+                                     Name = nic.Name,
+                                     GUID = nic.Id,
+                                     MAC = nic.GetPhysicalAddress(),
+                                     Description = nic.Description,
+                                     SharingEnabled = configuration.SharingEnabled,
+                                     NetworkAdapter = nic,
+                                     Configuration = configuration, 
+                                     Properties = properties,
+                                 };
+                 */
+                if (nic.OperationalStatus == OperationalStatus.Down)
+                    continue;
+                if (!nic.Supports(NetworkInterfaceComponent.IPv4))
+                    continue;
+                if (! (nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet
+                        || nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
+                        || nic.NetworkInterfaceType == NetworkInterfaceType.GigabitEthernet))
+                    continue;
+
+
+                IPInterfaceProperties ipProps = nic.GetIPProperties();
+                UnicastIPAddressInformationCollection uniCast = ipProps.UnicastAddresses;
+
+                if (uniCast == null) {
+                    // no address
+                    continue;
+                }
+
+                Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
+                Interface_List.Add(nic);
+
+                if (nic.Description.Contains("XoWare"))
+                {
+                    Exokey_Interface = nic;
+                    __Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description);
+                }
+                foreach (UnicastIPAddressInformation uni in uniCast)
+                {
+                    if (uni.Address.Equals(localAddr))
+                    {
+                        Intf_comboBox.SelectedIndex = i;
+                        Internet_Interface = nic;
+                        __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description);
+                    }
+                }
+
+                i++;
+
+            }
+          
+            
+            Intf_comboBox.Update();
+
+            if (Exokey_Interface == null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found");
+                return;
+            } else if (Internet_Interface == null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found");
+                return;
+            } else if (Internet_Interface.Equals(Exokey_Interface))
+            {
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey Is internet interface.  Invalid configuration.");
+                return;
+            }
+            try
+            {
+                EnableICS(Internet_Interface.Id, Exokey_Interface.Id, true);
+               // Internet_Interface
+              //  IcsManager.ShareConnection(Internet_Interface as NETCONLib.INetConnection, Exokey_Interface as NETCONLib.INetConnection);
+            }
+            catch (Exception ex)
+            {
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exception "+ ex.ToString());
+            }
+        }
+
         private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
         {
+            bool found;
             __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
            // check_registry();
             Set_Debug(Properties.Settings.Default.Debug);
             xokey = new XoKey(invoke => Invoke(invoke), Recv_Log_Msg);
             xokey.EK_IP_Address_Detected += EK_Address_Change_Handler;
             xokey.Startup();
-            Search_For_ExoKey();
+            found = Search_For_ExoKey();
+            if (found)
+                Load_Internet_Interfaces();
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
         {
@@ -241,7 +401,7 @@ namespace XoKeyHostApp
 
 
         }
-        private void Search_For_ExoKey()
+        private bool Search_For_ExoKey()
         {
             Search_USB_Devices();
             while (!USB_Dev_ID_Found)
@@ -255,15 +415,15 @@ namespace XoKeyHostApp
                 if (result == System.Windows.Forms.DialogResult.Cancel || result == System.Windows.Forms.DialogResult.Abort)
                 {
                     this.Close();
-                    break;
+                    return false;
                 }
                 if (result == System.Windows.Forms.DialogResult.Ignore)
                 {
-                    break;
+                    break;             
                 }
                  Search_USB_Devices();
             }
-
+            return true;
         }
         private void Search_USB_Devices()
         {
@@ -279,15 +439,21 @@ namespace XoKeyHostApp
                 PropertyDataCollection properties = device.Properties;
                 foreach (PropertyData property in properties)
                 {
-//                    Console.WriteLine("Name=" + property.Name + " Value = " +
-//                        (property.Value == null ? "null" :property.Value.ToString()));
+                    Console.WriteLine("Name=" + property.Name + " Value = " +
+                        (property.Value == null ? "null" :property.Value.ToString()));
 
                     if (property.Value != null)
                     {
                         if (property.Value.ToString().Contains("VID_0525&PID_A4A2")) {
                             System.Diagnostics.Debug.WriteLine("Found: VID_0525&PID_A4A2");
-                            USB_Dev_ID_Found = true;
+                            USB_Dev_ID_Found = true;  // LINUX USB Ether
                         }
+                        if (property.Value.ToString().Contains("VID_29B7&PID_0101"))
+                        {
+                            System.Diagnostics.Debug.WriteLine("Found: VID_29B7&PID_0101");
+                            USB_Dev_ID_Found = true;  // Xoware
+                        }
+
                     }
                     /*
                     foreach (QualifierData q in property.Qualifiers)

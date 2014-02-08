@@ -26,6 +26,10 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <UpdateUrl>http://updates.xoware.com/exokey/windows/</UpdateUrl>
+    <SupportUrl>htt://www.xoware.com/</SupportUrl>
+    <ProductName>Exokey</ProductName>
+    <PublisherName>XoWare Inc.</PublisherName>
+    <SuiteName>ExoKey</SuiteName>
     <AutorunEnabled>true</AutorunEnabled>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
@@ -92,8 +96,10 @@
     <Compile Include="ExoKeyHostAppForm.Designer.cs">
       <DependentUpon>ExoKeyHostAppForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="IcsManager.cs" />
     <Compile Include="LogMsg.cs" />
     <Compile Include="McastHeartBeatData.cs" />
+    <Compile Include="NetShare.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -192,21 +198,28 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SocksServerLib\SocksServerLib\SocksServerLib.csproj">
-      <Project>{fd3b4260-995c-4115-9a29-7dbdfed2803a}</Project>
-      <Name>SocksServerLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Routing\Routing.csproj">
+    <ProjectReference Include="..\..\Routing\Routing.csproj">
       <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
       <Name>Routing</Name>
     </ProjectReference>
-    <ProjectReference Include="..\XoKeyApi\XoKeyApi.csproj">
+    <ProjectReference Include="..\..\XoKeyApi\XoKeyApi.csproj">
       <Project>{e69aadfb-5f5b-4259-acfb-7eeb8677e4f6}</Project>
       <Name>XoKeyApi</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="NETCONLib">
+      <Guid>{43E734CA-043D-4A70-9A2C-A8F254063D91}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

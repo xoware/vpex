@@ -37,7 +37,6 @@ namespace XoKeyHostApp
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
 
-        Xoware.SocksServerLib.SocksListener Socks_Listener = null;
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
@@ -45,7 +44,7 @@ namespace XoKeyHostApp
         private volatile Boolean Disposing = false;
       //  UdpClient Mcast_UDP_Client = null;
         private BackgroundWorker startup_bw = new BackgroundWorker();
-        private BackgroundWorker socks_bw = new BackgroundWorker();
+
         private readonly Action<Action> gui_invoke;
         private Xoware.RoutingLib.RoutingTableRow default_route = null;
 
@@ -59,6 +58,7 @@ namespace XoKeyHostApp
 
  
         }
+
         public void Startup()
         {
             startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
@@ -509,46 +509,7 @@ namespace XoKeyHostApp
             Server_IPEndPoint = Server;
             Load_Routes();
         }
-        private void Background_Init_Socks(object sender, DoWorkEventArgs e)
-        {
-            Send_Log_Msg("Starting Background_Init_Socks", LogMsg.Priority.Debug);
-           
-            if (XoKey_IP == null &&  XoKey_IP == IPAddress.Any)
-            {
-                Send_Log_Msg(1, LogMsg.Priority.Error, "IP address not detected");
-            }
-            else
-            {
-
-            }
-
-            try
-            {
-                if (Socks_Listener == null)
-                {
-                    int port = Properties.Settings.Default.Socks_Port;
-                    if (Check_Available_Server_Port(port))
-                    {
-                        //Socks_Listener = new Xoware.SocksServerLib.SocksListener(XoKey_IP, port);
-                        Socks_Listener = new Xoware.SocksServerLib.SocksListener(port);
-                        Socks_Listener.Start();
-                        Set_XoKey_Socks_Server();
-                    }
-                    else
-                    {
-                        Send_Log_Msg(1, LogMsg.Priority.Error, "Port " + port + " NOT AVAILABLE");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Send_Log_Msg(1, LogMsg.Priority.Error, "Unable to start SOCKS server on Port "
-                    + Properties.Settings.Default.Socks_Port + " Addr:" + XoKey_IP.ToString()
-                    + "   "+ ex.Message.ToString());
-            }
-
-
-        }
+       
         public void Set_Session_Cookie(String Cookie)
         {
             if (Cookie == Session_Cookie)
@@ -556,9 +517,7 @@ namespace XoKeyHostApp
 
             Session_Cookie = Cookie;
 
- 
-            socks_bw.DoWork += Background_Init_Socks;
-            socks_bw.RunWorkerAsync();
+
 
         }
 
@@ -603,47 +562,7 @@ namespace XoKeyHostApp
                 throw;
             }
         }
-        private void Check_Socks_Clients()
-        {
-            if (Socks_Listener == null)
-                return;
-
-            
-            int Num_Clients = Socks_Listener.GetClientCount();
-         //   Send_Log_Msg("Check_Socks_Clients Num_Clients=" + Num_Clients, LogMsg.Priority.Debug);
-
-            if (Num_Clients == 0 && Server_IPEndPoint != null)
-            {
-                // No current connection be we were connected before.
-
-                Remove_Routes(Server_IPEndPoint);
-
-                Server_IPEndPoint = null;
-            }
-
-            for (int i = 0; i < Num_Clients; i++) {
-                Xoware.SocksServerLib.Client client = Socks_Listener.GetClientAt(i);
-                Xoware.SocksServerLib.SocksClient sc = (Xoware.SocksServerLib.SocksClient)client;
-                IPEndPoint ServerEP = sc.GetSeverRemoteEndpoint();
-                if (ServerEP == null)
-                    continue; // No socks endpoint
-                if (Server_IPEndPoint == null || !Server_IPEndPoint.Equals(ServerEP)
-                    && !Server_IPEndPoint.Address.Equals(ServerEP.Address))
-                {
-                    Send_Log_Msg("client i=" + i + " " + client.ToString()
-                        + " Server: " + sc.GetSeverRemoteEndpoint().ToString()
-                        + " Client " + sc.GetClientRemoteEndpoint().ToString()
-                        , LogMsg.Priority.Debug);
-                    Set_Sever_IPEndpoint(ServerEP);
-                }
-
-                
-          
-            }
-
-           
-
-        }
+     
         private void Check_State_Timer_Expired(object source, System.Timers.ElapsedEventArgs e)
         {
 
@@ -657,7 +576,6 @@ namespace XoKeyHostApp
 
                 Get_VPN_Status();
 
-                Check_Socks_Clients();
             }
             catch (Exception ex)
             {
