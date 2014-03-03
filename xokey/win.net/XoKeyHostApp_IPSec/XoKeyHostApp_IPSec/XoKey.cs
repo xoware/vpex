@@ -56,6 +56,8 @@ namespace XoKeyHostApp
             Send_Log_Msg("XoKey Startup");
             this.gui_invoke = gui_invoke;
 
+            NetworkChange.NetworkAddressChanged += new
+              NetworkAddressChangedEventHandler(AddressChangedCallback);
  
         }
 
@@ -115,8 +117,10 @@ namespace XoKeyHostApp
          */
         public void ReceiveCallback(IAsyncResult ar)
         {
+            IEnumerable<UnicastIPAddressInformation> addresses;
             UdpClient udp_client = (UdpClient)((UdpState)(ar.AsyncState)).udp_client;
             IPEndPoint end_point = (IPEndPoint)((UdpState)(ar.AsyncState)).end_point;
+            const int MAX_ADDRS = 8;
 
     //        var args = (object[])ar.AsyncState;
        //     var session = (UdpClient)args[0];
@@ -124,7 +128,7 @@ namespace XoKeyHostApp
 
             IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
             Byte[] bytes = udp_client.EndReceive(ar, ref localEp);
-            if (bytes.Length != 48) {
+            if (bytes.Length != 108){
                 // Invalid packet
                 goto queue_next;
             }
@@ -142,9 +146,40 @@ namespace XoKeyHostApp
                 goto queue_next;
             }
 
-            IPAddress New_IP = IPAddress.Parse(bytes[8] +"."+ bytes[9] +"."+ bytes[10] + "." + bytes[11]);
+            addresses = GetEKUnicastAddresses();
+            IPAddress New_IP = null;
+            bool IP_Reachable = false;
+            foreach (UnicastIPAddressInformation unicastIPAddress in addresses)
+            {
+                for (int i = 0 ; i < MAX_ADDRS && i < hbeat_data.Num_Addr; i++) {
+                    int offset = 12 + (i * 4);
+                    New_IP = IPAddress.Parse(bytes[offset] +"."+ bytes[offset+1] +"."+ bytes[offset+2] + "." + bytes[offset+3]);
+
+                    byte[] maskBytes = unicastIPAddress.IPv4Mask.GetAddressBytes();
+                    byte[] myIPBytes = unicastIPAddress.Address.GetAddressBytes();
+                    byte[] ekIPbytes = New_IP.GetAddressBytes();
+
+                    IP_Reachable = true;
+                    for (int b = 0; b < myIPBytes.Length; b++)
+                    {
+                        // Check if IP matches our range by the netmask
+                        if ((myIPBytes[b] & maskBytes[b]) != (ekIPbytes[b] & maskBytes[b]))
+                        {
+                            IP_Reachable = false;  // This IP is un reachable
+                            break;
+                        }
+
+                    }
+                    if (IP_Reachable)
+                        break; // We found a reachable one, get out of here
+                }
+                if (IP_Reachable)
+                    break; // We found a reachable one, get out of here
+            }
+
+           
           //  Console.WriteLine("Received: {0}", bytes);
-            if (!New_IP.Equals(XoKey_IP))
+            if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP))
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected" + New_IP.ToString());
                 XoKey_IP = New_IP;
@@ -160,7 +195,53 @@ namespace XoKeyHostApp
             queue_next:
             udp_client.BeginReceive(ReceiveCallback, ar.AsyncState); // recieve next packet
         }
-      
+
+        private IEnumerable<UnicastIPAddressInformation> GetEKUnicastAddresses()
+        {
+            //  IEnumerable<IPAddress> addresses = new IEnumerable<IPAddress>();
+            List<UnicastIPAddressInformation> addresses = new List<UnicastIPAddressInformation>();
+
+            // join multicast group on all available network interfaces
+            System.Net.NetworkInformation.NetworkInterface[] networkInterfaces =
+                    System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+
+
+            foreach (NetworkInterface networkInterface in networkInterfaces)
+            {
+                if ((!networkInterface.Supports(NetworkInterfaceComponent.IPv4)) ||
+                     (networkInterface.OperationalStatus != OperationalStatus.Up))
+                {
+                    continue;
+                }
+
+                // Only get IP addres of USB ethernet  (Exo Key IP)
+                if (!networkInterface.Description.Contains("XoWare"))
+                    continue;
+
+                IPInterfaceProperties adapterProperties = networkInterface.GetIPProperties();
+                UnicastIPAddressInformationCollection unicastIPAddresses = adapterProperties.UnicastAddresses;
+                IPAddress ipAddress = null;
+                foreach (UnicastIPAddressInformation unicastIPAddress in unicastIPAddresses)
+                {
+                    ipAddress = unicastIPAddress.Address;
+
+                    if (ipAddress == null)
+                        continue;
+
+                    // Only get IPv4
+                    if (unicastIPAddress.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    if (ipAddress.Equals(IPAddress.Parse("127.0.0.1")))
+                        continue;
+
+
+                    addresses.Add(unicastIPAddress);
+                }
+
+            }
+            return addresses;
+        }
         private IEnumerable<IPAddress> GetLocalIpAddresses()
         {
           //  IEnumerable<IPAddress> addresses = new IEnumerable<IPAddress>();
@@ -179,8 +260,9 @@ namespace XoKeyHostApp
                     continue;
                 }
 
-                //FIXME   Only get IP addres of USB ethernet  (Exo Key IP)
-
+                // Only get IP addres of USB ethernet  (Exo Key IP)
+                if (!networkInterface.Description.Contains("XoWare"))
+                    continue;
 
                 IPInterfaceProperties adapterProperties = networkInterface.GetIPProperties();
                 UnicastIPAddressInformationCollection unicastIPAddresses = adapterProperties.UnicastAddresses;
@@ -189,6 +271,7 @@ namespace XoKeyHostApp
                 foreach (UnicastIPAddressInformation unicastIPAddress in unicastIPAddresses)
                 {
                     ipAddress = unicastIPAddress.Address;
+                    
                     if (ipAddress == null)
                         continue;
 
@@ -206,28 +289,51 @@ namespace XoKeyHostApp
             }
             return addresses;
         }
-        private void StartMultiCastReciever()
+        private bool Try_MCast_Bind(IPAddress Local_IP, int retries)
         {
             const int MCast_Port = 1500;
             try
             {
-
-                IEnumerable<IPAddress> Local_IP_Addresses = GetLocalIpAddresses();
                 IPAddress multicastaddress = IPAddress.Parse("239.255.255.255");
+                UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
+                Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
+                Mcast_UDP_Client.JoinMulticastGroup(multicastaddress, Local_IP);
+   
+              
+
+                UdpState state = new UdpState();
+                state.udp_client = Mcast_UDP_Client;
+                state.end_point = new IPEndPoint(Local_IP, MCast_Port);
+
+                Mcast_UDP_Client.BeginReceive(new AsyncCallback(ReceiveCallback), state);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "MultiCastReciever ex " + Local_IP.ToString() + " "
+                    + ex.Message.ToString() + " Retries Remaining:" + retries);
+                System.Threading.Thread.Sleep(123);
+                return false;
+            }
+        }
+        private void StartMultiCastReciever()
+        {
+          
+            try
+            {
+                IEnumerable<IPAddress> Local_IP_Addresses = GetLocalIpAddresses();
 
                foreach (IPAddress Local_IP in  Local_IP_Addresses ) {
+                   bool Success = false;
 
-                    UdpClient  Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
-                    Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
-                    Mcast_UDP_Client.JoinMulticastGroup(multicastaddress, Local_IP);
-
-
-                    UdpState state = new UdpState();
-                    state.udp_client = Mcast_UDP_Client;
-                    state.end_point = new IPEndPoint(Local_IP, MCast_Port);
-
-                    Mcast_UDP_Client.BeginReceive(new AsyncCallback(ReceiveCallback), state);
+                   for (int retry = 5; retry > 0  && !Success ; retry--) {
+                       Success = Try_MCast_Bind(Local_IP, retry);
+                   }
+                   if (Success)
+                       Send_Log_Msg(1, LogMsg.Priority.Debug, "Success listening to" + Local_IP.ToString());
+                   else
+                       Send_Log_Msg(1, LogMsg.Priority.Critical, "Failed listening to" + Local_IP.ToString());
                }
 
 
@@ -238,6 +344,22 @@ namespace XoKeyHostApp
                     + ex.Message.ToString());
             }
 
+        }
+
+        void AddressChangedCallback(object sender, EventArgs e)
+        {
+
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface n in adapters)
+            {
+                Send_Log_Msg(1, LogMsg.Priority.Debug,  n.Name + " : "+ n.Description + " is "+ n.OperationalStatus);
+
+                if (n.OperationalStatus == OperationalStatus.Up && n.Description.Contains("XoWare"))
+                {
+                    // Needed for possible restart or plug, unplug, replug
+                    StartMultiCastReciever();
+                }
+            }
         }
 
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
@@ -292,6 +414,7 @@ namespace XoKeyHostApp
         }
         private void Get_VPN_Status()
         {
+            WebResponse response = null;
             if (Session_Cookie.Length < 3)
             {
                 return;
@@ -305,7 +428,15 @@ namespace XoKeyHostApp
             Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
             wr.CookieContainer.Add(cook);
 
-            WebResponse response = wr.GetResponse();
+            try
+            {
+                response = wr.GetResponse();
+            }
+            catch
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Error, "No connection or response from Exokey " + XoKey_IP.ToString());
+                return;
+            }
         //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
             // Get the stream containing content returned by the server.
@@ -320,6 +451,22 @@ namespace XoKeyHostApp
             object objResp = jsonSerializer.ReadObject(dataStream);
             XoKeyApi.VpnStatusResponse vpn_response = objResp as XoKeyApi.VpnStatusResponse;
 
+            try {
+                if (vpn_response.active_vpn != null &&  vpn_response.active_vpn.state == "Connected")
+                {
+                    String VPN_Server_Hostname = vpn_response.active_vpn.address[0].host;
+                    IPAddress[] addresslist = Dns.GetHostAddresses(VPN_Server_Hostname);
+                    IPEndPoint Server = new IPEndPoint(addresslist[0],0);
+                    Set_Sever_IPEndpoint(Server);
+                }
+                else
+                {
+                    Remove_Routes();
+                }
+
+            } catch (Exception ex) {
+                  Send_Log_Msg(0, LogMsg.Priority.Debug, "Ex " + ex.ToString());
+            }
            
             response.Close(); // cleanup;
         }
@@ -401,7 +548,8 @@ namespace XoKeyHostApp
         {
             if (Firewall_Opened == true)
                 return;
-
+            
+            Run_NetSh_Cmd("netsh advfirewall firewall delete rule Name=\"ExoKeyHost\"");
 
             Run_NetSh_Cmd("advfirewall firewall add rule name=\"ExoKeyHost\" dir=in action=allow program=\""
                     + System.AppDomain.CurrentDomain.FriendlyName +"\" enable=yes");
@@ -480,7 +628,7 @@ namespace XoKeyHostApp
 
             Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
-
+            Server_IPEndPoint = null;
         }
 
         private void Load_Routes()
@@ -520,7 +668,7 @@ namespace XoKeyHostApp
 
 
         }
-
+        /*
         private void Set_XoKey_Socks_Server()
         {
             try
@@ -562,7 +710,7 @@ namespace XoKeyHostApp
                 throw;
             }
         }
-     
+     */
         private void Check_State_Timer_Expired(object source, System.Timers.ElapsedEventArgs e)
         {
 

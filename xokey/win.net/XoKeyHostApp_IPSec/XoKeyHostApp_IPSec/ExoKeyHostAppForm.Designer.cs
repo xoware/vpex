@@ -51,8 +51,6 @@
             this.Location_textBox = new System.Windows.Forms.TextBox();
             this.Go_button = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.label1 = new System.Windows.Forms.Label();
-            this.Intf_comboBox = new System.Windows.Forms.ComboBox();
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -261,25 +259,6 @@
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
             // 
-            // label1
-            // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(479, 36);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(136, 17);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Internet Facing Link:";
-            // 
-            // Intf_comboBox
-            // 
-            this.Intf_comboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Intf_comboBox.FormattingEnabled = true;
-            this.Intf_comboBox.Location = new System.Drawing.Point(621, 33);
-            this.Intf_comboBox.Name = "Intf_comboBox";
-            this.Intf_comboBox.Size = new System.Drawing.Size(439, 24);
-            this.Intf_comboBox.TabIndex = 6;
-            // 
             // ExoKeyHostAppForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -287,8 +266,6 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(1064, 473);
-            this.Controls.Add(this.Intf_comboBox);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.Go_button);
             this.Controls.Add(this.Location_textBox);
@@ -335,8 +312,6 @@
         private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem devToolsToolStripMenuItem;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox Intf_comboBox;
     }
 }
 

@@ -10,11 +10,13 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using System.Windows.Threading;
 using System.Management;
 using Microsoft.Win32;
 using CefSharp.WinForms;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Threading;
 
 
 
@@ -30,6 +32,10 @@ namespace XoKeyHostApp
         List<NetworkInterface> Interface_List;
         NetworkInterface Exokey_Interface = null;
         NetworkInterface Internet_Interface = null;
+        Init_Dialog_Form Init_Dialog = null;
+        private BackgroundWorker startup_bw = new BackgroundWorker();
+        private volatile IPAddress XoKey_IP;
+
 
         public ExoKeyHostAppForm()
         {
@@ -73,6 +79,8 @@ namespace XoKeyHostApp
             if (url.Url.Contains("cef-error"))
             {
                 __Log_Msg(0, LogMsg.Priority.Debug, "Error loading UI");
+                Reload_UI_Login();
+                return;
             }
             __Log_Msg(0, LogMsg.Priority.Debug, "LoadCompleted: " + url.Url);
             web_view.ExecuteScript("console.log('XOEvent:Cookie:' +document.cookie);");
@@ -150,10 +158,15 @@ namespace XoKeyHostApp
  
         }
          **/
+        private void Reload_UI_Login()
+        {
+            Load_Url("https://" + XoKey_IP.ToString() + "/ui/login.html");
+        }
         private void EK_Address_Change_Handler(IPAddress addr)
         {
+            XoKey_IP = addr;
             __Log_Msg(0, LogMsg.Priority.Debug, "EK_Address_Change_Handler ip= "+ addr.ToString());
-            Load_Url("https://" + addr.ToString() + "/ui/login.html");
+            Reload_UI_Login();
         }
 
         public static void DisableICS()
@@ -208,6 +221,8 @@ namespace XoKeyHostApp
             {
 
             }
+            Init_Dialog.Recv_Status_Text("Checking Internet Route");
+            Init_Dialog.Recv_Progress_Val(40);
 
             // Create a UDP client, so we can figure out what interface has a route to the internet. 
             UdpClient u = new UdpClient("8.8.8.8", 53);
@@ -216,7 +231,8 @@ namespace XoKeyHostApp
 
             NetworkInterface Def_Intf =  NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault();
             Interface_List = new  List<NetworkInterface>();
-            Intf_comboBox.Items.Clear();
+
+     
             Exokey_Interface = null; // init
             Internet_Interface = null;
             int i = 0;
@@ -257,7 +273,7 @@ namespace XoKeyHostApp
                     continue;
                 }
 
-                Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
+         //       Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
                 Interface_List.Add(nic);
 
                 if (nic.Description.Contains("XoWare"))
@@ -269,7 +285,7 @@ namespace XoKeyHostApp
                 {
                     if (uni.Address.Equals(localAddr))
                     {
-                        Intf_comboBox.SelectedIndex = i;
+                //        Intf_comboBox.SelectedIndex = i;
                         Internet_Interface = nic;
                         __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description);
                     }
@@ -278,9 +294,10 @@ namespace XoKeyHostApp
                 i++;
 
             }
-          
+            Init_Dialog.Recv_Status_Text("Enabeling Internet Connection Sharing");
+            Init_Dialog.Recv_Progress_Val(85);
             
-            Intf_comboBox.Update();
+        //    Intf_comboBox.Update();
 
             if (Exokey_Interface == null)
             {
@@ -288,7 +305,7 @@ namespace XoKeyHostApp
                 return;
             } else if (Internet_Interface == null)
             {
-                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found");
+                __Log_Msg(0, LogMsg.Priority.Critical, "Internet interface not found");
                 return;
             } else if (Internet_Interface.Equals(Exokey_Interface))
             {
@@ -307,18 +324,43 @@ namespace XoKeyHostApp
             }
         }
 
-        private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
+
+        private void startup_DoWork(object sender, DoWorkEventArgs e)
         {
-            bool found;
-            __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
-           // check_registry();
-            Set_Debug(Properties.Settings.Default.Debug);
+   
+            BackgroundWorker worker = sender as BackgroundWorker;
+            __Log_Msg(0, LogMsg.Priority.Debug, "Main Form Worker Startup");
+            Load_Internet_Interfaces();
+
+            Init_Dialog.Recv_Status_Text("Finishing Initalization.");
+            Init_Dialog.Recv_Progress_Val(90);
             xokey = new XoKey(invoke => Invoke(invoke), Recv_Log_Msg);
             xokey.EK_IP_Address_Detected += EK_Address_Change_Handler;
             xokey.Startup();
-            found = Search_For_ExoKey();
-            if (found)
-                Load_Internet_Interfaces();
+            Init_Dialog.Invoke_Close();
+        }
+
+        private void ExoKeyHostAppForm_Load(object sender, EventArgs e)
+        {
+            
+            __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
+           // check_registry();
+            Set_Debug(Properties.Settings.Default.Debug);
+
+            Init_Dialog = new Init_Dialog_Form();
+            Init_Dialog.Show();
+            Init_Dialog.Set_Status_Text("Searching for USB device");
+            Init_Dialog.Set_Progress_Bar(10);
+
+            if ( Search_For_ExoKey() )
+            {
+                Init_Dialog.Set_Status_Text("USB Device Found.  Detecting Network Intfaces.");
+                Init_Dialog.Set_Progress_Bar(20);
+                startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
+                startup_bw.RunWorkerAsync();
+            }
+
+ 
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
         {
@@ -328,12 +370,6 @@ namespace XoKeyHostApp
         // Asyncronously pass the message to the main thread
         public void Recv_Log_Msg(LogMsg Msg)
         {
-
-            // Add_Log_Entry_Callback logger = new Add_Log_Entry_Callback(Add_Log_Entry);
-            //logger.Invoke(Msg);
-            //   Log_dataGridView.Invoke(new Add_Log_Entry_Callback(Add_Log_Entry),
-            //      new object[] { Msg });
-
             try
             {
 
@@ -629,6 +665,14 @@ namespace XoKeyHostApp
 
         private void ExoKeyHostAppForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            try
+            {
+                DisableICS();
+            }
+            catch
+            {
+
+            }
      //       web_view.Dispose();
             if (xokey != null)
             {
