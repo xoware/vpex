@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Bundle Name="Xoware ExoKey" Version="1.0.0.0" Manufacturer="Xoware Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
+		<BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense" />
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\Exokey"/>
+		<Chain>
+			<!-- TODO: Define the list of chained packages. -->
+			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
+      <PackageGroupRef Id="NetFx451Redist" />
+      <MsiPackage  Id="Setup"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
+        <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
+      </MsiPackage>
+		</Chain>
+	</Bundle>
+</Wix>

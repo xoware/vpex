@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="ExoKey Host Application" Language="1033" Version="1.0.0.0" Manufacturer="Xoware Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="localesComponent" />
+    
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="XoWare">
+          <Directory Id="localesFolder" Name="locales" />
+        </Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+		  <Component Id="ProductComponent">
+				<!-- TODO: Insert files, registry keys, and other resources here. -->
+        <File Source="$(var.XoKeyHostApp.TargetPath)" />
+        <File Source="$(var.XoKeyHostApp.ProjectDir)/avcodec-54.dll" />
+        <File Source="$(var.XoKeyHostApp.ProjectDir)/avformat-54.dll" />
+        <File Source="$(var.XoKeyHostApp.ProjectDir)/avutil-51.dll" />
+        <File Source="$(var.XoKeyHostApp.ProjectDir)/CefSharp.dll" /> 
+        <File Source="$(var.XoKeyHostApp.TargetDir)/CefSharp.WinForms.dll" />
+        
+		 </Component>
+      <Component Id="icudt" Guid="*">
+          <File Source="$(var.XoKeyHostApp.ProjectDir)\icudt.dll" />
+      </Component>
+      <Component Id="libcef" Guid="*">
+          <File Source="$(var.XoKeyHostApp.ProjectDir)\libcef.dll" />
+      </Component>
+      <Component Id="libEGL" Guid="*">
+          <File Source="$(var.XoKeyHostApp.ProjectDir)\libEGL.dll" />
+      </Component>
+      <Component Id="libGLESv2" Guid="*">
+          <File Source="$(var.XoKeyHostApp.ProjectDir)\libGLESv2.dll" />
+      </Component>
+      <Component Id="RoutingDll" Guid="*">      
+         <File Source="$(var.XoKeyHostApp.TargetDir)/Routing.dll" />
+      </Component>
+      <Component Id="vpexIco" Guid="*">
+          <File Source="$(var.XoKeyHostApp.ProjectDir)\vpex.ico" />
+      </Component>
+            <Component Id="XoKeyApi.dll" Guid="*">      
+         <File Source="$(var.XoKeyHostApp.TargetDir)/XoKeyApi.dll" />
+      </Component>
+      <Component Id="config" Guid="*">
+          <File Source="$(var.XoKeyHostApp.TargetDir)\XoKeyHostApp.exe.config" />
+      </Component>
+
+		</ComponentGroup>
+   </Fragment>
+  <Fragment>
+    <ComponentGroup Id="localesComponent" Directory="localesFolder">
+      <Component Id="enUsPakComponent" Guid="*">
+        <File Source="$(var.XoKeyHostApp.TargetDir)\locales\en-US.pak" /> 
+      </Component>
+    </ComponentGroup>
+	
+  </Fragment>
+</Wix>
