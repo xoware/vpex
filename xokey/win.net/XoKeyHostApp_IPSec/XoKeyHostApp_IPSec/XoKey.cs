@@ -39,7 +39,7 @@ namespace XoKeyHostApp
 
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
-        Boolean Traffic_Routed_To_XoKey = false;
+        Boolean Traffic_Routed_To_XoKey = true;
         Boolean Firewall_Opened = false;
         private volatile Boolean Disposing = false;
       //  UdpClient Mcast_UDP_Client = null;
@@ -622,6 +622,8 @@ namespace XoKeyHostApp
             {
                 Old_Server = Server_IPEndPoint;
             }
+            if (Traffic_Routed_To_XoKey == false)
+                return;
 
             if (Old_Server != null &&  default_route.GetForardNextHopIPStr().Length > 4)
                 Run_Route_Cmd("DELETE " + Old_Server.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
@@ -629,6 +631,7 @@ namespace XoKeyHostApp
             Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Server_IPEndPoint = null;
+            Traffic_Routed_To_XoKey = false;
         }
 
         private void Load_Routes()
