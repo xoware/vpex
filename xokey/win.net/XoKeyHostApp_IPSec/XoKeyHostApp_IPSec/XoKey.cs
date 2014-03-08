@@ -47,6 +47,7 @@ namespace XoKeyHostApp
 
         private readonly Action<Action> gui_invoke;
         private Xoware.RoutingLib.RoutingTableRow default_route = null;
+        private List<IPAddress> MCast_Listening;
 
         public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -55,6 +56,7 @@ namespace XoKeyHostApp
 
             Send_Log_Msg("XoKey Startup");
             this.gui_invoke = gui_invoke;
+            MCast_Listening =  new List<IPAddress>();
 
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
@@ -331,9 +333,15 @@ namespace XoKeyHostApp
                        Success = Try_MCast_Bind(Local_IP, retry);
                    }
                    if (Success)
+                   {
                        Send_Log_Msg(1, LogMsg.Priority.Debug, "Success listening to" + Local_IP.ToString());
+                       MCast_Listening.Add(Local_IP);
+                   }
                    else
-                       Send_Log_Msg(1, LogMsg.Priority.Critical, "Failed listening to" + Local_IP.ToString());
+                   {
+                       if (!MCast_Listening.Contains(Local_IP))
+                            Send_Log_Msg(1, LogMsg.Priority.Error, "Failed listening to" + Local_IP.ToString());
+                   }
                }
 
 
