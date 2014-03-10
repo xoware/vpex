@@ -58,6 +58,8 @@ namespace XoKeyHostApp
             this.gui_invoke = gui_invoke;
             MCast_Listening =  new List<IPAddress>();
 
+            Open_Firewall();
+
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
  
@@ -186,7 +188,7 @@ namespace XoKeyHostApp
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected" + New_IP.ToString());
                 XoKey_IP = New_IP;
 
-                Open_Firewall();
+               
 
                 if (EK_IP_Address_Detected != null)
                 {
@@ -340,7 +342,7 @@ namespace XoKeyHostApp
                    else
                    {
                        if (!MCast_Listening.Contains(Local_IP))
-                            Send_Log_Msg(1, LogMsg.Priority.Error, "Failed listening to" + Local_IP.ToString());
+                            Send_Log_Msg(1, LogMsg.Priority.Debug, "Failed listening to" + Local_IP.ToString());
                    }
                }
 
@@ -633,11 +635,28 @@ namespace XoKeyHostApp
             if (Traffic_Routed_To_XoKey == false)
                 return;
 
-            if (Old_Server != null &&  default_route.GetForardNextHopIPStr().Length > 4)
-                Run_Route_Cmd("DELETE " + Old_Server.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
+            try
+            {
+                if (Old_Server != null &&  default_route.GetForardNextHopIPStr().Length > 4)
+                    Run_Route_Cmd("DELETE " + Old_Server.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            try
+            {
+                if (XoKey_IP != null && XoKey_IP.ToString().Length > 3)
+                {
+                    Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+                    Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
 
-            Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
-            Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+            }
+
             Server_IPEndPoint = null;
             Traffic_Routed_To_XoKey = false;
         }
