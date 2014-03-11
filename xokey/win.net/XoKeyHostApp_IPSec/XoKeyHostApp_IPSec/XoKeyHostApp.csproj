@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>XoKeyHostApp</RootNamespace>
-    <AssemblyName>XoKeyHostApp</AssemblyName>
+    <AssemblyName>ExoKeyHostApp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -65,17 +65,16 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>F8256835419FE18CA6B5C9B4281AF6C2B47A8841</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>776C12CA4ED661F3DD37DDAF8B6641DE26DA1EE7</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>XoKeyHostApp_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>Internet</TargetZone>
@@ -84,7 +83,8 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>XoKeyHostApp_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CefSharp">
@@ -176,7 +176,6 @@
     <None Include="locales\en-US.pak">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="XoKeyHostApp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="avcodec-54.dll">

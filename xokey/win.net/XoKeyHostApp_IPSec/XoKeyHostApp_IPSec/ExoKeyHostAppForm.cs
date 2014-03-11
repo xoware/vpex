@@ -27,7 +27,7 @@ namespace XoKeyHostApp
         
 
         XoKey xokey;
-        private readonly WebView web_view;
+        private  WebView web_view;
         private bool USB_Dev_ID_Found = false;
         List<NetworkInterface> Interface_List;
         NetworkInterface Exokey_Interface = null;
@@ -39,14 +39,6 @@ namespace XoKeyHostApp
 
         public ExoKeyHostAppForm()
         {
-
-          //  Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION", "WindowsFormsApplication1.exe", value);
-            //Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",  "WindowsFormsApplication1.vshost.exe", value);
-
-            
-            
-         //   Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION",    System.AppDomain.CurrentDomain.FriendlyName, 10000);
-
             InitializeComponent();
 
             // Subscribe to Event(s) with the WindowsInterop Class
@@ -59,16 +51,28 @@ namespace XoKeyHostApp
            // this.Icon = ico;
 
             ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
-
+            /*
             web_view = new WebView("", Get_Chrome_Settings());
             web_view.Dock = DockStyle.Fill;
             tabPage1.Controls.Add(web_view);
             web_view.ConsoleMessage += web_view_ConsoleMessage;
             web_view.LoadCompleted += web_view_LoadCompleted;
             web_view.LocationChanged += web_view_LocationChanged; 
+             * */
         }
-        
 
+        public bool IsProcessOpen(string name)
+        {
+            foreach (System.Diagnostics.Process clsProcess in System.Diagnostics.Process.GetProcesses())
+            {
+                if (clsProcess.ProcessName.Contains(name))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+ 
         void web_view_LocationChanged(object sender, EventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "LocationChanged: " + web_view.Location + "  e:" + e.ToString() );
@@ -255,8 +259,8 @@ namespace XoKeyHostApp
                                      Properties = properties,
                                  };
                  */
-                if (nic.OperationalStatus == OperationalStatus.Down)
-                    continue;
+ //               if (nic.OperationalStatus == OperationalStatus.Down)
+ //                   continue;
                 if (!nic.Supports(NetworkInterfaceComponent.IPv4))
                     continue;
                 if (! (nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet
@@ -275,7 +279,7 @@ namespace XoKeyHostApp
 
          //       Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
                 Interface_List.Add(nic);
-
+                __Log_Msg(0, LogMsg.Priority.Debug, "interface: "  + nic.Name + "  Desc: "+ nic.Description + " Status:" + nic.OperationalStatus.ToString());
                 if (nic.Description.Contains("XoWare"))
                 {
                     Exokey_Interface = nic;
@@ -301,6 +305,7 @@ namespace XoKeyHostApp
 
             if (Exokey_Interface == null)
             {
+                Init_Dialog.Recv_Status_Text("Exokey not found");
                 __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found");
                 return;
             } else if (Internet_Interface == null)
@@ -315,6 +320,9 @@ namespace XoKeyHostApp
             try
             {
                 EnableICS(Internet_Interface.Id, Exokey_Interface.Id, true);
+                Init_Dialog.Recv_Status_Text("ICS complete");
+                Init_Dialog.Recv_Progress_Val(90);
+
                // Internet_Interface
               //  IcsManager.ShareConnection(Internet_Interface as NETCONLib.INetConnection, Exokey_Interface as NETCONLib.INetConnection);
             }
@@ -333,7 +341,7 @@ namespace XoKeyHostApp
             Load_Internet_Interfaces();
 
             Init_Dialog.Recv_Status_Text("Finishing Initalization.");
-            Init_Dialog.Recv_Progress_Val(90);
+            Init_Dialog.Recv_Progress_Val(93);
             xokey = new XoKey(invoke => Invoke(invoke), Recv_Log_Msg);
             xokey.EK_IP_Address_Detected += EK_Address_Change_Handler;
             xokey.Startup();
@@ -344,22 +352,56 @@ namespace XoKeyHostApp
         {
             
             __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
-           // check_registry();
-            Set_Debug(Properties.Settings.Default.Debug);
-
-            Init_Dialog = new Init_Dialog_Form();
-            Init_Dialog.Show();
-            Init_Dialog.Set_Status_Text("Searching for USB device");
-            Init_Dialog.Set_Progress_Bar(10);
-
-            if ( Search_For_ExoKey() )
+            try
             {
-                Init_Dialog.Set_Status_Text("USB Device Found.  Detecting Network Intfaces.");
-                Init_Dialog.Set_Progress_Bar(20);
-                startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
-                startup_bw.RunWorkerAsync();
-            }
 
+
+                // Get Reference to the current Process
+                System.Diagnostics.Process thisProc = System.Diagnostics.Process.GetCurrentProcess();
+                if (IsProcessOpen(System.AppDomain.CurrentDomain.FriendlyName) == false)
+                {
+                    //System.Windows.MessageBox.Show("Application not open!");
+                    //System.Windows.Application.Current.Shutdown();
+                }
+                else
+                {
+                    // Check how many total processes have the same name as the current one
+                    if (System.Diagnostics.Process.GetProcessesByName(thisProc.ProcessName).Length > 1)
+                    {
+                        // If ther is more than one, than it is already running.
+                        MessageBox.Show("Application is already running.");
+                        this.Close();
+                        return;
+                    }
+                }
+
+
+                // check_registry();
+                Set_Debug(Properties.Settings.Default.Debug);
+
+                web_view = new WebView("", Get_Chrome_Settings());
+                web_view.Dock = DockStyle.Fill;
+                tabPage1.Controls.Add(web_view);
+                web_view.ConsoleMessage += web_view_ConsoleMessage;
+                web_view.LoadCompleted += web_view_LoadCompleted;
+                web_view.LocationChanged += web_view_LocationChanged; 
+
+                Init_Dialog = new Init_Dialog_Form();
+                Init_Dialog.Show();
+                Init_Dialog.Set_Status_Text("Searching for USB device");
+                Init_Dialog.Set_Progress_Bar(10);
+
+                if (Search_For_ExoKey())
+                {
+                    Init_Dialog.Set_Status_Text("USB Device Found.  Detecting Network Intfaces.");
+                    Init_Dialog.Set_Progress_Bar(20);
+                    startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
+                    startup_bw.RunWorkerAsync();
+                }
+            } catch (Exception ex)
+            {
+                __Log_Msg(0, LogMsg.Priority.Error, "Initalizing Loading");
+            }
  
         }
         private void __Log_Msg(int code, LogMsg.Priority level, String message)
