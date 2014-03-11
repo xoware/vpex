@@ -3,10 +3,12 @@
 	<Product Id="*" Name="ExoKey Host Application" Language="1033" Version="1.0.0.1" Manufacturer="Xoware Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate />
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
 
-		<Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
+		
+      <Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="localesComponent" />
       <ComponentRef Id="ApplicationShortcut" />
