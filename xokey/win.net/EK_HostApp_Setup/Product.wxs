@@ -54,62 +54,62 @@
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-      <Component Id="XoKeyHostApp.exe" Guid="{B6AD8A3B-ADAE-4C93-8DF2-12B489E22D8A}">
-        <File Source="$(var.XoKeyHostApp.TargetPath)"  />
+      <Component Id="ExoKeyHostApp.exe" Guid="{B6AD8A3B-ADAE-4C93-8DF2-12B489E22D8A}">
+        <File Source="$(var.ExoKeyHostApp.TargetPath)"  />
         <Shortcut Id="desktopShortcut" Advertise="yes" Directory="DesktopFolder"
                     Name="ExoKey" WorkingDirectory="INSTALLFOLDER"
                     Icon="icon1.exe" IconIndex="0">
-          <Icon Id="icon1.exe" SourceFile="$(var.XoKeyHostApp.TargetPath)" />
+          <Icon Id="icon1.exe" SourceFile="$(var.ExoKeyHostApp.TargetPath)" />
         </Shortcut>
         <Shortcut Id="startMenuShotcut" Directory="ApplicationProgramsFolder"
                   Name="Exokey" WorkingDirectory="INSTALLFOLDER"
                   Icon="icon2.exe" IconIndex="0" Advertise="yes">
-            <Icon Id="icon2.exe" SourceFile="$(var.XoKeyHostApp.TargetPath)" />
+            <Icon Id="icon2.exe" SourceFile="$(var.ExoKeyHostApp.TargetPath)" />
         </Shortcut>
       </Component>
 		  <Component Id="ProductComponent" Guid="{D326B7F1-2339-404F-A47E-4239C2291901}">
 				<!-- TODO: Insert files, registry keys, and other resources here. -->
        
-        <File Source="$(var.XoKeyHostApp.ProjectDir)/avcodec-54.dll" />
-        <File Source="$(var.XoKeyHostApp.ProjectDir)/avformat-54.dll" />
-        <File Source="$(var.XoKeyHostApp.ProjectDir)/avutil-51.dll" />
-        <File Source="$(var.XoKeyHostApp.ProjectDir)/CefSharp.dll" /> 
-        <File Source="$(var.XoKeyHostApp.TargetDir)/CefSharp.WinForms.dll" />
+        <File Source="$(var.ExoKeyHostApp.ProjectDir)/avcodec-54.dll" />
+        <File Source="$(var.ExoKeyHostApp.ProjectDir)/avformat-54.dll" />
+        <File Source="$(var.ExoKeyHostApp.ProjectDir)/avutil-51.dll" />
+        <File Source="$(var.ExoKeyHostApp.ProjectDir)/CefSharp.dll" /> 
+        <File Source="$(var.ExoKeyHostApp.TargetDir)/CefSharp.WinForms.dll" />
         
 		 </Component>
       
       <Component Id="icudt" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\icudt.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\icudt.dll" />
       </Component>
       <Component Id="libcef" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\libcef.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\libcef.dll" />
       </Component>
       <Component Id="libEGL" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\libEGL.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\libEGL.dll" />
       </Component>
       <Component Id="libGLESv2" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\libGLESv2.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\libGLESv2.dll" />
       </Component>
       <Component Id="msvcp110dll" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\msvcp110.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\msvcp110.dll" />
       </Component>
       <Component Id="msvcr110dll" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\msvcr110.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\msvcr110.dll" />
       </Component>
       <Component Id="vccorlib110dll" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\vccorlib110.dll" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\vccorlib110.dll" />
       </Component>
       <Component Id="RoutingDll" Guid="*">      
-         <File Source="$(var.XoKeyHostApp.TargetDir)/Routing.dll" />
+         <File Source="$(var.ExoKeyHostApp.TargetDir)/Routing.dll" />
       </Component>
       <Component Id="vpexIco" Guid="*">
-          <File Source="$(var.XoKeyHostApp.ProjectDir)\vpex.ico" />
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\vpex.ico" />
       </Component>
             <Component Id="XoKeyApi.dll" Guid="*">      
-         <File Source="$(var.XoKeyHostApp.TargetDir)/XoKeyApi.dll" />
+         <File Source="$(var.ExoKeyHostApp.TargetDir)/XoKeyApi.dll" />
       </Component>
       <Component Id="config" Guid="*">
-          <File Source="$(var.XoKeyHostApp.TargetDir)\ExoKeyHostApp.exe.config" />
+          <File Source="$(var.ExoKeyHostApp.TargetDir)\ExoKeyHostApp.exe.config" />
       </Component>
 
 		</ComponentGroup>
@@ -118,7 +118,7 @@
   <Fragment>
     <ComponentGroup Id="localesComponent" Directory="localesFolder">
       <Component Id="enUsPakComponent" Guid="*">
-        <File Source="$(var.XoKeyHostApp.TargetDir)\locales\en-US.pak" /> 
+        <File Source="$(var.ExoKeyHostApp.TargetDir)\locales\en-US.pak" /> 
       </Component>
     </ComponentGroup>
   </Fragment>
@@ -128,10 +128,10 @@
       <Shortcut Id="ApplicationStartMenuShortcut"
                 Name="ExoKey Host Application"
                 Description="Xoware ExoKey Host Application"
-                Target="XoKeyHostApp.exe"
+                Target="ExoKeyHostApp.exe"
                 WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-      <RegistryValue Root="HKCU" Key="Software\Xoware\ExoKeyHostApp" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      <RegistryValue Root="HKCU" Key="Software\Xoware\EExoKeyHostApp" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
     </Component>
   </DirectoryRef>
   </Fragment>
