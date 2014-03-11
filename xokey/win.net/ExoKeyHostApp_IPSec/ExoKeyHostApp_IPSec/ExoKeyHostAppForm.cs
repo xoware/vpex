@@ -337,7 +337,8 @@ namespace XoKeyHostApp
         {
    
             BackgroundWorker worker = sender as BackgroundWorker;
-            __Log_Msg(0, LogMsg.Priority.Debug, "Main Form Worker Startup");
+            __Log_Msg(0, LogMsg.Priority.Debug, "Windows Version:" + System.Environment.OSVersion.ToString());
+
             Load_Internet_Interfaces();
 
             Init_Dialog.Recv_Status_Text("Finishing Initalization.");
@@ -352,6 +353,11 @@ namespace XoKeyHostApp
         {
             
             __Log_Msg(0, LogMsg.Priority.Debug, "Startup " + System.AppDomain.CurrentDomain.FriendlyName);
+            __Log_Msg(0, LogMsg.Priority.Debug, "OS Name: " + OSInfo.Name);
+            __Log_Msg(0, LogMsg.Priority.Debug, "OS Edition: " + OSInfo.Edition);
+            __Log_Msg(0, LogMsg.Priority.Debug, "OS ServicePack: " + OSInfo.ServicePack);
+            __Log_Msg(0, LogMsg.Priority.Debug, "OS Bits: " + OSInfo.Bits);
+
             try
             {
 
@@ -372,6 +378,22 @@ namespace XoKeyHostApp
                         MessageBox.Show("Application is already running.");
                         this.Close();
                         return;
+                    }
+                }
+                int Major_Version = System.Environment.OSVersion.Version.Major;
+
+                // Windows 2008 server and Windows 7 are major version 6
+                if ( Major_Version < 6) 
+                {
+                    MessageBox.Show("Windows 7 or newer required");
+                    this.Close();
+                    return;
+                }
+                else if (Major_Version == 6)
+                {
+                    if (OSInfo.Edition.Contains("Starter"))
+                    {
+                        __Log_Msg(0, LogMsg.Priority.Error, "Windows Starter version not supported, use at your own risk");
                     }
                 }
 
