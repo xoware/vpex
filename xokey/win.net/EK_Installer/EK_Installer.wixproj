@@ -35,7 +35,15 @@
     </WixExtension>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WIX_SetupProject\EK_HostApp_Setup.wixproj">
+    <ProjectReference Include="..\driver-install\driver-install.wixproj">
+      <Name>driver-install</Name>
+      <Project>{d43a8351-400c-459a-a3dd-175f0149fbf7}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\EK_HostApp_Setup\EK_HostApp_Setup.wixproj">
       <Name>EK_HostApp_Setup</Name>
       <Project>{01b93a05-d068-4fc0-9039-fc7b4bc93b06}</Project>
       <Private>True</Private>
