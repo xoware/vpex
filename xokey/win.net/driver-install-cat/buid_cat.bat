@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:C:\Work\xoware\vpex\xokey\win.net\driver-install-cat
