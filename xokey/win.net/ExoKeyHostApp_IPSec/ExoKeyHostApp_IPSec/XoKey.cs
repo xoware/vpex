@@ -185,7 +185,7 @@ namespace XoKeyHostApp
           //  Console.WriteLine("Received: {0}", bytes);
             if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP))
             {
-                Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected" + New_IP.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected: " + New_IP.ToString());
                 XoKey_IP = New_IP;
 
                
