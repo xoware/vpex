@@ -64,5 +64,5 @@ HKR, NDI\params\VistaProperty, optional,   0, "1"
 
 [Strings]
 Xoware                 = "Xoware Inc."
-XoDevice           = "XoWare USB Ethernet/RNDIS Gadget"
+XoDevice           = "XoWare ExoKey USB Ethernet/RNDIS Gadget"
 Vista_Property        = "Optional Vista Property"
