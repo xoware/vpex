@@ -65,7 +65,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1064, 28);
+            this.menuStrip1.Size = new System.Drawing.Size(1167, 28);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -145,10 +145,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Location = new System.Drawing.Point(0, 64);
+            this.tabControl1.Location = new System.Drawing.Point(0, 31);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1064, 384);
+            this.tabControl1.Size = new System.Drawing.Size(1167, 514);
             this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
@@ -156,7 +156,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1056, 355);
+            this.tabPage1.Size = new System.Drawing.Size(1124, 473);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -168,9 +168,9 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1056, 355);
+            this.tabPage2.Size = new System.Drawing.Size(1159, 485);
             this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "App Log";
+            this.tabPage2.Text = "Log";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // PopupErrors_checkBox
@@ -187,6 +187,7 @@
             // 
             // Log_dataGridView
             // 
+            this.Log_dataGridView.AccessibleRole = System.Windows.Forms.AccessibleRole.TitleBar;
             this.Log_dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -196,10 +197,10 @@
             this.Code_Col,
             this.Level_Col,
             this.Message_Col});
-            this.Log_dataGridView.Location = new System.Drawing.Point(0, 53);
+            this.Log_dataGridView.Location = new System.Drawing.Point(3, 47);
             this.Log_dataGridView.Name = "Log_dataGridView";
             this.Log_dataGridView.RowTemplate.Height = 24;
-            this.Log_dataGridView.Size = new System.Drawing.Size(1079, 522);
+            this.Log_dataGridView.Size = new System.Drawing.Size(1153, 435);
             this.Log_dataGridView.TabIndex = 0;
             // 
             // Date_Time_Col
@@ -234,15 +235,16 @@
             // 
             this.Location_textBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.Location_textBox.Location = new System.Drawing.Point(71, 37);
+            this.Location_textBox.Location = new System.Drawing.Point(236, 6);
             this.Location_textBox.Name = "Location_textBox";
-            this.Location_textBox.Size = new System.Drawing.Size(304, 22);
+            this.Location_textBox.Size = new System.Drawing.Size(729, 22);
             this.Location_textBox.TabIndex = 2;
             this.Location_textBox.Text = "https://192.168.255.1/ek/login.html";
             // 
             // Go_button
             // 
-            this.Go_button.Location = new System.Drawing.Point(4, 36);
+            this.Go_button.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.Go_button.Location = new System.Drawing.Point(192, 5);
             this.Go_button.Name = "Go_button";
             this.Go_button.Size = new System.Drawing.Size(41, 23);
             this.Go_button.TabIndex = 3;
@@ -252,9 +254,9 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 451);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 548);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1064, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1167, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
@@ -265,7 +267,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(1064, 473);
+            this.ClientSize = new System.Drawing.Size(1167, 570);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.Go_button);
             this.Controls.Add(this.Location_textBox);

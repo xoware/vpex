@@ -17,6 +17,11 @@ using CefSharp.WinForms;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
+using System.ServiceProcess;
+
+using NATUPNPLib;
+using NETCONLib;
+using NetFwTypeLib;
 
 
 
@@ -59,6 +64,15 @@ namespace XoKeyHostApp
             web_view.LoadCompleted += web_view_LoadCompleted;
             web_view.LocationChanged += web_view_LocationChanged; 
              * */
+     
+        }
+        private const string CLSID_FIREWALL_MANAGER = "{304CE942-6E39-40D8-943A-B913C40C9CD4}";
+        private static NetFwTypeLib.INetFwMgr GetFirewallManager()
+        {
+            Type objectType = Type.GetTypeFromCLSID(
+                  new Guid(CLSID_FIREWALL_MANAGER));
+            return Activator.CreateInstance(objectType) 
+                  as NetFwTypeLib.INetFwMgr;
         }
 
         public bool IsProcessOpen(string name)
@@ -100,8 +114,9 @@ namespace XoKeyHostApp
 
             if (Event_Msg.IndexOf(Cookie_Marker) == 0)
             {
-                
-                xokey.Set_Session_Cookie(Event_Msg.Substring(Cookie_Marker.Length));
+                String Cookie_Val = Event_Msg.Substring(Cookie_Marker.Length);
+                if (Cookie_Val.Length > 3)
+                    xokey.Set_Session_Cookie(Cookie_Val);
             }
         }
 
@@ -164,7 +179,8 @@ namespace XoKeyHostApp
          **/
         private void Reload_UI_Login()
         {
-            Load_Url("https://" + XoKey_IP.ToString() + "/ui/login.html");
+            if (XoKey_IP != null)
+                Load_Url("https://" + XoKey_IP.ToString() + "/ui/login.html");
         }
         private void EK_Address_Change_Handler(IPAddress addr)
         {
@@ -187,6 +203,9 @@ namespace XoKeyHostApp
         }
          void EnableICS(string shared, string home, bool force)
         {
+
+
+
             var connectionToShare = IcsManager.FindConnectionByIdOrName(shared);
             if (connectionToShare == null)
             {
@@ -215,6 +234,15 @@ namespace XoKeyHostApp
 
             IcsManager.ShareConnection(connectionToShare, homeConnection);
         }
+        private void Debug_Services()
+        { 
+            ServiceController[] allService = ServiceController.GetServices();
+            foreach (ServiceController serviceController in allService)
+            {
+                __Log_Msg(0, LogMsg.Priority.Debug, "Service: " + serviceController.ServiceName 
+                    +  " Status: " + serviceController.Status.ToString());
+            }
+        }
         private void Load_Internet_Interfaces()
         {
             try
@@ -226,7 +254,7 @@ namespace XoKeyHostApp
 
             }
             Init_Dialog.Recv_Status_Text("Checking Internet Route");
-            Init_Dialog.Recv_Progress_Val(40);
+            Init_Dialog.Recv_Progress_Val(20);
 
             // Create a UDP client, so we can figure out what interface has a route to the internet. 
             UdpClient u = new UdpClient("8.8.8.8", 53);
@@ -298,6 +326,10 @@ namespace XoKeyHostApp
                 i++;
 
             }
+            Init_Dialog.Recv_Status_Text("Checking services");
+            WinServices.StartService("TapiSrv", "Manual"); ;
+            Init_Dialog.Recv_Progress_Val(70);
+
             Init_Dialog.Recv_Status_Text("Enabeling Internet Connection Sharing");
             Init_Dialog.Recv_Progress_Val(85);
             
@@ -306,7 +338,9 @@ namespace XoKeyHostApp
             if (Exokey_Interface == null)
             {
                 Init_Dialog.Recv_Status_Text("Exokey not found");
-                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found");
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found.  "
+                    + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
+                    + " If the problem persists after retrying, look for the ExoKey Device in the device manager.");
                 return;
             } else if (Internet_Interface == null)
             {
@@ -328,6 +362,7 @@ namespace XoKeyHostApp
             }
             catch (Exception ex)
             {
+                Debug_Services();
                 __Log_Msg(0, LogMsg.Priority.Critical, "Exception "+ ex.ToString());
             }
         }
@@ -360,7 +395,9 @@ namespace XoKeyHostApp
 
             try
             {
+                INetFwMgr manager = GetFirewallManager();
 
+                __Log_Msg(0, LogMsg.Priority.Debug, "FW Enabled: " + manager.LocalPolicy.CurrentProfile.FirewallEnabled.ToString());
 
                 // Get Reference to the current Process
                 System.Diagnostics.Process thisProc = System.Diagnostics.Process.GetCurrentProcess();
@@ -419,10 +456,13 @@ namespace XoKeyHostApp
                     Init_Dialog.Set_Progress_Bar(20);
                     startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
                     startup_bw.RunWorkerAsync();
+
+                    Load_Url("file://"+ System.IO.Path.GetDirectoryName(Application.ExecutablePath)
+                        +"/waiting_for_hw.html");
                 }
             } catch (Exception ex)
             {
-                __Log_Msg(0, LogMsg.Priority.Error, "Initalizing Loading");
+                __Log_Msg(0, LogMsg.Priority.Error, "Initalizing Loading" + ex.ToString());
             }
  
         }
@@ -651,14 +691,16 @@ namespace XoKeyHostApp
                 return;
             }
         }
-        private void Navigate()
+        private void Navigate( String address = null)
         {
-            String address = Location_textBox.Text;
+           
+            if (address == null)
+                address = Location_textBox.Text;
 
             if (String.IsNullOrEmpty(address)) return;
             if (address.Equals("about:blank")) return;
             if (!address.StartsWith("http://") &&
-                !address.StartsWith("https://"))
+                !address.StartsWith("https://") && !address.StartsWith("file://"))
             {
                 address = "http://" + address;
             }
@@ -731,6 +773,8 @@ namespace XoKeyHostApp
         {
             try
             {
+                Console.WriteLine("FormClosing1");
+                System.Diagnostics.Debug.WriteLine("FormClosing2 "); 
                 DisableICS();
             }
             catch
@@ -740,10 +784,13 @@ namespace XoKeyHostApp
      //       web_view.Dispose();
             if (xokey != null)
             {
+                System.Diagnostics.Debug.WriteLine("dispose xokey "); 
                 xokey.Dispose();
                 xokey = null;
             }
+            System.Diagnostics.Debug.WriteLine("dispose this object"); 
             this.Dispose();
+            System.Diagnostics.Debug.WriteLine("Form closing dispose done."); 
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
