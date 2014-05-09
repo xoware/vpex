@@ -108,6 +108,12 @@
             <Component Id="XoKeyApi.dll" Guid="*">      
          <File Source="$(var.ExoKeyHostApp.TargetDir)/XoKeyApi.dll" />
       </Component>
+      <Component Id="waitHtml" Guid="*">
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\waiting_for_hw.html" />
+      </Component>
+      <Component Id="LoadingGif" Guid="*">
+          <File Source="$(var.ExoKeyHostApp.ProjectDir)\loading.gif" />
+      </Component>
       <Component Id="config" Guid="*">
           <File Source="$(var.ExoKeyHostApp.TargetDir)\ExoKeyHostApp.exe.config" />
       </Component>

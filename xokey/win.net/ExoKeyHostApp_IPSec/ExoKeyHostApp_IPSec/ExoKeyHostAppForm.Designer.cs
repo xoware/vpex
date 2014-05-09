@@ -156,7 +156,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1124, 473);
+            this.tabPage1.Size = new System.Drawing.Size(1159, 485);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -243,7 +243,8 @@
             // 
             // Go_button
             // 
-            this.Go_button.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.Go_button.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.Go_button.Location = new System.Drawing.Point(192, 5);
             this.Go_button.Name = "Go_button";
             this.Go_button.Size = new System.Drawing.Size(41, 23);

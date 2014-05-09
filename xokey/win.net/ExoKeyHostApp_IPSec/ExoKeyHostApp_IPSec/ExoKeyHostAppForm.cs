@@ -243,6 +243,33 @@ namespace XoKeyHostApp
                     +  " Status: " + serviceController.Status.ToString());
             }
         }
+        private void Check_ISCS_Dependencies()
+        {
+   
+            string[] deps = { 
+                "TapiSrv", // Telephony
+                "ALG", // Application Layer Gateway
+                "Netman", // Network connections
+                "NlaSvc", // Network location awarenes
+                "PlugPlay",
+                "RasAuto",  // Remote Access Auto Connection Manage
+                "RasMan",  // Remote Access Connection Manager
+                "RpcSs"  // Remote Procedure Call (RPC)
+             };
+
+            foreach (String dep in deps) {
+                try{
+                     WinServices.StartService(dep, "Manual");
+                }
+                catch (Exception ex)
+                {
+                  Debug_Services();
+                  __Log_Msg(0, LogMsg.Priority.Critical, "Launching: "+ dep + " Exception "+ ex.ToString());
+                }
+
+            }
+            
+        }
         private void Load_Internet_Interfaces()
         {
             try
@@ -327,7 +354,8 @@ namespace XoKeyHostApp
 
             }
             Init_Dialog.Recv_Status_Text("Checking services");
-            WinServices.StartService("TapiSrv", "Manual"); ;
+           
+            Check_ISCS_Dependencies();
             Init_Dialog.Recv_Progress_Val(70);
 
             Init_Dialog.Recv_Status_Text("Enabeling Internet Connection Sharing");
@@ -773,6 +801,16 @@ namespace XoKeyHostApp
         {
             try
             {
+                Init_Dialog = new Init_Dialog_Form("Closing");
+                Init_Dialog.Show();
+                Init_Dialog.Set_Status_Text("Disabeling ExoKey Internet ");
+                Init_Dialog.Set_Progress_Bar(20);
+            } catch (Exception ex)
+            {
+                Console.WriteLine("ex" + ex.ToString());
+            }
+            try
+            {
                 Console.WriteLine("FormClosing1");
                 System.Diagnostics.Debug.WriteLine("FormClosing2 "); 
                 DisableICS();
@@ -784,12 +822,18 @@ namespace XoKeyHostApp
      //       web_view.Dispose();
             if (xokey != null)
             {
+                Init_Dialog.Set_Status_Text("Cleaningup Configuration");
+                Init_Dialog.Set_Progress_Bar(80);
                 System.Diagnostics.Debug.WriteLine("dispose xokey "); 
                 xokey.Dispose();
                 xokey = null;
             }
+
+            Init_Dialog.Set_Status_Text("Closing");
+            Init_Dialog.Set_Progress_Bar(90);
+            web_view.CloseDevTools();
             System.Diagnostics.Debug.WriteLine("dispose this object"); 
-            this.Dispose();
+          //  this.Dispose();
             System.Diagnostics.Debug.WriteLine("Form closing dispose done."); 
         }
 
@@ -801,6 +845,7 @@ namespace XoKeyHostApp
         private void devToolsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             web_view.ShowDevTools();
+
         }
    
     }

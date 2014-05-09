@@ -558,11 +558,15 @@ namespace XoKeyHostApp
         {
             if (Firewall_Opened == true)
                 return;
-            
-            Run_NetSh_Cmd("netsh advfirewall firewall delete rule Name=\"ExoKeyHost\"");
 
+            Run_NetSh_Cmd("advfirewall firewall delete rule Name=\"ExoKeyHost\" dir=in");
+         //   Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"ExoKey Port 1500 inbound\"  dir=in action=allow protocol=UDP localport=1500");
+       //     Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"ExoKey Port 1500 outbound\"  dir=out action=allow protocol=UDP localport=1500");
+         
+      //      Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"ExoKey Port 1500 inbound\" dir=in action=allow protocol=UDP localport=1500");
+       //     Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"ExoKey Port 1500 outbound\" dir=out action=allow protocol=UDP localport=1500");
             Run_NetSh_Cmd("advfirewall firewall add rule name=\"ExoKeyHost\" dir=in action=allow program=\""
-                    + System.AppDomain.CurrentDomain.FriendlyName +"\" enable=yes");
+                    + Application.ExecutablePath + "\" enable=yes");
 
             Firewall_Opened = true;
         }
