@@ -235,22 +235,23 @@
             // 
             this.Location_textBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.Location_textBox.Location = new System.Drawing.Point(236, 6);
+            this.Location_textBox.Location = new System.Drawing.Point(364, 6);
             this.Location_textBox.Name = "Location_textBox";
-            this.Location_textBox.Size = new System.Drawing.Size(729, 22);
+            this.Location_textBox.Size = new System.Drawing.Size(709, 22);
             this.Location_textBox.TabIndex = 2;
             this.Location_textBox.Text = "https://192.168.255.1/ek/login.html";
+            this.Location_textBox.Enter += new System.EventHandler(this.Location_textBox_Enter);
             // 
             // Go_button
             // 
-            this.Go_button.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Go_button.Location = new System.Drawing.Point(192, 5);
+            this.Go_button.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.Go_button.Location = new System.Drawing.Point(317, 6);
             this.Go_button.Name = "Go_button";
             this.Go_button.Size = new System.Drawing.Size(41, 23);
             this.Go_button.TabIndex = 3;
             this.Go_button.Text = "Go";
             this.Go_button.UseVisualStyleBackColor = true;
+            this.Go_button.Visible = false;
             this.Go_button.Click += new System.EventHandler(this.Go_button_Click);
             // 
             // statusStrip1

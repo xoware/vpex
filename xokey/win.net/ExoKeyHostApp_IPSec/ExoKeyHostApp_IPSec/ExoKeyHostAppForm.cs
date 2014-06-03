@@ -847,6 +847,11 @@ namespace XoKeyHostApp
             web_view.ShowDevTools();
 
         }
+
+        private void Location_textBox_Enter(object sender, EventArgs e)
+        {
+            Navigate();
+        }
    
     }
 }

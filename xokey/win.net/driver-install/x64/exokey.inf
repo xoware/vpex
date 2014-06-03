@@ -11,7 +11,10 @@ Signature           = "$Windows NT$"
 Class               = Net
 ClassGUID           = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider            = %Xoware%
-DriverVer           = 06/21/2006,6.0.6000.16384
+DriverVer           = 06/21/2013,6.0.6000.16384
+CatalogFile.ntx86   = ExoKeyX86.cat
+CatalogFile.ntamd64 = ExoKeyX64.cat
+
 
 [Manufacturer]
 %Xoware%             = XoWareDevices,NTx86,NTamd64,NTia64

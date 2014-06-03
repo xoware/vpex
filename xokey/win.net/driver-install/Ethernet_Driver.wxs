@@ -50,6 +50,10 @@
         <File Id="exokey.inf_x86"  Name="exokey.inf" Vital="yes" DiskId="1"  Source="x86\exokey.inf" />
         <Condition>NOT VersionNT64</Condition>
       </Component>
+      <Component Id="exokey_cat_x86" Guid="*">
+        <File Id="exokey.cat_x86"  Name="exokeyx86.cat" Vital="yes" DiskId="1"  Source="x86\exokeyx86.cat" />
+        <Condition>NOT VersionNT64</Condition>
+      </Component>
       
       <Component Id="DPInst_x64" Guid="*">
         <File Id="DPInst.exe_x64" Name="DPInst.exe"  Vital="yes" DiskId="1"  Source="x64\DPInst.exe" />
@@ -58,6 +62,10 @@
       
       <Component Id="exokey_inf_x64" Guid="*">
         <File Id="exokey.inf_x64"  Name="exokey.inf" Vital="yes" DiskId="1"  Source="x64\exokey.inf" />
+        <Condition>VersionNT64</Condition>
+      </Component>
+      <Component Id="exokey_cat_x64" Guid="*">
+        <File Id="exokey.cat_x64"  Name="exokeyx64.cat" Vital="yes" DiskId="1"  Source="x64\exokeyx64.cat" />
         <Condition>VersionNT64</Condition>
       </Component>
 
