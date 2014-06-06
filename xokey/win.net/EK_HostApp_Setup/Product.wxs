@@ -133,7 +133,7 @@
     <Component Id="ApplicationShortcut" Guid="{053CE9D9-E983-4B76-A963-3BB1B6FD70A1}">
       <Shortcut Id="ApplicationStartMenuShortcut"
                 Name="ExoKey Host Application"
-                Description="Xoware ExoKey Host Application"
+                Description="x.o.ware ExoKey Host Application"
                 Target="ExoKeyHostApp.exe"
                 WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>

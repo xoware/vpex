@@ -219,7 +219,7 @@ namespace XoKeyHostApp
                 }
 
                 // Only get IP addres of USB ethernet  (Exo Key IP)
-                if (!networkInterface.Description.Contains("XoWare"))
+                if (!networkInterface.Description.Contains("XoWare") && !networkInterface.Description.Contains("x.o.ware"))
                     continue;
 
                 IPInterfaceProperties adapterProperties = networkInterface.GetIPProperties();
@@ -265,7 +265,7 @@ namespace XoKeyHostApp
                 }
 
                 // Only get IP addres of USB ethernet  (Exo Key IP)
-                if (!networkInterface.Description.Contains("XoWare"))
+                if (!networkInterface.Description.Contains("x.o.ware"))
                     continue;
 
                 IPInterfaceProperties adapterProperties = networkInterface.GetIPProperties();
@@ -364,7 +364,8 @@ namespace XoKeyHostApp
             {
                 Send_Log_Msg(1, LogMsg.Priority.Debug,  n.Name + " : "+ n.Description + " is "+ n.OperationalStatus);
 
-                if (n.OperationalStatus == OperationalStatus.Up && n.Description.Contains("XoWare"))
+                if (n.OperationalStatus == OperationalStatus.Up 
+                    && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
                     // Needed for possible restart or plug, unplug, replug
                     StartMultiCastReciever();

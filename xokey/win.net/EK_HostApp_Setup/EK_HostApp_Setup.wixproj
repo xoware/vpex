@@ -36,7 +36,8 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.verisign.com/scripts/timestamp.dll  "!(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
+"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\ExoKey Host Application Setup.msi"</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
