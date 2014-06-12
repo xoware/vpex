@@ -14,5 +14,7 @@ namespace XoKeyApi
         public string host { get; set; }
         [DataMember(Name = "port")]
         public int port { get; set; }
+        [DataMember(Name = "ip")]
+        public string ip { get; set; }
     }
 }

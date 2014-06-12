@@ -445,18 +445,14 @@ namespace XoKeyHostApp
             }
             catch
             {
-                Send_Log_Msg(0, LogMsg.Priority.Error, "No connection or response from Exokey " + XoKey_IP.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString());
                 return;
             }
         //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
             // Get the stream containing content returned by the server.
             Stream dataStream = response.GetResponseStream();
-            // Open the stream using a StreamReader for easy access.
-//            StreamReader reader = new StreamReader(dataStream);
-            // Read the content.
-//            string responseFromServer = reader.ReadToEnd();
-//            Send_Log_Msg("Get_VPN_Status: responseFromServer=" + responseFromServer);
+
 
             DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
             object objResp = jsonSerializer.ReadObject(dataStream);
@@ -466,7 +462,25 @@ namespace XoKeyHostApp
                 if (vpn_response.active_vpn != null &&  vpn_response.active_vpn.state == "Connected")
                 {
                     String VPN_Server_Hostname = vpn_response.active_vpn.address[0].host;
-                    IPAddress[] addresslist = Dns.GetHostAddresses(VPN_Server_Hostname);
+                    IPAddress[] addresslist;
+                    try
+                    {
+                        if (vpn_response.active_vpn.address[0].ip.Length > 4)
+                        {
+                            addresslist = new IPAddress[1];
+
+                            addresslist[0] = IPAddress.Parse(vpn_response.active_vpn.address[0].ip);
+
+                        }
+                        else {
+                        addresslist = Dns.GetHostAddresses(VPN_Server_Hostname);
+                        }
+                    } catch (Exception ex)
+                    {
+                        Send_Log_Msg(0, LogMsg.Priority.Warning, "Can't resolve DNS address:" + VPN_Server_Hostname
+                            + " : " + ex.GetType().ToString());
+                        throw ex;
+                    }
                     IPEndPoint Server = new IPEndPoint(addresslist[0],0);
                     Set_Sever_IPEndpoint(Server);
                 }
