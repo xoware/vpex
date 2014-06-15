@@ -125,6 +125,9 @@ namespace XoKeyHostApp
                 case PowerModes.Suspend:
                     break;
             }
+
+            if (xokey != null)
+                xokey.On_Power_Change(e.Mode);
         }
         void web_view_LocationChanged(object sender, EventArgs e)
         {
@@ -585,7 +588,7 @@ namespace XoKeyHostApp
         private void Set_Debug(bool value)
         {
             debugToolStripMenuItem.Checked = value;
-            Go_button.Visible = value;
+            Go_button.Visible = false;
             Location_textBox.Visible = value;
 
         }
@@ -849,31 +852,52 @@ namespace XoKeyHostApp
 
         private void ExoKeyHostAppForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+
             try
             {
                 Init_Dialog = new Init_Dialog_Form("Closing");
                 Init_Dialog.Show();
                 Init_Dialog.Set_Status_Text("Disabeling ExoKey Internet ");
-                Init_Dialog.Set_Progress_Bar(20);
+                Init_Dialog.Set_Progress_Bar(5);
             } catch (Exception ex)
             {
                 Console.WriteLine("ex" + ex.ToString());
             }
+
             try
             {
-                Console.WriteLine("FormClosing1");
-                System.Diagnostics.Debug.WriteLine("FormClosing2 "); 
+                Init_Dialog.Set_Status_Text("Stopping ExoKey");
+                Init_Dialog.Set_Progress_Bar(10);
+
+                if (xokey != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("stop xokey ");
+                    xokey.Stop();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Stop ex: " + ex.ToString());
+            }
+
+            try
+            {
+                Init_Dialog.Set_Status_Text("Disable Windows ICS with ExoKey");
+                Init_Dialog.Set_Progress_Bar(20);
+                Console.WriteLine("DisableICS");
+                System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
                 DisableICS();
             }
-            catch
+            catch (Exception ex)
             {
-
+                Console.WriteLine("Disable ICS ex: " + ex.ToString());
             }
      //       web_view.Dispose();
             if (xokey != null)
             {
+  
                 Init_Dialog.Set_Status_Text("Cleaningup Configuration");
-                Init_Dialog.Set_Progress_Bar(80);
+                Init_Dialog.Set_Progress_Bar(85);
                 System.Diagnostics.Debug.WriteLine("dispose xokey "); 
                 xokey.Dispose();
                 xokey = null;

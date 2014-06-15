@@ -79,11 +79,19 @@ namespace XoKeyHostApp
             Check_State_Timer.Start();
             StartMultiCastReciever();
         }
+        public void Stop()
+        {
+            Check_State_Timer.Enabled = false;
+            Check_State_Timer.Stop();
+            Stop_VPN();
+            Log_Msg_Send_Event = null;
+        }
         public void Dispose()
         {
             Disposing = true;
             Check_State_Timer.Enabled = false;
             Check_State_Timer.Dispose();
+            
             if (Traffic_Routed_To_XoKey)
             {
                 Remove_Routes();
@@ -391,12 +399,6 @@ namespace XoKeyHostApp
             Send_Log_Msg(Log_Msg, priority, code);
         }
 
-        public void Stop()
-        {
-
-            Log_Msg_Send_Event = null;
-
-        }
         private void Ping_For_Client_IP()
         {
             WebRequest wr = WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/Ping");
@@ -423,6 +425,49 @@ namespace XoKeyHostApp
             //      reader.Close(); // cleanup
             response.Close(); // cleanup;
         }
+
+        public void Stop_VPN()
+        {
+            WebResponse response = null;
+            System.Diagnostics.Debug.WriteLine("Stop_VPN");
+            if (Session_Cookie.Length < 3)
+            {
+                return;
+            }
+            if (XoKey_IP == null)
+                return;
+
+            HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/StopVpn");
+            wr.Method = "GET";
+            wr.CookieContainer = new CookieContainer();
+            Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
+            wr.CookieContainer.Add(cook);
+
+            try
+            {
+                wr.Timeout = 2000; //Set 2 sec timeout
+                response = wr.GetResponse();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("stop ex " + ex.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString());
+                return;
+            }
+            //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
+
+            // Get the stream containing content returned by the server.
+            Stream dataStream = response.GetResponseStream();
+
+
+            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
+            object objResp = jsonSerializer.ReadObject(dataStream);
+            XoKeyApi.StopVpnResponse vpn_response = objResp as XoKeyApi.StopVpnResponse;
+
+            Send_Log_Msg("Stop Response: " + vpn_response.ack.msg);
+            
+        }
+
         private void Get_VPN_Status()
         {
             WebResponse response = null;
@@ -661,7 +706,7 @@ namespace XoKeyHostApp
             }
             catch (Exception ex)
             {
-                
+                System.Diagnostics.Debug.WriteLine("Remove_Routes ex " + ex.ToString()); 
             }
             try
             {
@@ -760,6 +805,18 @@ namespace XoKeyHostApp
             }
         }
      */
+        public void On_Power_Change(Microsoft.Win32.PowerModes Power_Mode)
+        {
+            switch (Power_Mode)
+            {
+                case Microsoft.Win32.PowerModes.Resume:
+
+                    break;
+                case Microsoft.Win32.PowerModes.Suspend:
+                    Stop_VPN();
+                    break;
+            }
+        }
         private void Check_State_Timer_Expired(object source, System.Timers.ElapsedEventArgs e)
         {
 
