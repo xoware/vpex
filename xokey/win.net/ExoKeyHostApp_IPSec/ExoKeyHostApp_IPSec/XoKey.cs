@@ -134,10 +134,6 @@ namespace XoKeyHostApp
             IPEndPoint end_point = (IPEndPoint)((UdpState)(ar.AsyncState)).end_point;
             const int MAX_ADDRS = 8;
 
-    //        var args = (object[])ar.AsyncState;
-       //     var session = (UdpClient)args[0];
-       //     var local = (IPEndPoint)args[1];
-
             IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
             Byte[] bytes = udp_client.EndReceive(ar, ref localEp);
             if (bytes.Length != 108){
@@ -301,22 +297,51 @@ namespace XoKeyHostApp
             }
             return addresses;
         }
+        byte[] getAnnounceDataBytes(McastHeartBeatData announce_data)
+        {
+            int size = Marshal.SizeOf(announce_data);
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            Marshal.StructureToPtr(announce_data, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+
+            return arr;
+        }
         private bool Try_MCast_Bind(IPAddress Local_IP, int retries)
         {
             const int MCast_Port = 1500;
+            McastHeartBeatData announce_data = new McastHeartBeatData();
             try
             {
                 IPAddress multicastaddress = IPAddress.Parse("239.255.255.255");
                 UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
+
+                IPEndPoint Remote_EP = new IPEndPoint(multicastaddress, MCast_Port);
                 Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
                 Mcast_UDP_Client.JoinMulticastGroup(multicastaddress, Local_IP);
-   
+                Mcast_UDP_Client.Ttl = 1;
               
 
                 UdpState state = new UdpState();
                 state.udp_client = Mcast_UDP_Client;
                 state.end_point = new IPEndPoint(Local_IP, MCast_Port);
+
+                announce_data.Version = 1;
+                announce_data.Magic = 0xDEADBEEF;
+                announce_data.Num_Addr = 1;
+                announce_data.IP_Address = new uint[8];
+                announce_data.IP_Address[0] = BitConverter.ToUInt32(Local_IP.GetAddressBytes(), 0);
+                announce_data.Addr_Prefix = new uint[8];
+                announce_data.Addr_Prefix[0] = 24;
+                announce_data.Product_ID = 3;
+                announce_data.unixtime = (uint)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                byte[] mcast_bytes = getAnnounceDataBytes(announce_data);
+                Mcast_UDP_Client.Send(mcast_bytes,
+                    Marshal.SizeOf(announce_data), Remote_EP);
+
 
                 Mcast_UDP_Client.BeginReceive(new AsyncCallback(ReceiveCallback), state);
                 return true;
@@ -706,7 +731,7 @@ namespace XoKeyHostApp
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Remove_Routes ex " + ex.ToString()); 
+                System.Diagnostics.Debug.WriteLine("Remove_Routes EK ex " + ex.ToString()); 
             }
             try
             {
@@ -718,7 +743,7 @@ namespace XoKeyHostApp
             }
             catch (Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine("Remove_Routes def ex " + ex.ToString()); 
             }
 
             Server_IPEndPoint = null;

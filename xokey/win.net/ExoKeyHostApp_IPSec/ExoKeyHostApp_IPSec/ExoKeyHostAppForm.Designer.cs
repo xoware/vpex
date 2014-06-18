@@ -148,7 +148,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 31);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1167, 514);
+            this.tabControl1.Size = new System.Drawing.Size(1167, 539);
             this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
@@ -156,7 +156,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1159, 485);
+            this.tabPage1.Size = new System.Drawing.Size(1159, 510);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -245,7 +245,7 @@
             // Go_button
             // 
             this.Go_button.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.Go_button.Location = new System.Drawing.Point(317, 6);
+            this.Go_button.Location = new System.Drawing.Point(317, 18);
             this.Go_button.Name = "Go_button";
             this.Go_button.Size = new System.Drawing.Size(41, 23);
             this.Go_button.TabIndex = 3;
@@ -256,7 +256,7 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 548);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 573);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1167, 22);
             this.statusStrip1.TabIndex = 4;
@@ -269,7 +269,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(1167, 570);
+            this.ClientSize = new System.Drawing.Size(1167, 595);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.Go_button);
             this.Controls.Add(this.Location_textBox);
