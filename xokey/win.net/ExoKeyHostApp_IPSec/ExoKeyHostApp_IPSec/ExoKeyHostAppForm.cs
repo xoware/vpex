@@ -887,6 +887,11 @@ namespace XoKeyHostApp
                 Console.WriteLine("DisableICS");
                 System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
                 DisableICS();
+
+                Init_Dialog.Set_Status_Text("Windows ICS Disabled");
+                Init_Dialog.Set_Progress_Bar(30);
+  
+                System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
             }
             catch (Exception ex)
             {
@@ -901,13 +906,16 @@ namespace XoKeyHostApp
                 System.Diagnostics.Debug.WriteLine("dispose xokey "); 
                 xokey.Dispose();
                 xokey = null;
+                System.Diagnostics.Debug.WriteLine("xokey disposed "); 
             }
 
             Init_Dialog.Set_Status_Text("Closing");
             Init_Dialog.Set_Progress_Bar(90);
+            System.Diagnostics.Debug.WriteLine("Close Dev"); 
             web_view.CloseDevTools();
             System.Diagnostics.Debug.WriteLine("dispose this object"); 
           //  this.Dispose();
+            Init_Dialog.Invoke_Close();
             System.Diagnostics.Debug.WriteLine("Form closing dispose done."); 
         }
 

@@ -28,14 +28,88 @@ namespace XoKeyHostApp
         public IPEndPoint end_point;
     }
 
+    public enum FacilityEnum : int
+    {
+        Kernel = 0,
+        User = 1,  
+        Mail = 2,  
+        System = 3,
+        Security = 4,
+        Internally = 5,
+        Printer = 6,
+        News = 7,
+        UUCP = 8,
+        cron = 9,
+        Security2 = 10,
+        Ftp = 11,
+        Ntp = 12,
+        Audit = 13,
+        Alert = 14,
+        Clock2 = 15,
+        local0 = 16,
+        local1 = 17,
+        local2 = 18,
+        local3 = 19,
+        local4 = 20,
+        local5 = 21,
+        local6 = 22,
+        local7 = 23,
+    }
+
+    public enum SeverityEnum : int
+    {
+        Emergency = 0,
+        Alert = 1,
+        Critical = 2,
+        Error = 3,
+        Warning = 4,
+        Notice = 5,
+        Info = 6,
+        Debug = 7,
+    }
+
+    public struct PriStruct
+
+    {
+
+        public FacilityEnum Facility;
+
+        public SeverityEnum Severity;
+
+        public PriStruct(string strPri)
+
+        {
+
+            int intPri = Convert.ToInt32(strPri);
+
+            int intFacility = intPri >> 3;
+
+            int intSeverity = intPri & 0x7;
+
+            this.Facility = (FacilityEnum)Enum.Parse(typeof(FacilityEnum), intFacility.ToString());
+            this.Severity = (SeverityEnum)Enum.Parse(typeof(SeverityEnum),
+               intSeverity.ToString());
+        }
+        public override string ToString()
+        {
+            //EXPORT VALUES TO A VALID PRI STRUCTURE
+            return string.Format("{0}.{1}", this.Facility, this.Severity);
+        }
+    }
+
+
     public class XoKey : IDisposable
     {
+        const int MCast_Port = 1500;
+        const int SysLog_MCast_Port = 514;
+        IPAddress ExoKey_Multicast_Address = IPAddress.Parse("239.255.255.255");
+        IPAddress ExoKey_SysLogMcast_Address = IPAddress.Parse("239.255.255.254");
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         public event EK_IP_Address_Detected_Handler EK_IP_Address_Detected = null;
         private readonly Object event_locker = new Object();
         private string Session_Cookie = "";
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
-        private volatile IPAddress Client_USB_IP = IPAddress.Parse("192.168.255.2");
+        private volatile IPAddress Client_USB_IP = null;
 
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
@@ -85,6 +159,7 @@ namespace XoKeyHostApp
             Check_State_Timer.Stop();
             Stop_VPN();
             Log_Msg_Send_Event = null;
+            System.Diagnostics.Debug.WriteLine("XoKey stop done.");  
         }
         public void Dispose()
         {
@@ -96,6 +171,7 @@ namespace XoKeyHostApp
             {
                 Remove_Routes();
             }
+            System.Diagnostics.Debug.WriteLine("XoKey dispose done.");  
         }
         private McastHeartBeatData ByteArr2McastHeartBeatData(byte[] bytes)
         {
@@ -127,6 +203,37 @@ namespace XoKeyHostApp
             }
         }
          */
+        public void SysLog_ReceiveCallback(IAsyncResult ar)
+        {
+            IEnumerable<UnicastIPAddressInformation> addresses;
+            UdpClient udp_client = (UdpClient)((UdpState)(ar.AsyncState)).udp_client;
+            IPEndPoint end_point = (IPEndPoint)((UdpState)(ar.AsyncState)).end_point;
+            PriStruct Pri;
+            System.Text.RegularExpressions.Regex mRegex;
+            IPEndPoint localEp = new IPEndPoint(IPAddress.Any, 1500);
+            Byte[] bytes = udp_client.EndReceive(ar, ref localEp);
+            String Parsed_Msg;
+
+            if (bytes.Length < 3)
+            {
+                // Invalid packet
+                goto queue_next;
+            }
+            string msg = System.Text.ASCIIEncoding.ASCII.GetString(bytes, 0, bytes.Length);   
+            
+            mRegex = new System.Text.RegularExpressions.Regex("<(?<PRI>([0-9]{1,3}))>(?<Message>.*)",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+            System.Text.RegularExpressions.Match tmpMatch = mRegex.Match(msg);
+            Pri = new PriStruct(tmpMatch.Groups["PRI"].Value);
+            Parsed_Msg = tmpMatch.Groups["Message"].Value;
+
+
+
+            Send_Log_Msg(0, (LogMsg.Priority) Pri.Severity,"EK: " + Parsed_Msg);
+
+            queue_next:
+            udp_client.BeginReceive(SysLog_ReceiveCallback, ar.AsyncState); // recieve next packet
+        }
         public void ReceiveCallback(IAsyncResult ar)
         {
             IEnumerable<UnicastIPAddressInformation> addresses;
@@ -309,38 +416,59 @@ namespace XoKeyHostApp
 
             return arr;
         }
+        private void Send_MCast_Announce_Msg(IPAddress Local_IP)
+        {
+            if (Local_IP.ToString().Contains("169.254."))
+                return; // Don't do empty IP, DCHP ranges
+
+
+            McastHeartBeatData announce_data = new McastHeartBeatData();
+            UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
+
+            IPEndPoint Remote_EP = new IPEndPoint(ExoKey_Multicast_Address, MCast_Port);
+            Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
+            Mcast_UDP_Client.JoinMulticastGroup(ExoKey_Multicast_Address, Local_IP);
+            Mcast_UDP_Client.Ttl = 1;
+
+
+            UdpState state = new UdpState();
+            state.udp_client = Mcast_UDP_Client;
+            state.end_point = new IPEndPoint(Local_IP, MCast_Port);
+
+            announce_data.Version = 1;
+            announce_data.Magic = 0xDEADBEEF;
+            announce_data.Num_Addr = 1;
+            announce_data.IP_Address = new uint[8];
+            announce_data.IP_Address[0] = BitConverter.ToUInt32(Local_IP.GetAddressBytes(), 0);
+            announce_data.Addr_Prefix = new uint[8];
+            announce_data.Addr_Prefix[0] = 24;
+            announce_data.Product_ID = 3;
+            announce_data.unixtime = (uint)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            byte[] mcast_bytes = getAnnounceDataBytes(announce_data);
+            Mcast_UDP_Client.Send(mcast_bytes,
+                Marshal.SizeOf(announce_data), Remote_EP);
+
+        }
         private bool Try_MCast_Bind(IPAddress Local_IP, int retries)
         {
-            const int MCast_Port = 1500;
-            McastHeartBeatData announce_data = new McastHeartBeatData();
+           
             try
             {
-                IPAddress multicastaddress = IPAddress.Parse("239.255.255.255");
+                Client_USB_IP = Local_IP;
+                Send_MCast_Announce_Msg(Local_IP);
                 UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
 
-                IPEndPoint Remote_EP = new IPEndPoint(multicastaddress, MCast_Port);
+                IPEndPoint Remote_EP = new IPEndPoint(ExoKey_Multicast_Address, MCast_Port);
                 Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
-                Mcast_UDP_Client.JoinMulticastGroup(multicastaddress, Local_IP);
+                Mcast_UDP_Client.JoinMulticastGroup(ExoKey_Multicast_Address, Local_IP);
                 Mcast_UDP_Client.Ttl = 1;
               
 
                 UdpState state = new UdpState();
                 state.udp_client = Mcast_UDP_Client;
                 state.end_point = new IPEndPoint(Local_IP, MCast_Port);
-
-                announce_data.Version = 1;
-                announce_data.Magic = 0xDEADBEEF;
-                announce_data.Num_Addr = 1;
-                announce_data.IP_Address = new uint[8];
-                announce_data.IP_Address[0] = BitConverter.ToUInt32(Local_IP.GetAddressBytes(), 0);
-                announce_data.Addr_Prefix = new uint[8];
-                announce_data.Addr_Prefix[0] = 24;
-                announce_data.Product_ID = 3;
-                announce_data.unixtime = (uint)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                byte[] mcast_bytes = getAnnounceDataBytes(announce_data);
-                Mcast_UDP_Client.Send(mcast_bytes,
-                    Marshal.SizeOf(announce_data), Remote_EP);
 
 
                 Mcast_UDP_Client.BeginReceive(new AsyncCallback(ReceiveCallback), state);
@@ -354,6 +482,38 @@ namespace XoKeyHostApp
                 return false;
             }
         }
+        private bool Try_SysLog_MCast_Bind(IPAddress Local_IP, int retries)
+        {
+
+            try
+            {
+                Client_USB_IP = Local_IP;
+                Send_MCast_Announce_Msg(Local_IP);
+                UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
+
+                IPEndPoint Remote_EP = new IPEndPoint(ExoKey_SysLogMcast_Address, SysLog_MCast_Port);
+                Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, SysLog_MCast_Port));
+                Mcast_UDP_Client.JoinMulticastGroup(ExoKey_SysLogMcast_Address, Local_IP);
+
+
+                UdpState state = new UdpState();
+                state.udp_client = Mcast_UDP_Client;
+                state.end_point = new IPEndPoint(Local_IP, MCast_Port);
+
+
+                Mcast_UDP_Client.BeginReceive(new AsyncCallback(SysLog_ReceiveCallback), state);
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever bound " + Local_IP.ToString());
+                return true;
+            }
+            catch (Exception ex)
+            {
+//                Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever ex " + Local_IP.ToString() + " "
+//                    + ex.Message.ToString() + " Retries Remaining:" + retries);
+                return false;
+            }
+            
+        }
         private void StartMultiCastReciever()
         {
           
@@ -366,6 +526,8 @@ namespace XoKeyHostApp
 
                    for (int retry = 5; retry > 0  && !Success ; retry--) {
                        Success = Try_MCast_Bind(Local_IP, retry);
+
+                       Try_SysLog_MCast_Bind(Local_IP, retry);
                    }
                    if (Success)
                    {
@@ -852,6 +1014,11 @@ namespace XoKeyHostApp
                     return;
                 Check_State_Timer.Enabled = false;  // avoid timer overrun
                 // Send_Log_Msg("Check_State_Timer_Expired", LogMsg.Priority.Debug);
+
+                if (Client_USB_IP != null && XoKey_IP == null)
+                {
+                    Send_MCast_Announce_Msg(Client_USB_IP);
+                }
 
                 Get_VPN_Status();
 

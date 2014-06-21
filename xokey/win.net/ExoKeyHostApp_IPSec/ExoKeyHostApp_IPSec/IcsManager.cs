@@ -35,9 +35,15 @@ namespace XoKeyHostApp
                     if (config.SharingEnabled)
                     {
                         if (config.SharingConnectionType == tagSHARINGCONNECTIONTYPE.ICSSHARINGTYPE_PUBLIC)
+                        {
                             sharedConnection = c;
+                            Console.WriteLine("SharedConnection=" + c.ToString());
+                        }
                         else if (config.SharingConnectionType == tagSHARINGCONNECTIONTYPE.ICSSHARINGTYPE_PRIVATE)
+                        {
                             homeConnection = c;
+                            Console.WriteLine("homeConnection=" + c.ToString());
+                        }
                     }
                 }
                 catch (System.Runtime.InteropServices.ExternalException)

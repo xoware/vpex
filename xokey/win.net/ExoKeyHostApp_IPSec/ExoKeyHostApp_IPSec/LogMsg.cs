@@ -11,11 +11,14 @@ namespace XoKeyHostApp
     {
         public enum Priority
         {            
-            Critical = 0,
-            Error = 1,
-            Warning = 2,
-            Info = 3,
-            Debug = 4,
+            Emergency = 0,
+            Alert = 1,
+            Critical = 2,
+            Error = 3,
+            Warning = 4,
+            Notice = 5,
+            Info = 6,
+            Debug = 7,
             //LAST_INVALID
         }
 
