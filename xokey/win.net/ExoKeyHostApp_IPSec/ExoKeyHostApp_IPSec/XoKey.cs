@@ -104,6 +104,7 @@ namespace XoKeyHostApp
         const int SysLog_MCast_Port = 514;
         IPAddress ExoKey_Multicast_Address = IPAddress.Parse("239.255.255.255");
         IPAddress ExoKey_SysLogMcast_Address = IPAddress.Parse("239.255.255.254");
+        private String Last_SysLog_Msg = "";  // to avoid repeats
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         public event EK_IP_Address_Detected_Handler EK_IP_Address_Detected = null;
         private readonly Object event_locker = new Object();
@@ -155,9 +156,13 @@ namespace XoKeyHostApp
         }
         public void Stop()
         {
+            
             Check_State_Timer.Enabled = false;
             Check_State_Timer.Stop();
+            
             Stop_VPN();
+            Disposing = true;
+            Check_State_Timer.Dispose();
             Log_Msg_Send_Event = null;
             System.Diagnostics.Debug.WriteLine("XoKey stop done.");  
         }
@@ -166,6 +171,7 @@ namespace XoKeyHostApp
             Disposing = true;
             Check_State_Timer.Enabled = false;
             Check_State_Timer.Dispose();
+            Check_State_Timer = null;
             
             if (Traffic_Routed_To_XoKey)
             {
@@ -214,22 +220,36 @@ namespace XoKeyHostApp
             Byte[] bytes = udp_client.EndReceive(ar, ref localEp);
             String Parsed_Msg;
 
-            if (bytes.Length < 3)
+            try
             {
-                // Invalid packet
-                goto queue_next;
+                if (bytes.Length < 3)
+                {
+                    // Invalid packet
+                    goto queue_next;
+                }
+                string msg = System.Text.ASCIIEncoding.ASCII.GetString(bytes, 0, bytes.Length);
+
+                lock (Last_SysLog_Msg)
+                {
+                    // avoid duplicate messages
+                    if (msg == Last_SysLog_Msg)
+                        goto queue_next;
+                    Last_SysLog_Msg = msg;
+                }
+
+                mRegex = new System.Text.RegularExpressions.Regex("<(?<PRI>([0-9]{1,3}))>(?<Message>.*)",
+                    System.Text.RegularExpressions.RegexOptions.Compiled);
+                System.Text.RegularExpressions.Match tmpMatch = mRegex.Match(msg);
+                Pri = new PriStruct(tmpMatch.Groups["PRI"].Value);
+                Parsed_Msg = tmpMatch.Groups["Message"].Value;
+                
+                Send_Log_Msg(0, (LogMsg.Priority)Pri.Severity, "EK: " + Parsed_Msg);
+               
             }
-            string msg = System.Text.ASCIIEncoding.ASCII.GetString(bytes, 0, bytes.Length);   
-            
-            mRegex = new System.Text.RegularExpressions.Regex("<(?<PRI>([0-9]{1,3}))>(?<Message>.*)",
-                System.Text.RegularExpressions.RegexOptions.Compiled);
-            System.Text.RegularExpressions.Match tmpMatch = mRegex.Match(msg);
-            Pri = new PriStruct(tmpMatch.Groups["PRI"].Value);
-            Parsed_Msg = tmpMatch.Groups["Message"].Value;
-
-
-
-            Send_Log_Msg(0, (LogMsg.Priority) Pri.Severity,"EK: " + Parsed_Msg);
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Ex Syslog Recv:" + ex.ToString());
+            }
 
             queue_next:
             udp_client.BeginReceive(SysLog_ReceiveCallback, ar.AsyncState); // recieve next packet
@@ -572,6 +592,7 @@ namespace XoKeyHostApp
         {
             if (Disposing)
                 return;
+            /*
             lock (event_locker)
             {
                 if (Log_Msg_Send_Event == null)
@@ -580,6 +601,20 @@ namespace XoKeyHostApp
                 LogMsg Msg = new LogMsg(Log_Msg, priority, code);
                 Log_Msg_Send_Event(Msg);
             }
+            */
+
+            if(Monitor.TryEnter(event_locker, new TimeSpan(0, 0, 1))) {
+            try {
+                if (Log_Msg_Send_Event == null)
+                    return;
+
+                LogMsg Msg = new LogMsg(Log_Msg, priority, code);
+                Log_Msg_Send_Event(Msg); 
+            }
+            finally {
+                Monitor.Exit(event_locker);
+            }
+}
         }
         private void Send_Log_Msg(int code, LogMsg.Priority priority, string Log_Msg)
         {
@@ -691,7 +726,7 @@ namespace XoKeyHostApp
             XoKeyApi.VpnStatusResponse vpn_response = objResp as XoKeyApi.VpnStatusResponse;
 
             try {
-                if (vpn_response.active_vpn != null &&  vpn_response.active_vpn.state == "Connected")
+                if (vpn_response != null && vpn_response.active_vpn != null &&  vpn_response.active_vpn.state == "Connected")
                 {
                     String VPN_Server_Hostname = vpn_response.active_vpn.address[0].host;
                     IPAddress[] addresslist;
@@ -705,12 +740,21 @@ namespace XoKeyHostApp
 
                         }
                         else {
-                        addresslist = Dns.GetHostAddresses(VPN_Server_Hostname);
+                            try
+                            {
+                                addresslist = Dns.GetHostAddresses(VPN_Server_Hostname);
+                            }
+                            catch (Exception ex)
+                            {
+                                Send_Log_Msg(0, LogMsg.Priority.Warning, "Can't resolve DNS address:" + VPN_Server_Hostname
+                                      + " : " + ex.GetType().ToString());
+                                throw ex;
+                            }
                         }
                     } catch (Exception ex)
                     {
-                        Send_Log_Msg(0, LogMsg.Priority.Warning, "Can't resolve DNS address:" + VPN_Server_Hostname
-                            + " : " + ex.GetType().ToString());
+                        System.Diagnostics.Debug.WriteLine(" Response Ex "+ ex.ToString());
+                  
                         throw ex;
                     }
                     IPEndPoint Server = new IPEndPoint(addresslist[0],0);
@@ -1031,7 +1075,7 @@ namespace XoKeyHostApp
             }
             finally
             {
-                if (!Disposing)
+                if (!Disposing && Check_State_Timer != null)
                     Check_State_Timer.Enabled = true;
             }
         }
