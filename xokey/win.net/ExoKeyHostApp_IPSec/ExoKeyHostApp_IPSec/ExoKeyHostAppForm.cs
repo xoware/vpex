@@ -183,6 +183,7 @@ namespace XoKeyHostApp
 
         public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors)
         {   // Accept all SSL certs
+            Console.WriteLine("Accept SSL Cert");
             return true;
         }
         /*
@@ -571,6 +572,7 @@ namespace XoKeyHostApp
         {
             // Return true to ignore and not show the 
             // "Security Alert" dialog to the user
+            Console.WriteLine("Accept WindowsInterop_SecurityAlertDialogWillBeShown");
             return true;
         }
 
@@ -604,7 +606,7 @@ namespace XoKeyHostApp
         public void Add_Log_Entry(LogMsg Msg)
         {
 
-            if (PopupErrors_checkBox.Checked && Msg.Level <= LogMsg.Priority.Error)
+            if (PopupErrors_checkBox.Checked && Msg.Level <= LogMsg.Priority.Critical)
                 MessageBox.Show(Msg.Message);
 
 
@@ -913,6 +915,14 @@ namespace XoKeyHostApp
             Init_Dialog.Set_Progress_Bar(90);
             System.Diagnostics.Debug.WriteLine("Close Dev"); 
             web_view.CloseDevTools();
+
+            Init_Dialog.Set_Progress_Bar(92);
+            System.Diagnostics.Debug.WriteLine("Close WebView");
+            System.Diagnostics.Debug.WriteLine("stop web_view"); 
+            web_view.Stop();
+            System.Diagnostics.Debug.WriteLine("dispose web_view"); 
+            web_view.Dispose();
+            web_view = null;
             System.Diagnostics.Debug.WriteLine("dispose this object"); 
           //  this.Dispose();
             Init_Dialog.Invoke_Close();

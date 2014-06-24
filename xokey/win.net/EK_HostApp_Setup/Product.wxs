@@ -3,12 +3,28 @@
 	<Product Id="*" Name="ExoKey Host Application" Language="1033" Version="1.0.0.2" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-		<MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <!-- HowTo http://wixtoolset.org/documentation/manual/v3/howtos/updates/major_upgrade.html -->
+    <MajorUpgrade AllowDowngrades="no" 
+                  Schedule="afterInstallInitialize" AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate />
     <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+    <!--
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallInitialize"/>
+    </InstallExecuteSequence>
 
-		
-      <Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
+    <Upgrade Id="6b60c82d-4722-441f-a573-70765a1af96a">
+      <UpgradeVersion
+         Minimum="1.0.0.0" Maximum="99.0.0.0"
+         Property="PREVIOUSVERSIONSINSTALLED"
+         IncludeMinimum="yes" IncludeMaximum="no" />
+    </Upgrade>
+-->
+
+
+    <Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="localesComponent" />
       <ComponentRef Id="ApplicationShortcut" />
