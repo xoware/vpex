@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Management;
 using Xoware;
 
 
@@ -145,14 +146,45 @@ namespace XoKeyHostApp
             startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
             startup_bw.RunWorkerAsync();
         }
+        public void DisplayDnsAddresses()
+        {
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface adapter in adapters)
+            {
+
+                IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+                IPAddressCollection dnsServers = adapterProperties.DnsAddresses;
+                if (dnsServers.Count > 0)
+                {
+                    Console.WriteLine(adapter.Description);
+                    foreach (IPAddress dns in dnsServers)
+                    {
+                        Console.WriteLine("  DNS Servers ............................. : {0}",
+                            dns.ToString());
+                        Send_Log_Msg(0, LogMsg.Priority.Debug, "  DNS Servers  : " + dns.ToString()
+                            + " Adapter: " + adapter.Description);
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
         private void startup_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
        //   Send_Log_Msg("Worker Startup");
-            Check_State_Timer = new System.Timers.Timer(1000);
-            Check_State_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Check_State_Timer_Expired);
-            Check_State_Timer.Start();
-            StartMultiCastReciever();
+            try
+            {
+                Check_State_Timer = new System.Timers.Timer(1000);
+                Check_State_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Check_State_Timer_Expired);
+                Check_State_Timer.Start();
+                StartMultiCastReciever();
+                DisplayDnsAddresses();
+                SetNameservers("ExoKey", "8.8.8.8,8.8.4.4");
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Debug, "startup_DoWork Execption:" + ex.ToString() + "  " + ex.StackTrace.ToString());
+            }
         }
         public void Stop()
         {
@@ -678,16 +710,22 @@ namespace XoKeyHostApp
             }
             //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
-            // Get the stream containing content returned by the server.
-            Stream dataStream = response.GetResponseStream();
+            try
+            {
+                // Get the stream containing content returned by the server.
+                Stream dataStream = response.GetResponseStream();
 
 
-            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
-            object objResp = jsonSerializer.ReadObject(dataStream);
-            XoKeyApi.StopVpnResponse vpn_response = objResp as XoKeyApi.StopVpnResponse;
+                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
+                object objResp = jsonSerializer.ReadObject(dataStream);
+                XoKeyApi.StopVpnResponse vpn_response = objResp as XoKeyApi.StopVpnResponse;
 
-            Send_Log_Msg("Stop Response: " + vpn_response.ack.msg);
-            
+                Send_Log_Msg("Stop Response: " + vpn_response.ack.msg);
+            }
+            catch
+            {
+
+            }
         }
 
         private void Get_VPN_Status()
@@ -766,11 +804,39 @@ namespace XoKeyHostApp
                 }
 
             } catch (Exception ex) {
-                  Send_Log_Msg(0, LogMsg.Priority.Debug, "Ex " + ex.ToString());
+                  Send_Log_Msg(0, LogMsg.Priority.Debug, "Ex " + ex.ToString() + ex.StackTrace.ToString());
+                  Send_Log_Msg(0, LogMsg.Priority.Debug, dataStream.ToString());
             }
            
             response.Close(); // cleanup;
         }
+
+        /// <summary>
+        /// Set's the DNS Server of the local machine
+        /// </summary>
+        /// <param name="nic">NIC address</param>
+        /// <param name="dnsServers">Comma seperated list of DNS server addresses</param>
+        /// <remarks>Requires a reference to the System.Management namespace</remarks>
+        public void SetNameservers(string nic, string dnsServers)
+        {
+            using (var networkConfigMng = new ManagementClass("Win32_NetworkAdapterConfiguration"))
+            {
+                using (var networkConfigs = networkConfigMng.GetInstances())
+                {
+//                   foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Caption"].Equals(nic)))
+                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Description"].ToString().Contains(nic)))
+//                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] )) 
+                    {
+                        using (var newDNS = managementObject.GetMethodParameters("SetDNSServerSearchOrder"))
+                        {
+                            newDNS["DNSServerSearchOrder"] = dnsServers.Split(',');
+                            managementObject.InvokeMethod("SetDNSServerSearchOrder", newDNS, null);
+                        }
+                    }
+                }
+            }
+        }
+
         private Cookie Cookie_Str_To_Cookie(String Cook_Str)
         {
 
