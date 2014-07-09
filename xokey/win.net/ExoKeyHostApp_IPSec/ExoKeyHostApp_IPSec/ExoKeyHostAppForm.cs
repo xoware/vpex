@@ -39,8 +39,11 @@ namespace XoKeyHostApp
         NetworkInterface Exokey_Interface = null;
         NetworkInterface Internet_Interface = null;
         Init_Dialog_Form Init_Dialog = null;
+        bool First_EK_Page_Loaded = false;
         private BackgroundWorker startup_bw = new BackgroundWorker();
         private volatile IPAddress XoKey_IP;
+        private System.Windows.Forms.ContextMenu notify_contextMenu;
+        private System.Windows.Forms.MenuItem notify_exit_menuItem;
 
 
         public ExoKeyHostAppForm()
@@ -66,6 +69,18 @@ namespace XoKeyHostApp
             web_view.LocationChanged += web_view_LocationChanged; 
              * */
             SystemEvents.PowerModeChanged += OnPowerChange;
+
+            // Initialize menuItem1 
+  
+            notify_exit_menuItem = new System.Windows.Forms.MenuItem();
+            notify_exit_menuItem.Index = 0;
+            notify_exit_menuItem.Text = "E&xit";
+            notify_exit_menuItem.Click += new System.EventHandler(this.notify_exit_Click);
+            notify_contextMenu = new ContextMenu();
+            notify_contextMenu.MenuItems.AddRange(
+                    new System.Windows.Forms.MenuItem[] { this.notify_exit_menuItem });
+
+            notifyIcon1.ContextMenu = notify_contextMenu;
         }
         private const string CLSID_FIREWALL_MANAGER = "{304CE942-6E39-40D8-943A-B913C40C9CD4}";
         private static NetFwTypeLib.INetFwMgr GetFirewallManager()
@@ -74,6 +89,11 @@ namespace XoKeyHostApp
                   new Guid(CLSID_FIREWALL_MANAGER));
             return Activator.CreateInstance(objectType) 
                   as NetFwTypeLib.INetFwMgr;
+        }
+        private void notify_exit_Click(object Sender, EventArgs e)
+        {
+            // Close the form, which closes the application. 
+            this.Close();
         }
 
         private DateTime RetrieveLinkerTimestamp()
@@ -129,6 +149,21 @@ namespace XoKeyHostApp
             if (xokey != null)
                 xokey.On_Power_Change(e.Mode);
         }
+        private void On_EK_State_Change(ExoKeyState Old_State, ExoKeyState New_State)
+        {
+            if (New_State == ExoKeyState.ExoKeyState_Connected)
+            {
+                notifyIcon1.BalloonTipText = "ExoKey Connected to ExoNet";
+                notifyIcon1.ShowBalloonTip(1234);
+            }
+            else if (New_State == ExoKeyState.ExoKeyState_Disconnected)
+            {
+                notifyIcon1.BalloonTipText = "ExoKey Disconnected from ExoNet";
+                notifyIcon1.ShowBalloonTip(1234);
+            } 
+
+        }
+
         void web_view_LocationChanged(object sender, EventArgs e)
         {
             __Log_Msg(0, LogMsg.Priority.Debug, "LocationChanged: " + web_view.Location + "  e:" + e.ToString() );
@@ -147,6 +182,12 @@ namespace XoKeyHostApp
             // disable right click
             web_view.ExecuteScript("window.oncontextmenu = function() { return false; };");
 
+            if (First_EK_Page_Loaded == false)
+            {
+                First_EK_Page_Loaded = true;
+                notifyIcon1.BalloonTipText = "ExoKey Started";
+                notifyIcon1.ShowBalloonTip(1234);
+            }
             
         }
 
@@ -461,7 +502,8 @@ namespace XoKeyHostApp
             Init_Dialog.Recv_Status_Text("Finishing Initalization.");
             Init_Dialog.Recv_Progress_Val(93);
             xokey = new XoKey(invoke => Invoke(invoke), Recv_Log_Msg);
-            xokey.EK_IP_Address_Detected += EK_Address_Change_Handler;
+            xokey.EK_IP_Address_Detected += EK_Address_Change_Handler; // address change event
+            xokey.EK_State_Change += On_EK_State_Change;  // connection state change event
             xokey.Startup();
             Init_Dialog.Invoke_Close();
         }
@@ -943,6 +985,16 @@ namespace XoKeyHostApp
         private void Location_textBox_Enter(object sender, EventArgs e)
         {
             Navigate();
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // Set the WindowState to normal if the form is minimized. 
+            if (this.WindowState == FormWindowState.Minimized)
+                this.WindowState = FormWindowState.Normal;
+
+            // Activate the form. 
+            this.Activate();
         }
    
     }

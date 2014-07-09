@@ -21,7 +21,15 @@ using Xoware;
 
 namespace XoKeyHostApp
 {
+
+    public enum ExoKeyState : int
+    {
+        ExoKeyState_Disconnected = 0,
+        ExoKeyState_Connected = 1,
+    }
+
     public delegate void EK_IP_Address_Detected_Handler(IPAddress ip);
+    public delegate void EK_State_Change_Handler(ExoKeyState Old_State, ExoKeyState New_State);
 
     public class UdpState
     {
@@ -108,10 +116,12 @@ namespace XoKeyHostApp
         private String Last_SysLog_Msg = "";  // to avoid repeats
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         public event EK_IP_Address_Detected_Handler EK_IP_Address_Detected = null;
+        public event EK_State_Change_Handler EK_State_Change = null;
         private readonly Object event_locker = new Object();
         private string Session_Cookie = "";
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = null;
+        private volatile ExoKeyState EK_State =  ExoKeyState.ExoKeyState_Disconnected;
 
         System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
@@ -140,7 +150,14 @@ namespace XoKeyHostApp
               NetworkAddressChangedEventHandler(AddressChangedCallback);
  
         }
-
+        private void Set_EK_State(ExoKeyState New_State)
+        {
+            if (New_State != EK_State)
+            {
+                EK_State_Change(EK_State, New_State);
+                EK_State = New_State;
+            }
+        }
         public void Startup()
         {
             startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
@@ -797,10 +814,12 @@ namespace XoKeyHostApp
                     }
                     IPEndPoint Server = new IPEndPoint(addresslist[0],0);
                     Set_Sever_IPEndpoint(Server);
+                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
                 }
                 else
                 {
                     Remove_Routes();
+                    Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
                 }
 
             } catch (Exception ex) {
