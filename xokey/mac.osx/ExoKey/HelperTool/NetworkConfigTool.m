@@ -203,15 +203,23 @@
         [self ExoKeyLog:[NSString stringWithFormat:@"Failed to write PF config file for ExoKey at path %@",PF_CONF_PATH]];
         return;
     }
+
     
-    //3)    Load the PF configuration file
-    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-f",PF_CONF_PATH]];
-    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-sr"]];
-    
-    //3)    Enable packet forwarding (NAT)
-    [self ExoKeyLog:@"Enable packet forwarding (net.inet.ip.forwarding=1)"];
+    //3)    Enable packet forwarding (NAT) for IPv4
+    [self ExoKeyLog:@"Enable IPv4 packet forwarding (net.inet.ip.forwarding=1)"];
     [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"net.inet.ip.forwarding=1"]];
     
+    //4)    Enable packet forwarding (NAT) for IPv6
+    [self ExoKeyLog:@"Enable IPv6 packet forwarding (net.inet6.ip6.forwarding=1)"];
+    [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"inet6.ip6.forwarding=1"]];
+    
+    //5)    Enable PF
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-e"]];
+    
+    //6)    Load the PF configuration file
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-f",PF_CONF_PATH]];
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-sr"]];
+
     /*
     //Allow all incoming traffic on the ExoKey endpoint using IPFW
     [NSTask launchedTaskWithLaunchPath:@"/sbin/ipfw" arguments:@[@"add",@"allow",@"all",@"from",
@@ -240,14 +248,14 @@
                                                     "scrub-anchor \"com.apple*\"\n"
                                                     "nat-anchor \"com.apple/*\"\n"
                                                     "rdr-anchor \"com.apple/*\"\n"
-                                                    "nat on en0 from %@:network to any -> (%@)\n"        //New NAT rules for ExoKey
+                                                    "nat on %@ from %@:network to any -> (%@)\n"        //New NAT rules for ExoKey
                                                     "dummynet-anchor \"com.apple/*\"\n"
                                                     "anchor \"com.apple/*\"\n"
                                                     "load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
                                                     /*New filter rules for ExoKey*/
                                                     "pass in quick on %@ all\n"
                                                     "pass out quick on %@ all\n",
-                                                    ExoKeyEndpoint,inetEndpoint,
+                                                    inetEndpoint,ExoKeyEndpoint,inetEndpoint,
                                                     ExoKeyEndpoint,
                                                     ExoKeyEndpoint
                                                     ];

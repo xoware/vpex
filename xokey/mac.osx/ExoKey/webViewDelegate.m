@@ -31,11 +31,11 @@
 //  http://stackoverflow.com/questions/11573164/uiwebview-to-view-self-signed-websites-no-private-api-not-nsurlconnection-i
 //*******************************************************************
 -(int)connectToExoKey:(NSString*)path{
-  /*  NSURLCache *URLCache = [[NSURLCache alloc] initWithMemoryCapacity:4 * 1024 * 1024
+    NSURLCache *URLCache = [[NSURLCache alloc] initWithMemoryCapacity:4 * 1024 * 1024
                                                          diskCapacity:20 * 1024 * 1024
                                                              diskPath:nil];
     [NSURLCache setSharedURLCache:URLCache];
-    */
+   
     receivedData = [NSMutableData dataWithCapacity: 0];
     NSURL* url = [NSURL URLWithString:@"https://192.168.255.1/ek/login.html"];
     NSURLRequest* request = [NSURLRequest requestWithURL:url];

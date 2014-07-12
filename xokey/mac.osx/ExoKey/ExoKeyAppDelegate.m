@@ -54,7 +54,13 @@
 //              Purpose:    Holds definitions for the EK and device property keys
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//
+//  Globals
+//
 ExoKeyAppDelegate* c_pointer;
+NSFileHandle* logFileHandle;
+
 /*
 struct XoHeartBeatData
 {
@@ -70,6 +76,7 @@ struct XoHeartBeatData
 };
 */
 
+//
 //  Finding the network interface from the IP address usig getifaddrs
 //http://stackoverflow.com/questions/427517/finding-an-interface-name-from-an-ip-address
 NSString* findNetworkInterface(struct in_addr* addr){
@@ -203,7 +210,7 @@ void listenToExoKeyBroadcast(){
                                                         0);
 
     //Use GCD async and concurrent queues instead of threads.
-    dispatch_async(netWorkQueue, ^(void){
+    dispatch_sync(netWorkQueue, ^(void){
         while (1) {
             char buf[101];
             struct sockaddr from;
@@ -224,7 +231,7 @@ void listenToExoKeyBroadcast(){
 //Universal logger across all the different objects of the app (including the network tool)
 void ExoKeyLog(NSString* text){
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    dispatch_async(queue, ^{
+    dispatch_sync(queue, ^{
         NSLog(@"%@",text);
         NSMutableString* logText = [NSMutableString stringWithString:c_pointer.GUILog.string];
         NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
@@ -235,6 +242,13 @@ void ExoKeyLog(NSString* text){
         [logText appendString:@": "];
         [logText appendString:text];
         [logText appendString:@"\n"];
+    
+        //Log to file
+        NSMutableString* fileString = [NSMutableString stringWithString:text];
+        [fileString appendString:@"\n"];
+        if (logFileHandle) {
+            [logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
+        }
         [c_pointer.GUILog setString:logText];
         //[c_pointer.GUILog scrollRangeToVisible: NSMakeRange(c_pointer.GUILog.string.length, 0)];
     });
@@ -266,6 +280,16 @@ void ExoKeyLog(NSString* text){
     //  Get global concurrent queue
     networkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                               0);
+    
+    //  Initialize file I/O for logging
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
+    NSString* theDesktopPath = [paths objectAtIndex:0];
+    NSMutableString* logPath = [NSMutableString stringWithString:theDesktopPath];
+    [logPath appendString:@"/ExoKey.log"];
+    if (![[NSFileManager defaultManager]fileExistsAtPath:logPath]) {
+        [[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil];
+    }
+    logFileHandle = [NSFileHandle fileHandleForUpdatingAtPath:logPath];
     
     //  Initially, the application is unaware if an ExoKey device is connected.
     exoKeyConnected = false;
@@ -312,7 +336,23 @@ void ExoKeyLog(NSString* text){
     [self authorize];
     
     //  Create the network tool daemon.
-    [self initializeNetworkTool];
+    const unsigned int networkToolCreationRetries = 10;
+    for (int i = 0; i < networkToolCreationRetries; i++) {
+        if([self initializeNetworkTool]){
+            break;
+        }
+        ExoKeyLog([NSString stringWithFormat:@"Failed to create Network Tool. Trying again: %d",(i+1)]);
+    }
+    
+    //  Find interface facing the internet. We poll for it but it's initially needed before the PF rule are set
+    struct in_addr nextHop;
+    deviceProperties[ACTIVE_ENDPOINT]= XoUtil_getInternetSrcAddr(&nextHop);
+    if (!deviceProperties[ACTIVE_ENDPOINT]){
+        // Internet might be down so remove any ExoNet routes if they exist.
+        [self removeExoNetRoute];
+        return;
+    }
+    
     
     //  Listen to broadcast packets from the EK
     listenToExoKeyBroadcast();
@@ -348,9 +388,11 @@ void ExoKeyLog(NSString* text){
 -(void)devProc:(NSNotification*) notification{
     if([notification.name isEqualToString:EXOKEY_PLUGIN]){
         ExoKeyLog(@"***ExoKey plugin event received.***");
-        exoKeyConnected = true;
         self.ek_ConnectedDisplay.state = NSOnState;
        
+        //Set ExoKey connected state to true
+        exoKeyConnected = true;
+        
         //Set the EK BSD device name and initialize IP address and subnet to default values
         deviceProperties[EXOKEY_ENDPOINT] = exoKeyUSBObject.BSDDeviceName;
         deviceProperties[EXOKEY_IP_ADDRESS] = DEFAULT_IP;
@@ -362,16 +404,17 @@ void ExoKeyLog(NSString* text){
         //Create the network tool to execute programs requiring root
         [self setExoKeyIP];
         
-        //Setup firewall/NAT rules
-        dispatch_async(networkQueue,
+        //Setup firewall/NAT rules only when EK is connected
+        dispatch_sync(networkQueue,
             ^(void){
                 ExoKeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
                 sleep(2.0);
                 [self setupFirewall];
+                
+                //Load https site on separate thread.
+                [webViewDel connectToExoKey:@""];
         });
-      
-        //Load https site on separate thread.
-        [webViewDel connectToExoKey:@""];
+
     }
     if([notification.name isEqualToString:EXOKEY_UNPLUG]){
         ExoKeyLog(@"***ExoKey unplug event received.***");
@@ -456,8 +499,11 @@ void ExoKeyLog(NSString* text){
         deviceProperties[EXOKEY_IP_ADDRESS] = result;
         
         //Update device properties view.
-        [self.devicePropertiesView setString:[NSString stringWithFormat:
-                                              @"Endpoint: %@ \nIP Address: %@",deviceProperties[EXOKEY_ENDPOINT],deviceProperties[EXOKEY_IP_ADDRESS]]];
+        dispatch_sync(networkQueue,
+            ^{
+                [self.devicePropertiesView setString:[NSString stringWithFormat:
+                                                      @"Endpoint: %@ \nIP Address: %@",deviceProperties[EXOKEY_ENDPOINT],deviceProperties[EXOKEY_IP_ADDRESS]]];
+        });
     }
 
     
@@ -589,7 +635,7 @@ void ExoKeyLog(NSString* text){
             [self setExoKeyIP];
             
             //Setup firewall/NAT rules
-            dispatch_async(networkQueue,
+            dispatch_sync(networkQueue,
                 ^(void){
                     ExoKeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
                     sleep(2.0);
@@ -600,14 +646,6 @@ void ExoKeyLog(NSString* text){
     }else{
         ExoKeyLog(@"ExoKey is not connected!");
     }
-}
-
-//Route traffic to the ExoKey USB device
-//Network topology:
-//Mac -> ExoKey -> Mac -> Default Gateway -> Internet
-- (IBAction)routeToExoKey:(id)sender {
-   // [self routeToExoNet];
-    
 }
 
 #pragma mark Authorization functions
@@ -687,14 +725,12 @@ void ExoKeyLog(NSString* text){
 #pragma mark Network Tool methods
 
 //Create the helper tool then connect to it.
--(void)initializeNetworkTool{
-    //First attempt to determine IPAddress and endpoint of the device. The device broadcasts
-    //a UDP packet (destination : IP Address 239.255.255.255). The default IP Address is 192.168.255.1.
+-(BOOL)initializeNetworkTool{
     ExoKeyLog(@"Creating ExoKey network configuration tool.");
     NSError *error = nil;
     if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error]) {
         ExoKeyLog([NSString stringWithFormat:@"Failed to create network config tool. Error: %@ / %d", [error localizedFailureReason], (int) [error code]]);
-        return;
+        return NO;
     }else{
         ExoKeyLog(@"Succeeded in creating network config tool.");
         networkToolCreated = true;
@@ -716,6 +752,7 @@ void ExoKeyLog(NSString* text){
         //To send XPC messages
         myConnection.remoteObjectInterface = helperInterface;
         [myConnection resume];
+        return YES;
     }
 }
 
@@ -745,7 +782,7 @@ void ExoKeyLog(NSString* text){
 -(void)routeToExoNet:(NSString*)ExoNetIP{
     //Ensure that the ExoNet server path exists for the EK to forward traffic to s
     if ([deviceProperties[EXONET_IP] isNotEqualTo:NOT_SET]) {
-        dispatch_async(networkQueue, ^(void){
+        dispatch_sync(networkQueue, ^(void){
             //Add route from ExoNet to the router
             ExoKeyLog([NSString stringWithFormat:@"Add route from ExoNet IP %@ to the router IP %@",ExoNetIP,deviceProperties[ROUTER]]);
             [[myConnection remoteObjectProxy]destination:ExoNetIP gateway:deviceProperties[ROUTER] subnet:@"255.255.255.255"];
@@ -769,14 +806,6 @@ void ExoKeyLog(NSString* text){
         deviceProperties[EXONET_IP] = NOT_SET;
     }
 }
-
-- (IBAction)flushRoutingTable:(id)sender {
-    //Command to flush the routing table. -n flag causes the route program to bypass translation of address to
-    //symbolic name. We try to flush the routing table multiple times as suggested by some Stackoverflow posts...
-    ExoKeyLog(@"Flushing current routing table");
-    [[myConnection remoteObjectProxy]flushRoutingTable];
-}
-
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification{
     //Remove ExoNet routes from the routing table

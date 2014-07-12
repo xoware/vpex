@@ -35,15 +35,25 @@ void ExoKeyLog(NSString* text);
 }
 
 //Methods
+
+//GUI
 -(void)initializeGUI;
 -(void)initializeIPAddressBox;
--(void)setExoKeyIP;
--(void)initializeNetworkTool;
+
+//Network Tool
 -(void)authorize;
+-(BOOL)initializeNetworkTool;
+-(void)setupFirewall;
+
+//ExoKey
+-(void)setExoKeyIP;
 -(void)devProc:(NSNotification*) notification;
+
+//HTTPS Site/Routing
 -(void)appPoll:(NSTimer*)timer;
 -(void)findRouter;
--(void)setupFirewall;
+
+//ExoNet
 -(BOOL)resolveHostName:(NSString*)ExoNetHostName;
 -(void)routeToExoNet:(NSString*)ExoNetIP;
 -(void)removeExoNetRoute;
@@ -52,8 +62,6 @@ void ExoKeyLog(NSString* text);
 - (IBAction)reconnect:(id)sender;
 - (IBAction)selectedDHCPButton:(id)sender;
 - (IBAction)setIPAddressButton:(id)sender;
-- (IBAction)routeToExoKey:(id)sender;
-- (IBAction)flushRoutingTable:(id)sender;
 
 
 //- (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr;
