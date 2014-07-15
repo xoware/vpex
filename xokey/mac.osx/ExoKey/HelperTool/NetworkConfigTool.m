@@ -249,6 +249,7 @@
                                                     "nat-anchor \"com.apple/*\"\n"
                                                     "rdr-anchor \"com.apple/*\"\n"
                                                     "nat on %@ from %@:network to any -> (%@)\n"        //New NAT rules for ExoKey
+                                                   // "pass out on %@ from %@:net to any nat-to %@\n"           //Try new rule
                                                     "dummynet-anchor \"com.apple/*\"\n"
                                                     "anchor \"com.apple/*\"\n"
                                                     "load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"

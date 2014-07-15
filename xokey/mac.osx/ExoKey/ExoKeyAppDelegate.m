@@ -540,7 +540,6 @@ void ExoKeyLog(NSString* text){
         if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
             //Remove route to ExoNet
             [self removeExoNetRoute];
-            deviceProperties[EXONET_IP] = NOT_SET;
             routedToExoNet = false;
         }
         
@@ -726,6 +725,21 @@ void ExoKeyLog(NSString* text){
 
 //Create the helper tool then connect to it.
 -(BOOL)initializeNetworkTool{
+    //First detect if it already exists and remove the old network tool since SMJobRemove only removes the job from launchd
+    if ([[NSFileManager defaultManager]fileExistsAtPath:@"/Library/PrivilegedHelperTools/ExoKey.NetworkConfigTool"]) {
+    NSString * output = nil;
+    NSString * processErrorDescription = nil;
+    BOOL success = [self runProcessAsAdministrator:@"/bin/rm"
+                                     withArguments:[NSArray arrayWithObjects:@"/Library/PrivilegedHelperTools/ExoKey.NetworkConfigTool", nil]
+                                            output:&output
+                                  errorDescription:&processErrorDescription];
+        if (!success) {
+            ExoKeyLog(@"Failed to remove ExoKey.NetworkConfigTool with error");
+            ExoKeyLog(processErrorDescription);
+        }
+        
+    }
+    
     ExoKeyLog(@"Creating ExoKey network configuration tool.");
     NSError *error = nil;
     if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error]) {
@@ -814,54 +828,51 @@ void ExoKeyLog(NSString* text){
     [[myConnection remoteObjectProxy]uninstallNetworkTool];
     [myConnection invalidate];
 }
+
 //
 //
 //Executing root programs via AppleScript. This is not the preferred method and is not implemented in this project.
+//Code taken from: http://stackoverflow.com/questions/6841937/authorizationexecutewithprivileges-is-deprecated
 //
 //
-/*
  - (BOOL) runProcessAsAdministrator:(NSString*)scriptPath
- withArguments:(NSArray *)arguments
- output:(NSString **)output
- errorDescription:(NSString **)errorDescription {
+                      withArguments:(NSArray *)arguments
+                             output:(NSString **)output
+                   errorDescription:(NSString **)errorDescription {
  
- NSString * allArgs = [arguments componentsJoinedByString:@" "];
- NSString * fullScript = [NSString stringWithFormat:@"'%@' %@", scriptPath, allArgs];
+     NSString * allArgs = [arguments componentsJoinedByString:@" "];
+     NSString * fullScript = [NSString stringWithFormat:@"'%@' %@", scriptPath, allArgs];
  
- NSDictionary *errorInfo = [NSDictionary new];
- NSString *script =  [NSString stringWithFormat:@"do shell script \"%@\" with administrator privileges", fullScript];
- 
- NSAppleScript *appleScript = [[NSAppleScript new] initWithSource:script];
- NSAppleEventDescriptor * eventResult = [appleScript executeAndReturnError:&errorInfo];
- 
- // Check errorInfo
- if (! eventResult)
- {
- // Describe common errors
- *errorDescription = nil;
- if ([errorInfo valueForKey:NSAppleScriptErrorNumber])
- {
- NSNumber * errorNumber = (NSNumber *)[errorInfo valueForKey:NSAppleScriptErrorNumber];
- if ([errorNumber intValue] == -128)
- *errorDescription = @"The administrator password is required to do this.";
+     NSDictionary *errorInfo = [NSDictionary new];
+     NSString *script =  [NSString stringWithFormat:@"do shell script \"%@\" with administrator privileges", fullScript];
+     
+     NSAppleScript *appleScript = [[NSAppleScript new] initWithSource:script];
+     NSAppleEventDescriptor * eventResult = [appleScript executeAndReturnError:&errorInfo];
+     
+     // Check errorInfo
+     if (! eventResult)
+     {
+         // Describe common errors
+         *errorDescription = nil;
+         if ([errorInfo valueForKey:NSAppleScriptErrorNumber])
+         {
+             NSNumber * errorNumber = (NSNumber *)[errorInfo valueForKey:NSAppleScriptErrorNumber];
+             if ([errorNumber intValue] == -128) *errorDescription = @"The administrator password is required to do this.";
+         }
+         
+         // Set error message from provided message
+         if (*errorDescription == nil)
+         {
+             if ([errorInfo valueForKey:NSAppleScriptErrorMessage]) *errorDescription =  (NSString *)[errorInfo valueForKey:NSAppleScriptErrorMessage];
+         }
+         
+         return NO;
+    }else{
+        // Set output to the AppleScript's output
+        *output = [eventResult stringValue];
+         
+        return YES;
+    }
  }
  
- // Set error message from provided message
- if (*errorDescription == nil)
- {
- if ([errorInfo valueForKey:NSAppleScriptErrorMessage])
- *errorDescription =  (NSString *)[errorInfo valueForKey:NSAppleScriptErrorMessage];
- }
- 
- return NO;
- }
- else
- {
- // Set output to the AppleScript's output
- *output = [eventResult stringValue];
- 
- return YES;
- }
- }
- */
 @end
