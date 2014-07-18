@@ -96,11 +96,13 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
                                                                                    kIORegistryIterateRecursively );
             c_Reference.BSDDeviceName = (__bridge NSMutableString*)(bsdName);
             [[NSNotificationCenter defaultCenter]postNotificationName:EXOKEY_PLUGIN object:nil];
+
         }
         kr = IOObjectRelease(usbDevice);
         (*dev)->Release(dev);
-
-/*
+        //return;
+    
+  /*
         //Open the device to change its state
         kr = (*dev)->USBDeviceClose(dev);
         if(kr != kIOReturnSuccess){
@@ -108,14 +110,18 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
             (void) (*dev)->Release(dev);
             continue;
         }
+ 
         kr = (*dev)->USBDeviceOpen(dev);
+        if (kr == kIOReturnExclusiveAccess){
+            
+        }
         if (kr != kIOReturnSuccess)
         {
             printf("Unable to open device: %08x\n", kr);
-            (void) (*dev)->Release(dev);
+          //  (void) (*dev)->Release(dev);
             continue;
         }
-        
+   
         //Configure device
         kr = ConfigureDevice(dev);
         if (kr != kIOReturnSuccess)
@@ -125,8 +131,10 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
             (void) (*dev)->Release(dev);
             continue;
         }
-        
-        //Get the interfaces
+        kr = (*dev)->USBDeviceClose(dev);
+        kr = (*dev)->Release(dev);
+        [[NSNotificationCenter defaultCenter]postNotificationName:EXOKEY_PLUGIN object:nil];
+       //Get the interfaces
         kr = FindInterfaces(dev);
         if (kr != kIOReturnSuccess)
         {
@@ -141,6 +149,7 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
         kr = (*dev)->Release(dev);
 #endif
 */
+        
     }
 
 }

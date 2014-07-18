@@ -64,7 +64,10 @@
 -(void)configNetwork:(NSString*)ipAddress endPoint:(NSString*)BSDDeviceName subNet:(NSString*)mask;
 
 //Generic routing routine
--(void)destination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask;
+//-(void)destination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask;
+
+//Add routes to ExoNet
+-(void)routeToExoNet:(NSString*)exoNetIP gateway:(NSString*)gatewayIP exokeyEndpoint:(NSString*)ekEndpoint;
 
 //Remove route
 //-(void)removeDestination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask;

@@ -320,7 +320,7 @@ void ExoKeyLog(NSString* text){
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
     
     //  Setup timer to check for IP address changes from DHCP server and to poll the VPN status.
-    [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
+    [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
     
     //  Configure GUI
     [self initializeGUI];
@@ -346,11 +346,13 @@ void ExoKeyLog(NSString* text){
     
     //  Find interface facing the internet. We poll for it but it's initially needed before the PF rule are set
     struct in_addr nextHop;
-    deviceProperties[ACTIVE_ENDPOINT]= XoUtil_getInternetSrcAddr(&nextHop);
-    if (!deviceProperties[ACTIVE_ENDPOINT]){
+    NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
+    if (!activeEndpoint) {
         // Internet might be down so remove any ExoNet routes if they exist.
-        [self removeExoNetRoute];
-        return;
+        deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
+         [self removeExoNetRoute];
+    }else{
+        deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
     }
     
     
@@ -796,9 +798,9 @@ void ExoKeyLog(NSString* text){
 -(void)routeToExoNet:(NSString*)ExoNetIP{
     //Ensure that the ExoNet server path exists for the EK to forward traffic to s
     if ([deviceProperties[EXONET_IP] isNotEqualTo:NOT_SET]) {
-        dispatch_sync(networkQueue, ^(void){
+    //    dispatch_sync(networkQueue, ^(void){
             //Add route from ExoNet to the router
-            ExoKeyLog([NSString stringWithFormat:@"Add route from ExoNet IP %@ to the router IP %@",ExoNetIP,deviceProperties[ROUTER]]);
+           /* ExoKeyLog([NSString stringWithFormat:@"Add route from ExoNet IP %@ to the router IP %@",ExoNetIP,deviceProperties[ROUTER]]);
             [[myConnection remoteObjectProxy]destination:ExoNetIP gateway:deviceProperties[ROUTER] subnet:@"255.255.255.255"];
             sleep(0.5);
             ExoKeyLog(@"Add route 0.0.0.0/1 to ExoKey 192.168.255.1");
@@ -806,7 +808,9 @@ void ExoKeyLog(NSString* text){
             sleep(0.5);
             ExoKeyLog(@"Add route 128.0.0.0/1 to ExoKey 192.168.255.1");
             [[myConnection remoteObjectProxy]destination:@"128.0.0.0" gateway:@"192.168.255.1" subnet:@"128.0.0.0"];
-        });
+            */
+            [[myConnection remoteObjectProxy]routeToExoNet:ExoNetIP gateway:deviceProperties[ROUTER] exokeyEndpoint:deviceProperties[EXOKEY_ENDPOINT]];
+      //  });
     }
 }
 

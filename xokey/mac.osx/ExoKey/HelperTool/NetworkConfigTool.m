@@ -128,6 +128,7 @@
 }
 
 //Add entry in the routing table
+/*
 -(void)destination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask{
     NSTask* task = [[NSTask alloc]init];
     NSPipe* pipe = [NSPipe pipe];
@@ -135,12 +136,24 @@
     //[self ExoKeyLog:[NSString stringWithFormat:@"Routing destination %@ to gateway %@",destinationIP,gatewayIP]];
     [task setLaunchPath:@"/sbin/route"];
     [task setStandardOutput:pipe];
-    [task setArguments:@[@"add",@"-rtt",@"0",destinationIP,gatewayIP,@"-netmask",subnetMask]];
+    [task setArguments:@[@"-nv",@"add",@"-rtt",@"0.01",@"-host",destinationIP,gatewayIP,@"-netmask",subnetMask]];
     [task launch];
     output = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSUTF8StringEncoding];
     [self ExoKeyLog:output];
 }
-
+*/
+-(void)routeToExoNet:(NSString*)exoNetIP gateway:(NSString*)gatewayIP exokeyEndpoint:(NSString*)ekEndpoint{
+    //Add default -> EK 1
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"-nv",@"add",@"-rtt",@"0",@"-net",@"0.0.0.0",@"192.168.255.1",@"-netmask",@"128.0.0.0"]];
+    //Add defualt -> EK 2
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"-nv",@"add",@"-rtt",@"0",@"-net",@"128.0.0.0/1",@"192.168.255.1",@"-netmask",@"128.0.0.0"]];
+    //Add ExoNet -> Router
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"-nv",@"add",@"-host",exoNetIP,gatewayIP]];
+    
+    //Delete default -> link layer route
+    //route delete -ifscope en3 0.0.0.0/0
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",@"-ifscope",ekEndpoint,@"0.0.0.0/0"]];
+}
 //Remove entry in the routing table
 /*
 -(void)removeDestination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask{
@@ -211,7 +224,7 @@
     
     //4)    Enable packet forwarding (NAT) for IPv6
     [self ExoKeyLog:@"Enable IPv6 packet forwarding (net.inet6.ip6.forwarding=1)"];
-    [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"inet6.ip6.forwarding=1"]];
+    [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"net.inet6.ip6.forwarding=1"]];
     
     //5)    Enable PF
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-e"]];
@@ -245,20 +258,24 @@
     //NSString* path = @"/etc/exokey-pf.conf";
     NSString* ruleSet = [NSString stringWithFormat:/*Original rules from /etc/pf.conf*/
                                                     @"# Packet filter and NAT rules for ExoKey\n"
-                                                    "scrub-anchor \"com.apple*\"\n"
-                                                    "nat-anchor \"com.apple/*\"\n"
-                                                    "rdr-anchor \"com.apple/*\"\n"
-                                                    "nat on %@ from %@:network to any -> (%@)\n"        //New NAT rules for ExoKey
-                                                   // "pass out on %@ from %@:net to any nat-to %@\n"           //Try new rule
-                                                    "dummynet-anchor \"com.apple/*\"\n"
-                                                    "anchor \"com.apple/*\"\n"
-                                                    "load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
+                                                    //"scrub-anchor \"com.apple*\"\n"
+                                                    //"nat-anchor \"com.apple/*\"\n"
+                                                    //"rdr-anchor \"com.apple/*\"\n"
+                                                    "nat on %@ from %@:network to any -> (%@)\n",      //New NAT rules for ExoKey
+                                                    //"pass out on %@ from %@:net to any nat-to %@\n"           //Try new rule
+                                                    //"dummynet-anchor \"com.apple/*\"\n"
+                                                    //"anchor \"com.apple/*\"\n"
+                                                    //"load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
                                                     /*New filter rules for ExoKey*/
-                                                    "pass in quick on %@ all\n"
-                                                    "pass out quick on %@ all\n",
-                                                    inetEndpoint,ExoKeyEndpoint,inetEndpoint,
-                                                    ExoKeyEndpoint,
-                                                    ExoKeyEndpoint
+                                                    //"pass in quick on %@ all\n"
+                                                    //"pass out quick on %@ all\n"
+                                                    //"pass in  on %@ from 192.168.255.1 to any\n"
+                                                    //"pass out on %@ from any to 192.168.255.1\n",
+                                                    inetEndpoint,ExoKeyEndpoint,inetEndpoint//,
+                                                   // ExoKeyEndpoint,
+                                                    //ExoKeyEndpoint,
+                                                    //inetEndpoint,
+                                                    //inetEndpoint
                                                     ];
     NSData* data = [ruleSet dataUsingEncoding:NSUTF8StringEncoding];
     return [fileManager createFileAtPath:PF_CONF_PATH contents:data attributes:nil];

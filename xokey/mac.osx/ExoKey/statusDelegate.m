@@ -8,6 +8,7 @@
 
 #import "statusDelegate.h"
 #import "ExoKeY_Definitions.h"
+#import "ExoKeyAppDelegate.h"
 
 @implementation statusDelegate
 {
@@ -85,7 +86,9 @@
     
     //Connection failed. It can now be restarted. No need to release objects in ARC
     NSLog(@"VPN status request failed with error %@:",error);
+    _VPN_Status = VPN_DISCONNECTED;
     connectionFree = true;
+    ExoKeyLog(@"ExoKey is not responding.");
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection{
