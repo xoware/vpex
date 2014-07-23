@@ -41,6 +41,7 @@ namespace XoKeyHostApp
         Init_Dialog_Form Init_Dialog = null;
         bool First_EK_Page_Loaded = false;
         private BackgroundWorker startup_bw = new BackgroundWorker();
+        private BackgroundWorker shutdown_bw = new BackgroundWorker();
         private volatile IPAddress XoKey_IP;
         private System.Windows.Forms.ContextMenu notify_contextMenu;
         private System.Windows.Forms.MenuItem notify_exit_menuItem;
@@ -81,6 +82,9 @@ namespace XoKeyHostApp
                     new System.Windows.Forms.MenuItem[] { this.notify_exit_menuItem });
 
             notifyIcon1.ContextMenu = notify_contextMenu;
+
+       //     shutdown_bw.RunWorkerCompleted += Shutdown_Worker_Complete;
+
         }
         private const string CLSID_FIREWALL_MANAGER = "{304CE942-6E39-40D8-943A-B913C40C9CD4}";
         private static NetFwTypeLib.INetFwMgr GetFirewallManager()
@@ -90,6 +94,13 @@ namespace XoKeyHostApp
             return Activator.CreateInstance(objectType) 
                   as NetFwTypeLib.INetFwMgr;
         }
+        /*
+        private void Shutdown_Worker_Complete(object Sender, EventArgs e)
+        {
+            // Here you can safely manipulate the GUI controls
+         //   this.Close();
+        }
+         * */
         private void notify_exit_Click(object Sender, EventArgs e)
         {
             // Close the form, which closes the application. 
@@ -151,16 +162,35 @@ namespace XoKeyHostApp
         }
         private void On_EK_State_Change(ExoKeyState Old_State, ExoKeyState New_State)
         {
-            if (New_State == ExoKeyState.ExoKeyState_Connected)
+            try
             {
-                notifyIcon1.BalloonTipText = "ExoKey Connected to ExoNet";
-                notifyIcon1.ShowBalloonTip(1234);
+                if (New_State == ExoKeyState.ExoKeyState_Connected)
+                {
+                    notifyIcon1.BalloonTipText = "ExoKey Connected to ExoNet";
+                    notifyIcon1.ShowBalloonTip(1234);
+                }
+                else if (New_State == ExoKeyState.ExoKeyState_Disconnected)
+                {
+                    notifyIcon1.BalloonTipText = "ExoKey Disconnected from ExoNet";
+                    notifyIcon1.ShowBalloonTip(1234);
+                }
+                else if (New_State == ExoKeyState.ExoKeyState_Unplugged)
+                {
+                    notifyIcon1.BalloonTipText = "ExoKey Unplugged or not detected";
+                    notifyIcon1.ShowBalloonTip(1234);
+
+                    // Invoke on main thread
+                    this.BeginInvoke(new EventHandler(delegate
+                    {
+                        this.Close();
+                    }));
+
+                }
             }
-            else if (New_State == ExoKeyState.ExoKeyState_Disconnected)
+            catch (Exception ex)
             {
-                notifyIcon1.BalloonTipText = "ExoKey Disconnected from ExoNet";
-                notifyIcon1.ShowBalloonTip(1234);
-            } 
+                Console.WriteLine("State change Exception:" + ex.ToString());
+            }
 
         }
 
@@ -335,7 +365,7 @@ namespace XoKeyHostApp
                     +  " Status: " + serviceController.Status.ToString());
             }
         }
-        private void Check_ISCS_Dependencies()
+        private bool Check_ICS_Dependencies_Single()
         {
    
             string[] deps = { 
@@ -348,6 +378,7 @@ namespace XoKeyHostApp
                 "RasMan",  // Remote Access Connection Manager
                 "RpcSs"  // Remote Procedure Call (RPC)
              };
+            bool success = true;
 
             foreach (String dep in deps) {
                 try{
@@ -355,12 +386,35 @@ namespace XoKeyHostApp
                 }
                 catch (Exception ex)
                 {
-                  Debug_Services();
-                  __Log_Msg(0, LogMsg.Priority.Critical, "Launching: "+ dep + " Exception "+ ex.ToString());
+                    success = false;
+                    __Log_Msg(0, LogMsg.Priority.Warning, "Error Launching: " + dep + " Exception " + ex.ToString());
+                    throw ex;
+                   
                 }
 
             }
+            return success;
             
+        }
+
+        private void Check_ICS_Dependencies()
+        {
+            for (int retry = 5; retry > 0; retry--)
+            {
+                try
+                {
+                    Check_ICS_Dependencies_Single();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (retry <= 1)
+                    {
+                        Debug_Services();
+                        __Log_Msg(0, LogMsg.Priority.Warning, "Error  ICS Dependencies Exception: " + ex.ToString());
+                    }
+                }
+            }
         }
         private void Load_Internet_Interfaces()
         {
@@ -447,7 +501,7 @@ namespace XoKeyHostApp
             }
             Init_Dialog.Recv_Status_Text("Checking services");
            
-            Check_ISCS_Dependencies();
+            Check_ICS_Dependencies();
             Init_Dialog.Recv_Progress_Val(70);
 
             Init_Dialog.Recv_Status_Text("Enabling Internet Connection Sharing");
@@ -896,7 +950,7 @@ namespace XoKeyHostApp
 
         private void ExoKeyHostAppForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-
+            Console.WriteLine("Closing");
             try
             {
                 Init_Dialog = new Init_Dialog_Form("Closing");
