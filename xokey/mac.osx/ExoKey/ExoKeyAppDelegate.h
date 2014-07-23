@@ -52,6 +52,7 @@ void ExoKeyLog(NSString* text);
 //HTTPS Site/Routing
 -(void)appPoll:(NSTimer*)timer;
 -(void)findRouter;
+-(void)getActiveInterface;
 
 //ExoNet
 -(BOOL)resolveHostName:(NSString*)ExoNetHostName;

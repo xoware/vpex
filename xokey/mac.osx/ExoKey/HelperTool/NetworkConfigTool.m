@@ -112,7 +112,7 @@
             //NSString* outPut = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
             //[self ExoKeyLog:outPut];
         }else{
-            //Alans-MacBook-Air-2:LaunchDaemons user$ ipconfig set en3 manual 192.168.255.2 255.255.255.252
+            //ipconfig set en3 manual 192.168.255.2 255.255.255.252
             [networkTask setArguments:@[@"set",BSDDeviceName,@"manual",ipAddress,mask]];
             [networkTask setStandardOutput:pipe];
             [networkTask launch];
@@ -262,11 +262,17 @@
                                                     //"nat-anchor \"com.apple/*\"\n"
                                                     //"rdr-anchor \"com.apple/*\"\n"
                                                     "nat on %@ from %@:network to any -> (%@)\n",      //New NAT rules for ExoKey
-                                                    //"pass out on %@ from %@:net to any nat-to %@\n"           //Try new rule
                                                     //"dummynet-anchor \"com.apple/*\"\n"
                                                     //"anchor \"com.apple/*\"\n"
                                                     //"load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
-                                                    /*New filter rules for ExoKey*/
+                         
+                                                    /* 
+                                                     **Filter rules for ExoKey are not necessary
+                                                     **since the defualt behavior is to pass all packets
+                                                     **to and from any endpoint/IP.
+                                                     **
+                                                     */
+                         
                                                     //"pass in quick on %@ all\n"
                                                     //"pass out quick on %@ all\n"
                                                     //"pass in  on %@ from 192.168.255.1 to any\n"

@@ -196,7 +196,7 @@ void listenToExoKeyBroadcast(){
     //Set sockaddr info
     sa.sin_family = AF_INET;
     sa.sin_port = htons(1500);
-    //sa.sin_addr.s_addr = htons(((239<<8|255)<<8|255)<<8|255);    //239.255.255.255
+    sa.sin_addr.s_addr = htons(((239<<8|255)<<8|255)<<8|255);    //239.255.255.255
     sa.sin_addr.s_addr = INADDR_ANY;
     
     //Bind to the socket
@@ -233,6 +233,9 @@ void ExoKeyLog(NSString* text){
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_sync(queue, ^{
         NSLog(@"%@",text);
+
+        //Log window only exists in the debug version of the app
+#if _DEBUG
         NSMutableString* logText = [NSMutableString stringWithString:c_pointer.GUILog.string];
         NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
         [dateFormat setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
@@ -242,15 +245,16 @@ void ExoKeyLog(NSString* text){
         [logText appendString:@": "];
         [logText appendString:text];
         [logText appendString:@"\n"];
-    
+        [c_pointer.GUILog setString:logText];
+        //[c_pointer.GUILog scrollRangeToVisible: NSMakeRange(c_pointer.GUILog.string.length, 0)];
+#endif
         //Log to file
         NSMutableString* fileString = [NSMutableString stringWithString:text];
         [fileString appendString:@"\n"];
         if (logFileHandle) {
             [logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
         }
-        [c_pointer.GUILog setString:logText];
-        //[c_pointer.GUILog scrollRangeToVisible: NSMakeRange(c_pointer.GUILog.string.length, 0)];
+
     });
 
 }
@@ -277,15 +281,21 @@ void ExoKeyLog(NSString* text){
     //  Set c pointer for c functions.
     c_pointer = self;
     
+    //  Configure GUI
+    [self initializeGUI];
+    
     //  Get global concurrent queue
     networkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                               0);
     
     //  Initialize file I/O for logging
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
+    /*NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
     NSString* theDesktopPath = [paths objectAtIndex:0];
     NSMutableString* logPath = [NSMutableString stringWithString:theDesktopPath];
     [logPath appendString:@"/ExoKey.log"];
+     */
+    //A single log file is now located in /etc/ExoKey.log
+    NSString* logPath = [NSString stringWithFormat:@"/etc/ExoKey.log"];
     if (![[NSFileManager defaultManager]fileExistsAtPath:logPath]) {
         [[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil];
     }
@@ -320,11 +330,8 @@ void ExoKeyLog(NSString* text){
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
     
     //  Setup timer to check for IP address changes from DHCP server and to poll the VPN status.
-    [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
+    [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
     
-    //  Configure GUI
-    [self initializeGUI];
-
     //  Setup notifications for PnP events
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(devProc:) name:EXOKEY_PLUGIN object:nil];
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(devProc:) name:EXOKEY_UNPLUG object:nil];
@@ -345,16 +352,7 @@ void ExoKeyLog(NSString* text){
     }
     
     //  Find interface facing the internet. We poll for it but it's initially needed before the PF rule are set
-    struct in_addr nextHop;
-    NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
-    if (!activeEndpoint) {
-        // Internet might be down so remove any ExoNet routes if they exist.
-        deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
-         [self removeExoNetRoute];
-    }else{
-        deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
-    }
-    
+    [self getActiveInterface];
     
     //  Listen to broadcast packets from the EK
     listenToExoKeyBroadcast();
@@ -406,11 +404,14 @@ void ExoKeyLog(NSString* text){
         //Create the network tool to execute programs requiring root
         [self setExoKeyIP];
         
+        //Sleep a bit after setting the IP
+        ExoKeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
+        sleep(2.0);
+        
         //Setup firewall/NAT rules only when EK is connected
         dispatch_sync(networkQueue,
             ^(void){
-                ExoKeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
-                sleep(2.0);
+
                 [self setupFirewall];
                 
                 //Load https site on separate thread.
@@ -480,6 +481,20 @@ void ExoKeyLog(NSString* text){
     
 }
 
+-(void)getActiveInterface{
+    dispatch_async(networkQueue, ^(void){
+        struct in_addr nextHop;
+        NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
+        if (!activeEndpoint){
+            // Internet might be down so remove any ExoNet routes if they exist.
+            deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
+            [self removeExoNetRoute];
+        }else{
+            deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
+        }
+    });
+}
+
 //  Polling for ExoNet status and changes on the EK
 -(void)appPoll:(NSTimer*)timer{
     //  1) First check if EK is connected.
@@ -510,13 +525,8 @@ void ExoKeyLog(NSString* text){
 
     
     //  3) Check if the host has internet by finding the interface facing the internet.
-    struct in_addr nextHop;
-    deviceProperties[ACTIVE_ENDPOINT]= XoUtil_getInternetSrcAddr(&nextHop);
-    if (!deviceProperties[ACTIVE_ENDPOINT]){
-        // Internet might be down so remove any ExoNet routes if they exist.
-        [self removeExoNetRoute];
-        return;
-    }
+    [self getActiveInterface];
+    if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
     
     //  4) Check status of VPN server to determine if the EK is connected to the ExoNet
     {
@@ -798,19 +808,9 @@ void ExoKeyLog(NSString* text){
 -(void)routeToExoNet:(NSString*)ExoNetIP{
     //Ensure that the ExoNet server path exists for the EK to forward traffic to s
     if ([deviceProperties[EXONET_IP] isNotEqualTo:NOT_SET]) {
-    //    dispatch_sync(networkQueue, ^(void){
-            //Add route from ExoNet to the router
-           /* ExoKeyLog([NSString stringWithFormat:@"Add route from ExoNet IP %@ to the router IP %@",ExoNetIP,deviceProperties[ROUTER]]);
-            [[myConnection remoteObjectProxy]destination:ExoNetIP gateway:deviceProperties[ROUTER] subnet:@"255.255.255.255"];
-            sleep(0.5);
-            ExoKeyLog(@"Add route 0.0.0.0/1 to ExoKey 192.168.255.1");
-            [[myConnection remoteObjectProxy]destination:@"0.0.0.0" gateway:@"192.168.255.1" subnet:@"128.0.0.0"];
-            sleep(0.5);
-            ExoKeyLog(@"Add route 128.0.0.0/1 to ExoKey 192.168.255.1");
-            [[myConnection remoteObjectProxy]destination:@"128.0.0.0" gateway:@"192.168.255.1" subnet:@"128.0.0.0"];
-            */
+        dispatch_sync(networkQueue, ^(void){
             [[myConnection remoteObjectProxy]routeToExoNet:ExoNetIP gateway:deviceProperties[ROUTER] exokeyEndpoint:deviceProperties[EXOKEY_ENDPOINT]];
-      //  });
+        });
     }
 }
 
