@@ -35,6 +35,7 @@
                                                          diskCapacity:20 * 1024 * 1024
                                                              diskPath:nil];
     [NSURLCache setSharedURLCache:URLCache];
+    
    
     receivedData = [NSMutableData dataWithCapacity: 0];
     NSURL* url = [NSURL URLWithString:@"https://192.168.255.1/ek/login.html"];
@@ -68,6 +69,11 @@
         //cancel the current connection and then reconnect to the server using WebView which handles all the resource fetching.
         [connection cancel];
         ExoKeyAppDelegate* app = (ExoKeyAppDelegate*)[[NSApplication sharedApplication]delegate];
+        //Stop loading anything that's currently loading. Could have been the reason that the EK
+        //server was periodically freezing. Sleep a bit to let the webkit clear up the session before connecting to the server.
+        [[app.ek_WebView mainFrame]stopLoading];
+        //Slee
+        sleep(0.5);
         [[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
         
         //Released the connection and data resources since they are no longer needed (WebView handles fetching the files)

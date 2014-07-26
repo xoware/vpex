@@ -38,7 +38,6 @@ void ExoKeyLog(NSString* text);
 
 //GUI
 -(void)initializeGUI;
--(void)initializeIPAddressBox;
 
 //Network Tool
 -(void)authorize;
@@ -60,9 +59,14 @@ void ExoKeyLog(NSString* text);
 -(void)removeExoNetRoute;
 
 //Actions
-- (IBAction)reconnect:(id)sender;
-- (IBAction)selectedDHCPButton:(id)sender;
-- (IBAction)setIPAddressButton:(id)sender;
+-(IBAction)reconnect:(id)sender;
+- (IBAction)closeModalDialog:(id)sender;
+
+//Other Windows
+-(void)openWaitWindow;
+-(void)closeWaitWindow;
+-(void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
+        contextInfo:(void *)contextInfo;
 
 
 //- (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr;
@@ -89,5 +93,7 @@ Keep in case we need to run a single process as root.
 @property (atomic, copy,   readwrite) NSData *                  authorization;
 @property (unsafe_unretained) IBOutlet NSTextView *GUILog;
 @property (unsafe_unretained) IBOutlet NSTextView *devicePropertiesView;
+
+@property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
 
 @end
