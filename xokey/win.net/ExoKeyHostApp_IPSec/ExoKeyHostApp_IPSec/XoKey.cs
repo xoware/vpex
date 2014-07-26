@@ -26,6 +26,7 @@ namespace XoKeyHostApp
     {
         ExoKeyState_Disconnected = 0,
         ExoKeyState_Connected = 1,
+        ExoKeyState_Unplugged = 3
     }
 
     public delegate void EK_IP_Address_Detected_Handler(IPAddress ip);
@@ -134,6 +135,8 @@ namespace XoKeyHostApp
         private readonly Action<Action> gui_invoke;
         private Xoware.RoutingLib.RoutingTableRow default_route = null;
         private List<IPAddress> MCast_Listening;
+        public int No_EK_Status_Error_Count = 0;
+        public int EK_Intf_Down_Count = 0;
 
         public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -620,8 +623,9 @@ namespace XoKeyHostApp
 
         }
 
-        void AddressChangedCallback(object sender, EventArgs e)
+        void Check_Intf_Status()
         {
+             bool EK_Is_Up = false;
 
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface n in adapters)
@@ -631,10 +635,23 @@ namespace XoKeyHostApp
                 if (n.OperationalStatus == OperationalStatus.Up 
                     && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
+                    EK_Is_Up = true;
+                    EK_Intf_Down_Count = 0;
                     // Needed for possible restart or plug, unplug, replug
                     StartMultiCastReciever();
+                   
                 }
             }
+            if (!EK_Is_Up)
+            {
+                EK_Intf_Down_Count++;
+                if (EK_Intf_Down_Count > 10)
+                    Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
+            }
+        }
+        void AddressChangedCallback(object sender, EventArgs e)
+        {
+            Check_Intf_Status();
         }
 
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
@@ -757,6 +774,7 @@ namespace XoKeyHostApp
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/GetVpnStatus");
             wr.Method = "GET";
+            wr.Timeout = 5000;
             wr.CookieContainer = new CookieContainer();
             Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
             wr.CookieContainer.Add(cook);
@@ -764,10 +782,14 @@ namespace XoKeyHostApp
             try
             {
                 response = wr.GetResponse();
+
             }
             catch
             {
-                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString());
+                No_EK_Status_Error_Count++;
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
+                if (No_EK_Status_Error_Count > 5)
+                    Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
                 return;
             }
         //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
@@ -806,6 +828,7 @@ namespace XoKeyHostApp
                                 throw ex;
                             }
                         }
+                        No_EK_Status_Error_Count = 0; //OK
                     } catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine(" Response Ex "+ ex.ToString());
@@ -1150,6 +1173,11 @@ namespace XoKeyHostApp
                 }
 
                 Get_VPN_Status();
+
+                if (EK_Intf_Down_Count > 0)
+                {
+                    Check_Intf_Status();
+                }
 
             }
             catch (Exception ex)
