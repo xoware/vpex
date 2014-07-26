@@ -361,7 +361,6 @@ void ExoKeyLog(NSString* text){
 //Setup the GUI
 -(void)initializeGUI{
     self.ek_ConnectedDisplay.state = NSOffState;
-    [self.devicePropertiesView setEditable:NO];
     
     //Present the wait window
     [self openWaitWindow];
@@ -482,13 +481,6 @@ void ExoKeyLog(NSString* text){
 
 //  Polling for ExoNet status and changes on the EK
 -(void)appPoll:(NSTimer*)timer{
-    //Update device properties view.
-    dispatch_async(networkQueue,
-        ^{
-        [self.devicePropertiesView setString:[NSString stringWithFormat:
-                        @"Endpoint: %@ \nIP Address: %@",deviceProperties[EXOKEY_ENDPOINT],deviceProperties[EXOKEY_IP_ADDRESS]]];
-        });
-
     //  1) First check if EK is connected.
     if (!exoKeyConnected) return;
     
@@ -559,57 +551,6 @@ void ExoKeyLog(NSString* text){
 }
 
 #pragma mark GUI Actions
-- (IBAction)setIPAddressButton:(id)sender {
-    if (exoKeyConnected) {
-        //If DHCP is selected, set the device property-> IP_ADDRESS:@"DHCP"
-        if (self.DHCPCheckBox.state == NSOnState) {
-            deviceProperties[EXOKEY_IP_ADDRESS] = @"DHCP";
-            [self setExoKeyIP];
-        }else{
-            //Check if IP address values are valid.
-            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-            NSNumber* number;
-            
-            //Validate first number of IP address.
-            number = [formatter numberFromString:self.IPBox1.stringValue];
-            if(!number || ([number floatValue]-[number intValue] != 0)) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate second number of IP address.
-            number = [formatter numberFromString:self.IPBox2.stringValue];
-            if(!number || ([number floatValue]-[number intValue])){
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate third number of IP address.
-            number = [formatter numberFromString:self.IPBox3.stringValue];
-            if (!number || ([number floatValue]-[number intValue])) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate fourth number of IP address
-            number = [formatter numberFromString:self.IPBox4.stringValue];
-            if (!number || ([number floatValue]-[number intValue])) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            NSMutableString* newIPAddress = [[NSMutableString alloc]init];
-            [newIPAddress appendString:self.IPBox1.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox2.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox3.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox4.stringValue];
-            deviceProperties[EXOKEY_IP_ADDRESS] = newIPAddress;
-            [self setExoKeyIP];
-        }
-    }else{
-        ExoKeyLog(@"Cannot set ip address. ExoKey is not connected");
-    }
-}
-
 //Reconnect to the ExoKey https server
 - (IBAction)reconnect:(id)sender {
     //Only try to connect to the https server if the device is connected.
