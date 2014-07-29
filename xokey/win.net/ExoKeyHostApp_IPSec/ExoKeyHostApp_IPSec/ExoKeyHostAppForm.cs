@@ -984,7 +984,7 @@ namespace XoKeyHostApp
                 Init_Dialog.Set_Progress_Bar(20);
                 Console.WriteLine("DisableICS");
                 System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
-                DisableICS();
+            //    DisableICS();
 
                 Init_Dialog.Set_Status_Text("Windows ICS Disabled");
                 Init_Dialog.Set_Progress_Bar(30);

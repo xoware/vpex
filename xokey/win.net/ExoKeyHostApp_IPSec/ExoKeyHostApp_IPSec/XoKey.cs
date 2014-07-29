@@ -774,7 +774,7 @@ namespace XoKeyHostApp
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/GetVpnStatus");
             wr.Method = "GET";
-            wr.Timeout = 5000;
+            wr.Timeout = 9000;
             wr.CookieContainer = new CookieContainer();
             Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
             wr.CookieContainer.Add(cook);
