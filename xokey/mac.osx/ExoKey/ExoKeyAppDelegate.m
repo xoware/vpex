@@ -112,10 +112,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 	char *buf = NULL;
 	int buflen = 256;
     
-    //////////////////////////////////////////////////////////////
-    //  Determine if the computer can connect to the internet.  //
-    //////////////////////////////////////////////////////////////
-    
+    //  Determine if the computer can connect to the internet.
 	// some popular hosts on the Internet
 	char * hosts[] = {
 		"www.xoware.com",
@@ -143,10 +140,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 		return nil;
 	}
     
-    /////////////////////////////////////////////////////////////////////
-    //  Find network interface that has internet (facing the internet) //
-    /////////////////////////////////////////////////////////////////////
-    
+    //  Find network interface that has internet (facing the internet)
 	servAddr.sin_family = AF_INET;
 	memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],h->h_length);
 	servAddr.sin_port = htons(SERVER_PORT);
@@ -235,21 +229,15 @@ void ExoKeyLog(NSString* text){
         NSLog(@"%@",text);
 
         //Log window only exists in the debug version of the app
-#if _DEBUG
-        NSMutableString* logText = [NSMutableString stringWithString:c_pointer.GUILog.string];
         NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
         [dateFormat setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
         [dateFormat setDateFormat:@"EEEE, dd-MMM-yy HH:mm a"];
         NSString* formattedDate = [dateFormat stringFromDate:[NSDate date]];
-        [logText appendString:formattedDate];
-        [logText appendString:@": "];
-        [logText appendString:text];
-        [logText appendString:@"\n"];
-        [c_pointer.GUILog setString:logText];
-        //[c_pointer.GUILog scrollRangeToVisible: NSMakeRange(c_pointer.GUILog.string.length, 0)];
-#endif
+      
         //Log to file
-        NSMutableString* fileString = [NSMutableString stringWithString:text];
+        NSMutableString* fileString = [NSMutableString stringWithString:formattedDate];
+        [fileString appendString:@": "];
+        [fileString appendString:text];
         [fileString appendString:@"\n"];
         if (logFileHandle) {
             [logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
@@ -273,6 +261,7 @@ void ExoKeyLog(NSString* text){
     NSXPCInterface* helperInterface;
     NSXPCConnection *myConnection;
     dispatch_queue_t networkQueue;
+    NSWindow* modalWindow;
 }
 
 
@@ -365,23 +354,18 @@ void ExoKeyLog(NSString* text){
 //  XPC function allowed to be called from the network tool for logging.
 -(void)messageWrapper:(NSString*)text{
     ExoKeyLog(text);
+    
 }
 
 #pragma mark GUI Methods
 //Setup the GUI
 -(void)initializeGUI{
     self.ek_ConnectedDisplay.state = NSOffState;
-    [self.devicePropertiesView setEditable:NO];
-    [self initializeIPAddressBox];
+    
+    //Present the wait window
+    [self openWaitWindow];
 }
 
--(void)initializeIPAddressBox{
-    //Display default IP Address in the "Set IP Address" options
-    [self.IPBox1 setStringValue:@"192"];
-    [self.IPBox2 setStringValue:@"168"];
-    [self.IPBox3 setStringValue:@"255"];
-    [self.IPBox4 setStringValue:@"2"];
-}
 #pragma mark Callbacks and Other
 
 //Callback function for noification from the USB object that an ExoKey object exists
@@ -389,7 +373,7 @@ void ExoKeyLog(NSString* text){
     if([notification.name isEqualToString:EXOKEY_PLUGIN]){
         ExoKeyLog(@"***ExoKey plugin event received.***");
         self.ek_ConnectedDisplay.state = NSOnState;
-       
+        
         //Set ExoKey connected state to true
         exoKeyConnected = true;
         
@@ -398,26 +382,24 @@ void ExoKeyLog(NSString* text){
         deviceProperties[EXOKEY_IP_ADDRESS] = DEFAULT_IP;
         deviceProperties[EXOKEY_SUBNET] = DEFAULT_SUBNET;
         
-        //Reset IP Address box displayed in GUI
-        [self initializeIPAddressBox];
-        
         //Create the network tool to execute programs requiring root
         [self setExoKeyIP];
         
         //Sleep a bit after setting the IP
-        ExoKeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
-        sleep(2.0);
+        ExoKeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
+        
+        //Device has appeared, close the waiting window
+        [self closeWaitWindow];
         
         //Setup firewall/NAT rules only when EK is connected
         dispatch_sync(networkQueue,
             ^(void){
-
+                sleep(2.0);
                 [self setupFirewall];
-                
-                //Load https site on separate thread.
-                [webViewDel connectToExoKey:@""];
+                //[webViewDel connectToExoKey:@""];
         });
-
+        //Device has appeared, close the waiting window
+        [webViewDel connectToExoKey:@""];
     }
     if([notification.name isEqualToString:EXOKEY_UNPLUG]){
         ExoKeyLog(@"***ExoKey unplug event received.***");
@@ -437,6 +419,8 @@ void ExoKeyLog(NSString* text){
         deviceProperties[EXOKEY_IP_ADDRESS] = NOT_SET;
         deviceProperties[EXOKEY_SUBNET] = NOT_SET;
         
+        //Re-open the waiting window
+        [self openWaitWindow];
     }
 }
 
@@ -515,14 +499,7 @@ void ExoKeyLog(NSString* text){
         result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
         deviceProperties[EXOKEY_IP_ADDRESS] = result;
         
-        //Update device properties view.
-        dispatch_sync(networkQueue,
-            ^{
-                [self.devicePropertiesView setString:[NSString stringWithFormat:
-                                                      @"Endpoint: %@ \nIP Address: %@",deviceProperties[EXOKEY_ENDPOINT],deviceProperties[EXOKEY_IP_ADDRESS]]];
-        });
     }
-
     
     //  3) Check if the host has internet by finding the interface facing the internet.
     [self getActiveInterface];
@@ -558,76 +535,22 @@ void ExoKeyLog(NSString* text){
         //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
         //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
     }
-    
+}
+
+-(void)openWaitWindow{
+    [NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+}
+
+-(void)closeWaitWindow{
+    [NSApp endSheet:self.waitWindow];
+}
+
+- (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
+        contextInfo:(void *)contextInfo{
+    [sheet orderOut:self];
 }
 
 #pragma mark GUI Actions
-- (IBAction)selectedDHCPButton:(id)sender {
-    //  Disable static IP boxes if DHCP is enabled.
-    if (self.DHCPCheckBox.state == NSOnState) {
-        [self.IPBox1 setEnabled:false];
-        [self.IPBox2 setEnabled:false];
-        [self.IPBox3 setEnabled:false];
-        [self.IPBox4 setEnabled:false];
-    }else{
-        [self.IPBox1 setEnabled:true];
-        [self.IPBox2 setEnabled:true];
-        [self.IPBox3 setEnabled:true];
-        [self.IPBox4 setEnabled:true];
-    }
-}
-
-- (IBAction)setIPAddressButton:(id)sender {
-    if (exoKeyConnected) {
-        //If DHCP is selected, set the device property-> IP_ADDRESS:@"DHCP"
-        if (self.DHCPCheckBox.state == NSOnState) {
-            deviceProperties[EXOKEY_IP_ADDRESS] = @"DHCP";
-            [self setExoKeyIP];
-        }else{
-            //Check if IP address values are valid.
-            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-            NSNumber* number;
-            
-            //Validate first number of IP address.
-            number = [formatter numberFromString:self.IPBox1.stringValue];
-            if(!number || ([number floatValue]-[number intValue] != 0)) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate second number of IP address.
-            number = [formatter numberFromString:self.IPBox2.stringValue];
-            if(!number || ([number floatValue]-[number intValue])){
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate third number of IP address.
-            number = [formatter numberFromString:self.IPBox3.stringValue];
-            if (!number || ([number floatValue]-[number intValue])) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            //Validate fourth number of IP address
-            number = [formatter numberFromString:self.IPBox4.stringValue];
-            if (!number || ([number floatValue]-[number intValue])) {
-                ExoKeyLog(@"Not a valid integer");
-                return;
-            }
-            NSMutableString* newIPAddress = [[NSMutableString alloc]init];
-            [newIPAddress appendString:self.IPBox1.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox2.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox3.stringValue];
-            [newIPAddress appendString:@"."];
-            [newIPAddress appendString:self.IPBox4.stringValue];
-            deviceProperties[EXOKEY_IP_ADDRESS] = newIPAddress;
-            [self setExoKeyIP];
-        }
-    }else{
-        ExoKeyLog(@"Cannot set ip address. ExoKey is not connected");
-    }
-}
-
 //Reconnect to the ExoKey https server
 - (IBAction)reconnect:(id)sender {
     //Only try to connect to the https server if the device is connected.
@@ -638,9 +561,6 @@ void ExoKeyLog(NSString* text){
             deviceProperties[EXOKEY_ENDPOINT] = exoKeyUSBObject.BSDDeviceName;
             deviceProperties[EXOKEY_IP_ADDRESS] = DEFAULT_IP;
             deviceProperties[EXOKEY_SUBNET] = DEFAULT_SUBNET;
-            
-            //Reset IP Address box displayed in GUI
-            [self initializeIPAddressBox];
             
             //Create the network tool to execute programs requiring root
             [self setExoKeyIP];
@@ -655,8 +575,13 @@ void ExoKeyLog(NSString* text){
         }
         [webViewDel connectToExoKey:@""];
     }else{
+        [self openWaitWindow];
         ExoKeyLog(@"ExoKey is not connected!");
     }
+}
+
+- (IBAction)closeModalDialog:(id)sender {
+    [self closeWaitWindow];
 }
 
 #pragma mark Authorization functions

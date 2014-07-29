@@ -6,8 +6,6 @@
 	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
-	<key>CFBundleIconFile</key>
-	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string>xoware.ExoKey</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -35,7 +33,7 @@
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>ExoKey.NetworkConfigTool</key>
-		<string>identifier &quot;ExoKey.NetworkConfigTool&quot; and certificate leaf[subject.CN] = &quot;ExoKey on Mac&quot;</string>
+		<string>identifier "ExoKey.NetworkConfigTool" and certificate leaf[subject.CN] = "ExoKey on Mac"</string>
 	</dict>
 </dict>
 </plist>

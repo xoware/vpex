@@ -21,8 +21,14 @@
 		CE63A569194BC52B0062A10A /* statusDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE63A568194BC52B0062A10A /* statusDelegate.m */; };
 		CEAFB9DD192E6FD6001EAE12 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEC098D01926B29B009774E7 /* Foundation.framework */; };
 		CEAFB9E0192E6FD6001EAE12 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CEAFB9DF192E6FD6001EAE12 /* main.m */; };
-		CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in CopyFiles */ = {isa = PBXBuildFile; fileRef = CEAFB9DC192E6FD6001EAE12 /* ExoKey.NetworkConfigTool */; };
+		CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in Copy Files */ = {isa = PBXBuildFile; fileRef = CEAFB9DC192E6FD6001EAE12 /* ExoKey.NetworkConfigTool */; };
 		CEAFB9EE192E8DAF001EAE12 /* NetworkConfigTool.m in Sources */ = {isa = PBXBuildFile; fileRef = CEC098C51926A4F8009774E7 /* NetworkConfigTool.m */; };
+		CEBA999F1982B24800EEDB98 /* XO_Ware_PNG_128.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA999B1982B24800EEDB98 /* XO_Ware_PNG_128.png */; };
+		CEBA99A01982B24800EEDB98 /* XO_Ware_PNG_16.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA999C1982B24800EEDB98 /* XO_Ware_PNG_16.png */; };
+		CEBA99A11982B24800EEDB98 /* XO_Ware_PNG_32.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA999D1982B24800EEDB98 /* XO_Ware_PNG_32.png */; };
+		CEBA99A31982B30800EEDB98 /* XO_Ware_PNG_256.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA99A21982B30800EEDB98 /* XO_Ware_PNG_256.png */; };
+		CEBA99A51982B31100EEDB98 /* XO_Ware_PNG_64.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA99A41982B31100EEDB98 /* XO_Ware_PNG_64.png */; };
+		CEBA99A71982B5FB00EEDB98 /* xo_ware_top_banner.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA99A61982B5FB00EEDB98 /* xo_ware_top_banner.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,14 +51,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		CEC099531926CFB7009774E7 /* CopyFiles */ = {
+		CEC099531926CFB7009774E7 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
 			dstPath = Contents/Library/LaunchServices;
 			dstSubfolderSpec = 1;
 			files = (
-				CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in CopyFiles */,
+				CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -89,6 +96,12 @@
 		CEAFB9E2192E6FD6001EAE12 /* ExoKey_NetworkConfigTool-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ExoKey_NetworkConfigTool-Prefix.pch"; sourceTree = "<group>"; };
 		CEAFB9E8192E700C001EAE12 /* NetworkConfigTool-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "NetworkConfigTool-Info.plist"; sourceTree = "<group>"; };
 		CEAFB9E9192E7023001EAE12 /* NetworkConfigTool-Launchd.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "NetworkConfigTool-Launchd.plist"; sourceTree = "<group>"; };
+		CEBA999B1982B24800EEDB98 /* XO_Ware_PNG_128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_128.png; sourceTree = "<group>"; };
+		CEBA999C1982B24800EEDB98 /* XO_Ware_PNG_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_16.png; sourceTree = "<group>"; };
+		CEBA999D1982B24800EEDB98 /* XO_Ware_PNG_32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_32.png; sourceTree = "<group>"; };
+		CEBA99A21982B30800EEDB98 /* XO_Ware_PNG_256.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_256.png; sourceTree = "<group>"; };
+		CEBA99A41982B31100EEDB98 /* XO_Ware_PNG_64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_64.png; sourceTree = "<group>"; };
+		CEBA99A61982B5FB00EEDB98 /* xo_ware_top_banner.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = xo_ware_top_banner.png; sourceTree = "<group>"; };
 		CEC098C41926A4F8009774E7 /* NetworkConfigTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkConfigTool.h; path = ../ExoKey/HelperTool/NetworkConfigTool.h; sourceTree = "<group>"; };
 		CEC098C51926A4F8009774E7 /* NetworkConfigTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NetworkConfigTool.m; path = ../ExoKey/HelperTool/NetworkConfigTool.m; sourceTree = "<group>"; };
 		CEC098D01926B29B009774E7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -120,6 +133,7 @@
 		CE2EBF4A191BE7E2007FACFB = {
 			isa = PBXGroup;
 			children = (
+				CEBA99991982B24800EEDB98 /* Images */,
 				CE2EBF5C191BE7E3007FACFB /* ExoKey */,
 				CE2EBF7A191BE7E3007FACFB /* ExoKeyTests */,
 				CE2EBF55191BE7E3007FACFB /* Frameworks */,
@@ -231,6 +245,19 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		CEBA99991982B24800EEDB98 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				CEBA99A61982B5FB00EEDB98 /* xo_ware_top_banner.png */,
+				CEBA99A41982B31100EEDB98 /* XO_Ware_PNG_64.png */,
+				CEBA99A21982B30800EEDB98 /* XO_Ware_PNG_256.png */,
+				CEBA999B1982B24800EEDB98 /* XO_Ware_PNG_128.png */,
+				CEBA999C1982B24800EEDB98 /* XO_Ware_PNG_16.png */,
+				CEBA999D1982B24800EEDB98 /* XO_Ware_PNG_32.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -241,7 +268,7 @@
 				CE2EBF4F191BE7E3007FACFB /* Sources */,
 				CE2EBF50191BE7E3007FACFB /* Frameworks */,
 				CE2EBF51191BE7E3007FACFB /* Resources */,
-				CEC099531926CFB7009774E7 /* CopyFiles */,
+				CEC099531926CFB7009774E7 /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -307,9 +334,15 @@
 			files = (
 				CE0B7017193409B900905165 /* NetworkConfigTool in Resources */,
 				CE2EBF61191BE7E3007FACFB /* InfoPlist.strings in Resources */,
+				CEBA99A11982B24800EEDB98 /* XO_Ware_PNG_32.png in Resources */,
 				CE2EBF6F191BE7E3007FACFB /* Images.xcassets in Resources */,
+				CEBA99A71982B5FB00EEDB98 /* xo_ware_top_banner.png in Resources */,
+				CEBA999F1982B24800EEDB98 /* XO_Ware_PNG_128.png in Resources */,
+				CEBA99A51982B31100EEDB98 /* XO_Ware_PNG_64.png in Resources */,
+				CEBA99A01982B24800EEDB98 /* XO_Ware_PNG_16.png in Resources */,
 				CE2EBF67191BE7E3007FACFB /* Credits.rtf in Resources */,
 				CE2EBF6D191BE7E3007FACFB /* MainMenu.xib in Resources */,
+				CEBA99A31982B30800EEDB98 /* XO_Ware_PNG_256.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
