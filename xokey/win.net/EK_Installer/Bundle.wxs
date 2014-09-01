@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Bundle Name="x.o.ware ExoKey" Version="1.0.0.0" Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
+  <Bundle Name="x.o.ware ExoKey" Version="1.0.0.3" Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
 		<BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense" />
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\Exokey"/>
 

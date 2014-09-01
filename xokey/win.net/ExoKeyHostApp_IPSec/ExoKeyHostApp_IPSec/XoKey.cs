@@ -137,6 +137,7 @@ namespace XoKeyHostApp
         private List<IPAddress> MCast_Listening;
         public int No_EK_Status_Error_Count = 0;
         public int EK_Intf_Down_Count = 0;
+        bool Check_State_Timer_Running = false;
 
         public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -208,22 +209,38 @@ namespace XoKeyHostApp
         }
         public void Stop()
         {
-            
-            Check_State_Timer.Enabled = false;
-            Check_State_Timer.Stop();
+
+            if (Check_State_Timer != null)
+            {
+                Check_State_Timer.Enabled = false;
+                Check_State_Timer.Stop();
+                Check_State_Timer.Dispose();
+                Check_State_Timer = null;
+            }
             
             Stop_VPN();
             Disposing = true;
-            Check_State_Timer.Dispose();
+
+            if (Check_State_Timer_Running)
+            {
+                Console.WriteLine("Check_State_Timer_Running");
+                for (int i = 0; i < 10 && Check_State_Timer_Running; i++)
+                {
+                    System.Threading.Thread.Sleep(500);
+                }
+            }
             Log_Msg_Send_Event = null;
-            System.Diagnostics.Debug.WriteLine("XoKey stop done.");  
+            Console.WriteLine("XoKey stop done.");  
         }
         public void Dispose()
         {
             Disposing = true;
-            Check_State_Timer.Enabled = false;
-            Check_State_Timer.Dispose();
-            Check_State_Timer = null;
+            if (Check_State_Timer != null)
+            {
+                Check_State_Timer.Enabled = false;
+                Check_State_Timer.Dispose();
+                Check_State_Timer = null;
+            }
             
             if (Traffic_Routed_To_XoKey)
             {
@@ -645,7 +662,7 @@ namespace XoKeyHostApp
             if (!EK_Is_Up)
             {
                 EK_Intf_Down_Count++;
-                if (EK_Intf_Down_Count > 10)
+                if (EK_Intf_Down_Count > 25)
                     Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
             }
         }
@@ -1164,6 +1181,11 @@ namespace XoKeyHostApp
             {
                 if (Disposing)
                     return;
+                if (Check_State_Timer_Running)
+                    return;
+
+                Check_State_Timer_Running = true;
+
                 Check_State_Timer.Enabled = false;  // avoid timer overrun
                 // Send_Log_Msg("Check_State_Timer_Expired", LogMsg.Priority.Debug);
 
@@ -1189,7 +1211,9 @@ namespace XoKeyHostApp
             finally
             {
                 if (!Disposing && Check_State_Timer != null)
-                    Check_State_Timer.Enabled = true;
+                    Check_State_Timer.Enabled = true; // reenable timer
+
+                Check_State_Timer_Running = false;
             }
         }
       

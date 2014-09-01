@@ -60,7 +60,10 @@ namespace XoKeyHostApp
                 throw new ArgumentException("Connections must be different");
             var share = GetCurrentlySharedConnections();
             if (share.SharedConnection != null)
+            {
+                Console.WriteLine("Disable currently shared connection");
                 GetConfiguration(share.SharedConnection).DisableSharing();
+            }
             if (share.HomeConnection != null)
                 GetConfiguration(share.HomeConnection).DisableSharing();
             if (connectionToShare != null)
