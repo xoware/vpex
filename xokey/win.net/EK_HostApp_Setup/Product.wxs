@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="ExoKey Host Application" Language="1033" Version="1.0.0.2" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
+	<Product Id="*" Name="ExoKey Host Application" Language="1033" Version="1.0.0.3" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 
