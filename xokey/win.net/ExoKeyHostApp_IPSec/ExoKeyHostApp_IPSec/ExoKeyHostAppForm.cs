@@ -367,7 +367,8 @@ namespace XoKeyHostApp
             catch
             {
                 __Log_Msg(0, LogMsg.Priority.Critical,
-                    "Internet Connection Sharing to ExoKey Failed.  Internet: " + shared + " ExoKey:" + home);
+                    "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
+                    +" If the problem persists contact support. Internet: " + shared + " ExoKey:" + home);
                 
                 try
                 {
@@ -1062,7 +1063,7 @@ namespace XoKeyHostApp
                 if (xokey != null)
                 {
                     System.Diagnostics.Debug.WriteLine("stop xokey ");
-                    xokey.Stop();
+                    xokey.Stop();  // at first just stop timers and doing more polling
                 }
             }
             catch (Exception ex)
@@ -1070,23 +1071,7 @@ namespace XoKeyHostApp
                 Console.WriteLine("Stop ex: " + ex.ToString());
             }
 
-            try
-            {
-                Init_Dialog.Set_Status_Text("Disable Windows ICS with ExoKey");
-                Init_Dialog.Set_Progress_Bar(20);
-                Console.WriteLine("DisableICS");
-                System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
-                DisableICS();
 
-                Init_Dialog.Set_Status_Text("Windows ICS Disabled");
-                Init_Dialog.Set_Progress_Bar(30);
-
-                Console.WriteLine("DisableICS2 "); 
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Disable ICS ex: " + ex.ToString());
-            }
 
             try
             {
@@ -1094,20 +1079,27 @@ namespace XoKeyHostApp
                 if (xokey != null)
                 {
 
-                    Init_Dialog.Set_Status_Text("Cleaningup Configuration");
-                    Init_Dialog.Set_Progress_Bar(85);
+                    Init_Dialog.Set_Status_Text("Cleaningup ExoKey Service");
+                    Init_Dialog.Set_Progress_Bar(20);
                     System.Diagnostics.Debug.WriteLine("dispose xokey ");
                     xokey.Dispose();
                     xokey = null;
                     Console.WriteLine("xokey disposed ");
                 }
+                            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Stop ex: " + ex.ToString());
+            }
 
-                Init_Dialog.Set_Status_Text("Closing");
-                Init_Dialog.Set_Progress_Bar(90);
+            try
+            {
+                Init_Dialog.Set_Status_Text("Closing UI View");
+                Init_Dialog.Set_Progress_Bar(30); 
                 System.Diagnostics.Debug.WriteLine("Close Dev");
                 web_view.CloseDevTools();
 
-                Init_Dialog.Set_Progress_Bar(92);
+                Init_Dialog.Set_Progress_Bar(40);
                 Console.WriteLine("Close WebView");
                 Console.WriteLine("stop web_view");
                 web_view.Stop();
@@ -1116,18 +1108,46 @@ namespace XoKeyHostApp
                     Console.WriteLine("dispose web_view");
                     web_view.Dispose();
                     web_view = null;
+                    Init_Dialog.Set_Progress_Bar(50);
                 } catch (Exception ex)
                 {
                      Console.WriteLine("Exception dispose webview: " + ex.Message);
                      Console.WriteLine("Exception dispose webview: " + ex.StackTrace.ToString());
                 }
+
+            }
+            catch (Exception ex) {
+                Console.WriteLine("Exception closing: " + ex.Message);
+                Console.WriteLine("Exception closing: " + ex.StackTrace.ToString());
+            }
+
+            try
+            {
+                Init_Dialog.Set_Status_Text("Disable Windows ICS with ExoKey");
+                Init_Dialog.Set_Progress_Bar(60);
+                Console.WriteLine("DisableICS");
+                System.Diagnostics.Debug.WriteLine("DisableICS2 ");
+                DisableICS();
+
+                Init_Dialog.Set_Status_Text("Windows ICS Disabled");
+                Init_Dialog.Set_Progress_Bar(90);
+
+                Console.WriteLine("DisableICS2 ");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Disable ICS ex: " + ex.ToString());
+            }
+
+            try
+            {
                 Console.WriteLine("dispose this object");
                 //  this.Dispose();
                 Init_Dialog.Invoke_Close();
                 Console.WriteLine("Form closing dispose done.");
-
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine("Exception closing: " + ex.Message);
                 Console.WriteLine("Exception closing: " + ex.StackTrace.ToString());
             }
