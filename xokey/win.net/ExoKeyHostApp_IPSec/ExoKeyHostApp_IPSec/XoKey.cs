@@ -791,7 +791,7 @@ namespace XoKeyHostApp
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/GetVpnStatus");
             wr.Method = "GET";
-            wr.Timeout = 9000;
+            wr.Timeout = 6000;
             wr.CookieContainer = new CookieContainer();
             Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
             wr.CookieContainer.Add(cook);
@@ -801,11 +801,13 @@ namespace XoKeyHostApp
                 response = wr.GetResponse();
 
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("Exception Get_VPN_Status: " + ex.Message);
+                Console.WriteLine("Exception Get_VPN_Status: " + ex.StackTrace.ToString());
                 No_EK_Status_Error_Count++;
                 Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
-                if (No_EK_Status_Error_Count > 5)
+                if (No_EK_Status_Error_Count > 10)
                     Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
                 return;
             }
@@ -855,11 +857,13 @@ namespace XoKeyHostApp
                     IPEndPoint Server = new IPEndPoint(addresslist[0],0);
                     Set_Sever_IPEndpoint(Server);
                     Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+     
                 }
                 else
                 {
                     Remove_Routes();
                     Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+                    No_EK_Status_Error_Count = 0; //OK
                 }
 
             } catch (Exception ex) {
