@@ -20,6 +20,33 @@ namespace XoKeyHostApp
                    || (nic.NetworkInterfaceType == NetworkInterfaceType.GigabitEthernet)
                 select nic;
         }
+        public static void DisableAllShares()
+        {
+            INetSharingEveryConnectionCollection connections = SharingManager.EnumEveryConnection;
+            foreach (INetConnection con in connections)
+            {
+                try
+                {
+
+                    INetSharingConfiguration config = GetConfiguration(con);
+
+                    if (config.SharingEnabled)
+                    {
+                        Console.WriteLine("Sharing was enabled.  Disabeling: " + con.ToString());
+
+                        config.DisableSharing();
+                    }
+                }
+                catch (System.Runtime.InteropServices.ExternalException ex)
+                {
+                    Console.WriteLine("DisableAllShares InteropServices.ExternalException: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("DisableAllShares EX: " + ex.Message);
+                }
+            }
+        }
 
         public static NetShare GetCurrentlySharedConnections()
         {
