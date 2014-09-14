@@ -29,57 +29,65 @@ namespace XoKeyHostApp
         static void Main()
         {
             bool Debug = false;
-          
+
             string LogFile = "";
             string[] args = Environment.GetCommandLineArgs();
             int n_args = args.Length;
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            if (n_args > 1)
+            try
             {
-                // Attach to the parent process via AttachConsole SDK call
-                AttachConsole(ATTACH_PARENT_PROCESS);
-                Console.WriteLine("This is from the main program");
-                Console.WriteLine("nargs=" + n_args);
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
 
-                for (int i = 0; i < n_args; i++)
+                if (n_args > 1)
                 {
-                    Console.WriteLine("arg[" + i + "] =" + args[i]);
-                    switch (args[i])
-                    {
+                    // Attach to the parent process via AttachConsole SDK call
+                    AttachConsole(ATTACH_PARENT_PROCESS);
+                    Console.WriteLine("This is from the main program");
+                    Console.WriteLine("nargs=" + n_args);
 
-                        case "--debug":
-                            Debug = true;
-                            break;
-                        case "--help":
-                            Show_Help(args[0]);
-                            return;
-                        case "--log":
-                            if ((i < n_args) && args[i + 1] != null)
-                            {
-                                LogFile = args[i + 1];
-                                i++;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Logfile name required");
+                    for (int i = 0; i < n_args; i++)
+                    {
+                        Console.WriteLine("arg[" + i + "] =" + args[i]);
+                        switch (args[i])
+                        {
+
+                            case "--debug":
+                                Debug = true;
+                                break;
+                            case "--help":
                                 Show_Help(args[0]);
                                 return;
-                            }
-                            break;
-                    }
-                }
+                            case "--log":
+                                if ((i < n_args) && args[i + 1] != null)
+                                {
+                                    LogFile = args[i + 1];
+                                    i++;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Logfile name required");
+                                    Show_Help(args[0]);
+                                    return;
+                                }
+                                break;
+                        }
+                    } // For
 
+                } // if 
+
+
+
+                // Tell the WidowsInterop to Hook messages
+                WindowsInterop.Hook();
+
+                Application.Run(new ExoKeyHostAppForm(Debug, LogFile));
             }
-
-
-
-            // Tell the WidowsInterop to Hook messages
-            WindowsInterop.Hook();
-
-            Application.Run(new ExoKeyHostAppForm(Debug, LogFile));
-        }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in main: " + ex.Message);
+            }
+        } 
+       
     }
 }
