@@ -319,6 +319,7 @@ namespace XoKeyHostApp
 
         public static void DisableICS()
         {
+            IcsManager.DisableAllShares();
             var currentShare = IcsManager.GetCurrentlySharedConnections();
             if (!currentShare.Exists)
             {
@@ -367,8 +368,10 @@ namespace XoKeyHostApp
             {
                 __Log_Msg(0, LogMsg.Priority.Critical,
                     "Internet Connection Sharing to ExoKey Failed.  Internet: " + shared + " ExoKey:" + home);
+                
                 try
                 {
+                    Debug_Services();
                     DisableICS();
                 } catch
                 {
@@ -455,8 +458,8 @@ namespace XoKeyHostApp
                 Init_Dialog.Recv_Progress_Val(20);
 
                 // Create a UDP client, so we can figure out what interface has a route to the internet. 
-                UdpClient u = new UdpClient("8.8.8.8", 53);
-                IPAddress localAddr = ((IPEndPoint)u.Client.LocalEndPoint).Address; // This bound address is internet facing
+                UdpClient udp_cli = new UdpClient("8.8.8.8", 53);
+                IPAddress localAddr = ((IPEndPoint)udp_cli.Client.LocalEndPoint).Address; // This bound address is internet facing
 
 
                 NetworkInterface Def_Intf = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault();
@@ -510,7 +513,7 @@ namespace XoKeyHostApp
                     if (nic.Description.Contains("XoWare") || nic.Description.Contains("x.o.ware"))
                     {
                         Exokey_Interface = nic;
-                        __Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description);
+                        __Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description + " " + nic.Id);
                     }
                     foreach (UnicastIPAddressInformation uni in uniCast)
                     {
@@ -518,7 +521,7 @@ namespace XoKeyHostApp
                         {
                             //        Intf_comboBox.SelectedIndex = i;
                             Internet_Interface = nic;
-                            __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description);
+                            __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description + " " + nic.Id);
                         }
                     }
 
@@ -547,7 +550,7 @@ namespace XoKeyHostApp
                 }
                 else if (Internet_Interface == null)
                 {
-                    __Log_Msg(0, LogMsg.Priority.Critical, "Internet interface not found");
+                    __Log_Msg(0, LogMsg.Priority.Critical, "Internet interface not found.  Please check that you have internet connectivity");
                     return;
                 }
                 else if (Internet_Interface.Equals(Exokey_Interface))
@@ -944,6 +947,9 @@ namespace XoKeyHostApp
         {
             try
             {
+                if (web_view == null)
+                    return;
+
                 web_view.Load(address);
             }
             catch (System.UriFormatException)
@@ -951,6 +957,10 @@ namespace XoKeyHostApp
                 __Log_Msg(0, LogMsg.Priority.Error, "URI Format Error");
                 return;
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Load_Url ex:" + ex.Message);
+            } 
         }
         private void Navigate( String address = null)
         {
@@ -1101,9 +1111,16 @@ namespace XoKeyHostApp
                 Console.WriteLine("Close WebView");
                 Console.WriteLine("stop web_view");
                 web_view.Stop();
-                Console.WriteLine("dispose web_view");
-                web_view.Dispose();
-                web_view = null;
+                try
+                {
+                    Console.WriteLine("dispose web_view");
+                    web_view.Dispose();
+                    web_view = null;
+                } catch (Exception ex)
+                {
+                     Console.WriteLine("Exception dispose webview: " + ex.Message);
+                     Console.WriteLine("Exception dispose webview: " + ex.StackTrace.ToString());
+                }
                 Console.WriteLine("dispose this object");
                 //  this.Dispose();
                 Init_Dialog.Invoke_Close();
