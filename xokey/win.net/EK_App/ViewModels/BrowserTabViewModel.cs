@@ -17,6 +17,11 @@ namespace EK_App.ViewModels
 {
     public class BrowserTabViewModel : INotifyPropertyChanged
     {
+
+        public delegate void Str_Msg_Handler(string msg);
+        public delegate void Url_Changed(String url);
+        public delegate void Console_Message_Handler(String msg);
+
         private string address;
         public string Address
         {
@@ -74,10 +79,14 @@ namespace EK_App.ViewModels
             set { PropertyChanged.ChangeAndNotify(ref showSidebar, value, () => ShowSidebar); }
         }
 
+        public event Url_Changed Url_Changed_Event = null;
+        public event Console_Message_Handler Console_Message_Event = null;
         public ICommand GoCommand { get; set; }
         public ICommand HomeCommand { get; set; }
         public ICommand ExecuteJavaScriptCommand { get; set; }
         public ICommand EvaluateJavaScriptCommand { get; set; }
+        int Retries = 0;
+        private string Old_Url = "";
 
         public event PropertyChangedEventHandler PropertyChanged;
         /*
@@ -101,6 +110,7 @@ namespace EK_App.ViewModels
 
             var version = String.Format("Chromium: {0}, CEF: {1}, CefSharp: {2}", Cef.ChromiumVersion, Cef.CefVersion, Cef.CefSharpVersion);
             OutputMessage = version;
+//            ExecuteJavaScript("console.log('starting BrowserTabViewModel');");
         //    ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
         }
 
@@ -127,6 +137,25 @@ namespace EK_App.ViewModels
                 MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        public void InvokeExecuteJavaScript(string s)
+        {
+            try
+            {
+                /*
+                Application.Current.Dispatcher(
+                    System.Windows.Threading.DispatcherPriority.Background,
+                    new Str_Msg_Handler(ExecuteJavaScript), s); */
+
+                ExecuteJavaScript(s);
+//                Str_Msg_Handler callback = new Str_Msg_Handler(ExecuteJavaScript);
+  //              this.Invoke(callback, new object[] { s });
+
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine("InvokeExecuteJavaScript exception " + e.Message);
+            }
+        }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -147,15 +176,36 @@ namespace EK_App.ViewModels
                         // TODO: method, but it seems like "something" gets messed up (= doesn't work correctly) if we give it
                         // TODO: focus "too early" in the loading process...
                         WebBrowser.FrameLoadEnd += delegate { Application.Current.Dispatcher.BeginInvoke((Action)(() => webBrowser.Focus())); };
+                        WebBrowser.FrameLoadEnd += FrameLoadEndEventHandler;
                     }
 
                     break;
             }
         }
+        private void FrameLoadEndEventHandler(object sender, FrameLoadEndEventArgs url)
+        {
+            Console.WriteLine("Finished loading: " + url);
+
+            if (Old_Url != url.Url)
+            {
+                Old_Url = url.Url;
+                Url_Changed_Event(url.Url);                
+            }
+                
+        }
 
         private void OnWebBrowserConsoleMessage(object sender, ConsoleMessageEventArgs e)
         {
             OutputMessage = e.Message;
+            Console.WriteLine(e.Message);
+            Console_Message_Event(e.Message);
+            if (App.Web_Console_Log_File != null)
+            {
+                using (System.IO.StreamWriter sw = System.IO.File.AppendText(App.Web_Console_Log_File))
+                {
+                    sw.WriteLine( DateTime.Now.ToString("s") + " : " + e.Message);
+                }	
+            }
         }
 
         private void OnWebBrowserStatusMessage(object sender, StatusMessageEventArgs e)
@@ -169,11 +219,18 @@ namespace EK_App.ViewModels
             if (args.ErrorCode == CefErrorCode.Aborted)
                 return;
 
-            var errorMessage = "<html><body><h2>Failed to load URL " + args.FailedUrl +
-                  " with error " + args.ErrorText + " (" + args.ErrorCode +
-                  ").</h2></body></html>";
+            if (Retries > 3)
+            {
+                var errorMessage = "<html><body><h2>Failed to load URL " + args.FailedUrl +
+                      " with error " + args.ErrorText + " (" + args.ErrorCode +
+                      ").</h2></body></html>";
 
-            webBrowser.LoadHtml(errorMessage, args.FailedUrl);
+                webBrowser.LoadHtml(errorMessage, args.FailedUrl);
+                return;
+            }
+            Retries++;
+            ExecuteJavaScript("document.location.href='" + args.FailedUrl + "'");
+
         }
 
         private void Go()

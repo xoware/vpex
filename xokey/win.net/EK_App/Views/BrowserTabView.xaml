@@ -15,7 +15,7 @@
     <Grid>
         <DockPanel>
             <DockPanel VerticalAlignment="Top"
-                       DockPanel.Dock="Top">
+                       DockPanel.Dock="Top"  Visibility="{Binding ShowSidebar, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Button Height="23"
                         Width="75"
                         Command="{Binding HomeCommand}">Home</Button>
@@ -159,7 +159,7 @@
                             <VisualBrush.Visual>
                                 <StackPanel>
                                     <TextBlock Margin="6,12"
-                                               FontWeight="Bold">CefSharp Rocks!</TextBlock>
+                                               FontWeight="Bold">x.o.ware ExoKey!</TextBlock>
                                 </StackPanel>
                             </VisualBrush.Visual>
                             <VisualBrush.Transform>

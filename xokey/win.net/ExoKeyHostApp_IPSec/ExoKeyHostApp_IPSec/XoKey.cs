@@ -280,7 +280,7 @@ namespace XoKeyHostApp
          */
         public void SysLog_ReceiveCallback(IAsyncResult ar)
         {
-            IEnumerable<UnicastIPAddressInformation> addresses;
+   //         IEnumerable<UnicastIPAddressInformation> addresses;
             UdpClient udp_client = (UdpClient)((UdpState)(ar.AsyncState)).udp_client;
             IPEndPoint end_point = (IPEndPoint)((UdpState)(ar.AsyncState)).end_point;
             PriStruct Pri;
@@ -595,8 +595,9 @@ namespace XoKeyHostApp
                 Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever bound " + Local_IP.ToString());
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
+
 //                Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever ex " + Local_IP.ToString() + " "
 //                    + ex.Message.ToString() + " Retries Remaining:" + retries);
                 return false;

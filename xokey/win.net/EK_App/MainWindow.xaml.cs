@@ -5,10 +5,11 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.ComponentModel; // CancelEventArgs 
 //using System.Windows.Controls;
 using CefSharp.Example;
 using EK_App.ViewModels;
-
+using EK_App.Mvvm;
 
 namespace EK_App
 {
@@ -18,6 +19,7 @@ namespace EK_App
 
         public ObservableCollection<BrowserTabViewModel> BrowserTabs { get; set; }
 
+        ExoKey ek = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -25,10 +27,12 @@ namespace EK_App
 
             BrowserTabs = new ObservableCollection<BrowserTabViewModel>();
 
-            CommandBindings.Add(new CommandBinding(ApplicationCommands.New, OpenNewTab));
-            CommandBindings.Add(new CommandBinding(ApplicationCommands.Close, CloseTab));
+ //           CommandBindings.Add(new CommandBinding(ApplicationCommands.New, OpenNewTab));
+  //          CommandBindings.Add(new CommandBinding(ApplicationCommands.Close, CloseTab));
 
             Loaded += MainWindowLoaded;
+
+            
         }
 
         private void CloseTab(object sender, ExecutedRoutedEventArgs e)
@@ -65,16 +69,26 @@ namespace EK_App
 
         private void MainWindowLoaded(object sender, RoutedEventArgs e)
         {
-            CreateNewTab(CefExample.DefaultUrl, true);
+            CreateNewTab(CefExample.DefaultUrl, App.Debug);
+            ek = new ExoKey(null, BrowserTabs[0]);
+         //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
         }
 
         private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false)
         {
-            BrowserTabs.Add(new BrowserTabViewModel(url) { ShowSidebar = showSideBar });
+            BrowserTabViewModel bt = new BrowserTabViewModel(url) { ShowSidebar = showSideBar };
+            BrowserTabs.Add(bt);
         }
 
         private void OnClosing(System.ComponentModel.CancelEventArgs e) {
             System.Console.WriteLine("Closing");
         }
+
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            System.Console.WriteLine("MainWindow_Closing");
+            ek.Stop();
+        }
+
     }
 }
