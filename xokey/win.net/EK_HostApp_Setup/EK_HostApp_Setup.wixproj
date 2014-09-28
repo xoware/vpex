@@ -27,14 +27,6 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CefSharp.BrowserSubprocess\EK.BrowserSubprocess.csproj">
-      <Name>EK.BrowserSubprocess</Name>
-      <Project>{23ee5140-2c2c-4b53-a954-10b08dca6bd6}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
     <ProjectReference Include="..\EK_App\EK_App.csproj">
       <Name>EK_App</Name>
       <Project>{4828daec-ef99-4553-b674-4374f77c6d66}</Project>

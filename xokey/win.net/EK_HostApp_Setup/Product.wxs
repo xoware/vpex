@@ -116,9 +116,11 @@
       <Component Id="vpexIco" Guid="*">
           <File Source="$(var.EK_App.ProjectDir)\vpex.ico" />
       </Component>
-            <Component Id="XoKeyApi.dll" Guid="*">      
+      <!--
+      <Component Id="XoKeyApi.dll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/XoKeyApi.dll" />
       </Component>
+      -->
       <Component Id="config" Guid="*">
           <File Source="$(var.EK_App.TargetDir)\EK_App.exe.config" />
       </Component>

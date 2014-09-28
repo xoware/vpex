@@ -446,6 +446,8 @@ namespace XoKeyHostApp
             }
             return addresses;
         }
+
+        // Return the IP address of the EK IP
         private IEnumerable<IPAddress> GetLocalIpAddresses()
         {
           //  IEnumerable<IPAddress> addresses = new IEnumerable<IPAddress>();
