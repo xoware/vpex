@@ -87,7 +87,8 @@ namespace EK_App
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
             System.Console.WriteLine("MainWindow_Closing");
-            ek.Stop();
+            if (ek != null)
+                ek.Stop();
         }
 
     }

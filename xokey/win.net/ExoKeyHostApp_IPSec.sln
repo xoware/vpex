@@ -17,7 +17,7 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "driver-install", "driver-in
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoKeyHostApp", "ExoKeyHostApp_IPSec\ExoKeyHostApp_IPSec\ExoKeyHostApp.csproj", "{6CBA1945-28D2-4D15-87C2-8629C5DDB80F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CefSharp.BrowserSubprocess", "CefSharp.BrowserSubprocess\CefSharp.BrowserSubprocess.csproj", "{23EE5140-2C2C-4B53-A954-10B08DCA6BD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EK.BrowserSubprocess", "CefSharp.BrowserSubprocess\EK.BrowserSubprocess.csproj", "{23EE5140-2C2C-4B53-A954-10B08DCA6BD6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CefSharp.MinimalExample.Wpf", "CefSharp.MinimalExample.Wpf\CefSharp.MinimalExample.Wpf.csproj", "{BE4C3AD0-8DA2-4246-8C63-EEEB7DC197BE}"
 EndProject

@@ -15,7 +15,7 @@
        <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
-      <MsiPackage  Id="HostAppSetup"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
+      <MsiPackage  Id="EK_App"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
 		</Chain>

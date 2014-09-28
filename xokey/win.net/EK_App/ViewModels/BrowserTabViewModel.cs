@@ -189,7 +189,8 @@ namespace EK_App.ViewModels
             if (Old_Url != url.Url)
             {
                 Old_Url = url.Url;
-                Url_Changed_Event(url.Url);                
+                if (Url_Changed_Event != null)
+                    Url_Changed_Event(url.Url);                
             }
                 
         }

@@ -89,6 +89,9 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>vpex.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CefSharp">
       <HintPath>..\..\..\..\CefSharp\CefSharp\bin\x86\Debug\CefSharp.dll</HintPath>
@@ -167,9 +170,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CefSharp.BrowserSubprocess\CefSharp.BrowserSubprocess.csproj">
+    <ProjectReference Include="..\CefSharp.BrowserSubprocess\EK.BrowserSubprocess.csproj">
       <Project>{23ee5140-2c2c-4b53-a954-10b08dca6bd6}</Project>
-      <Name>CefSharp.BrowserSubprocess</Name>
+      <Name>EK.BrowserSubprocess</Name>
     </ProjectReference>
     <ProjectReference Include="..\CefSharp.Example\CefSharp.Example.csproj">
       <Project>{a4394e7b-1155-43a6-989e-8ab72dddc9e4}</Project>
@@ -206,6 +209,9 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="vpex.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

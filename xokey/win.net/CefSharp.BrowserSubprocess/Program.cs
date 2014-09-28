@@ -5,7 +5,7 @@
 using System;
 using CefSharp.Internals;
 
-namespace CefSharp.BrowserSubprocess
+namespace EK.BrowserSubprocess
 {
     public class Program
     {
@@ -19,7 +19,7 @@ namespace CefSharp.BrowserSubprocess
 
             using (var subprocess = new CefSubprocess())
             {
-                var wrapper = new CefAppWrapper(subprocess);
+                var wrapper = new CefSharp.CefAppWrapper(subprocess);
 
                 result = wrapper.Run(args);
             }
