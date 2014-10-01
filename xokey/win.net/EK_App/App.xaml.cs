@@ -36,12 +36,19 @@ namespace EK_App
 
         static public void Log(string Message)
         {
-            if (App.Web_Console_Log_File != null && Message != null)
+            try
             {
-                using (System.IO.StreamWriter sw = System.IO.File.AppendText(App.Web_Console_Log_File))
+                if (App.Web_Console_Log_File != null && Message != null)
                 {
-                    sw.WriteLine(DateTime.Now.ToString("s") + " : " + Message);
+                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(App.Web_Console_Log_File))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : " + Message);
+                    }
                 }
+            }
+            catch
+            {
+                Console.WriteLine("Could not log to " + App.Web_Console_Log_File);
             }
         }
 

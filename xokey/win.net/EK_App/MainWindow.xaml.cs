@@ -69,14 +69,17 @@ namespace EK_App
 
         private void MainWindowLoaded(object sender, RoutedEventArgs e)
         {
-            CreateNewTab(CefExample.DefaultUrl, App.Debug);
+            CreateNewTab(CefExample.DefaultUrl, App.Debug, App.Debug);
             ek = new ExoKey(null, BrowserTabs[0]);
          //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
         }
 
-        private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false)
+        private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false, bool showConsoleMessage = false)
         {
-            BrowserTabViewModel bt = new BrowserTabViewModel(url) { ShowSidebar = showSideBar };
+            BrowserTabViewModel bt = new BrowserTabViewModel(url) { 
+                ShowSidebar = showSideBar,
+                ShowConsoleMessage = showConsoleMessage
+            };
             BrowserTabs.Add(bt);
         }
 

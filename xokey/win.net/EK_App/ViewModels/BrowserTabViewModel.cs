@@ -78,7 +78,12 @@ namespace EK_App.ViewModels
             get { return showSidebar; }
             set { PropertyChanged.ChangeAndNotify(ref showSidebar, value, () => ShowSidebar); }
         }
-
+        private bool showConsoleMessage;
+        public bool ShowConsoleMessage
+        {
+            get { return showConsoleMessage; }
+            set { PropertyChanged.ChangeAndNotify(ref showConsoleMessage, value, () => ShowConsoleMessage); }
+        }
         public event Url_Changed Url_Changed_Event = null;
         public event Console_Message_Handler Console_Message_Event = null;
         public ICommand GoCommand { get; set; }
@@ -197,7 +202,9 @@ namespace EK_App.ViewModels
 
         private void OnWebBrowserConsoleMessage(object sender, ConsoleMessageEventArgs e)
         {
-            OutputMessage = e.Message;
+
+            if (ShowConsoleMessage)
+                OutputMessage = e.Message;
             Console.WriteLine(e.Message);
             Console_Message_Event(e.Message);
             if (App.Web_Console_Log_File != null)
