@@ -202,10 +202,18 @@ namespace EK_App.ViewModels
             Console_Message_Event(e.Message);
             if (App.Web_Console_Log_File != null)
             {
-                using (System.IO.StreamWriter sw = System.IO.File.AppendText(App.Web_Console_Log_File))
+                try
                 {
-                    sw.WriteLine( DateTime.Now.ToString("s") + " : " + e.Message);
-                }	
+
+                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(App.Web_Console_Log_File))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : " + e.Message);
+                    }
+                } 
+                catch
+                {
+                    // error writing to file
+                }
             }
         }
 

@@ -111,7 +111,7 @@ namespace EK_App
         private App()
         {
             ProcessArgs();
-            CefExample.Init(Cef_LogFile);
+            CefExample.Init(Cef_LogFile, App.Debug);
         }
     }
 }

@@ -11,21 +11,29 @@ namespace CefSharp.Example
         // Use when debugging the actual SubProcess, to make breakpoints etc. inside that project work.
         private const bool debuggingSubProcess = false;
 
-        public static void Init(String LogFile = null)
+        public static void Init(String LogFile = null, bool Debug = false)
         {
             var settings = new CefSettings();
-            settings.RemoteDebuggingPort = 8088;
+           
             settings.IgnoreCertificateErrors = true;
             if (LogFile != null)
             {
                 settings.LogFile = LogFile;
                 settings.LogSeverity = LogSeverity.Verbose;
             }
-
+            if (Debug)
+            {
+                settings.RemoteDebuggingPort = 8088;
+            }
+            else
+            {
+                settings.PackLoadingDisabled = true;
+            }
 //            if (debuggingSubProcess)
 //            {
 //                settings.BrowserSubprocessPath = "..\\..\\..\\..\\CefSharp.BrowserSubprocess\\bin\\x86\\Debug\\CefSharp.BrowserSubprocess.exe";
 //            }
+            settings.BrowserSubprocessPath = "EK.BrowserSubprocess.exe";
 
             settings.RegisterScheme(new CefCustomScheme
             {
@@ -45,7 +53,7 @@ namespace CefSharp.Example
                 }
             }
 
-            Cef.RegisterJsObject("bound", new BoundObject());
+         //   Cef.RegisterJsObject("bound", new BoundObject());
         }
     }
 }

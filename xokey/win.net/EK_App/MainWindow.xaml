@@ -4,7 +4,7 @@
         xmlns:controls="clr-namespace:EK_App.Controls"
         Title="EK Host Application"
         Closing="MainWindow_Closing"
-        WindowState="Maximized">
+        WindowState="Normal">
     <Window.InputBindings> <!--
         <KeyBinding Key="T" Modifiers="Control" Command="New"/>
         <KeyBinding Key="W" Modifiers="Control" Command="Close"/>

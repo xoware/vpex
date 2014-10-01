@@ -75,12 +75,17 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CefSharp">
-      <HintPath>..\..\..\..\CefSharp\CefSharp\bin\x86\Debug\CefSharp.dll</HintPath>
+    <Reference Include="CefSharp, Version=31.0.0.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\CefSharp\CefSharp.Wpf\bin\x86\Release\CefSharp.dll</HintPath>
     </Reference>
-    <Reference Include="CefSharp.Core">
-      <HintPath>..\..\..\..\CefSharp\CefSharp.Wpf\bin\x86\Debug\CefSharp.Core.dll</HintPath>
+    <Reference Include="CefSharp.Core, Version=31.0.0.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\CefSharp\CefSharp.Wpf\bin\x86\Release\CefSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -123,13 +128,15 @@
     <Content Include="Resources\bootstrap\bootstrap-theme.min.css" />
     <Content Include="Resources\bootstrap\bootstrap.min.css" />
     <Content Include="Resources\bootstrap\bootstrap.min.js" />
-    <Content Include="Resources\exokey.html" />
     <Content Include="Resources\home.html" />
     <Content Include="Resources\PopupTest.html" />
     <Content Include="Resources\SchemeTest.html" />
     <Content Include="Resources\TooltipTest.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

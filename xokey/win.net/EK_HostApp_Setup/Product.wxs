@@ -93,10 +93,18 @@
         <File Source="$(var.EK_App.TargetDir)\cef.pak" />
         <File Source="$(var.EK_App.TargetDir)\CefSharp.dll" /> 
         <File Source="$(var.EK_App.TargetDir)\CefSharp.core.dll" />
+        <File Source="$(var.EK_App.TargetDir)\CefSharp.example.dll" />
         <File Source="$(var.EK_App.TargetDir)\CefSharp.wpf.dll" />
-        
+        <File Source="$(var.EK_App.TargetDir)\d3dcompiler_43.dll" />
+        <File Source="$(var.EK_App.TargetDir)\d3dcompiler_46.dll" />
+        <File Source="$(var.EK_App.TargetDir)\devtools_resources.pak" />
+        <File Source="$(var.EK_App.TargetDir)\EK.BrowserSubprocess.exe" />
+
 		 </Component>
-      
+
+      <Component Id="ffmpeg" Guid="*">
+        <File Source="$(var.EK_App.TargetDir)\ffmpegsumo.dll" />
+      </Component>
       <Component Id="icudt" Guid="*">
           <File Source="$(var.EK_App.TargetDir)\icudt.dll" />
       </Component>
@@ -110,8 +118,17 @@
           <File Source="$(var.EK_App.TargetDir)\libGLESv2.dll" />
       </Component>
 
+      <Component Id="msvcp120" Guid="*">
+        <File Source="$(var.EK_App.TargetDir)\msvcp120.dll" />
+      </Component>
+      <Component Id="msvcr120" Guid="*">
+        <File Source="$(var.EK_App.TargetDir)\msvcr120.dll" />
+      </Component>
       <Component Id="RoutingDll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/Routing.dll" />
+      </Component>
+      <Component Id="vccorlib120" Guid="*">
+        <File Source="$(var.EK_App.TargetDir)/vccorlib120.dll" />
       </Component>
       <Component Id="vpexIco" Guid="*">
           <File Source="$(var.EK_App.ProjectDir)\vpex.ico" />
@@ -120,11 +137,11 @@
       <Component Id="XoKeyApi.dll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/XoKeyApi.dll" />
       </Component>
-      -->
+
       <Component Id="config" Guid="*">
           <File Source="$(var.EK_App.TargetDir)\EK_App.exe.config" />
       </Component>
-
+      -->
 		</ComponentGroup>
    </Fragment>
   

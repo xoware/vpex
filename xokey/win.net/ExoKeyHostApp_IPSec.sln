@@ -23,6 +23,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoKeyHostApp", "ExoKeyHostApp_IPSec\ExoKeyHostApp_IPSec\ExoKeyHostApp.csproj", "{6CBA1945-28D2-4D15-87C2-8629C5DDB80F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EK_App", "EK_App\EK_App.csproj", "{4828DAEC-EF99-4553-B674-4374F77C6D66}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29BF8A5E-6326-4D76-AAF1-9362FA03EC45} = {29BF8A5E-6326-4D76-AAF1-9362FA03EC45}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CefSharp.Example", "CefSharp.Example\CefSharp.Example.csproj", "{A4394E7B-1155-43A6-989E-8AB72DDDC9E4}"
 EndProject

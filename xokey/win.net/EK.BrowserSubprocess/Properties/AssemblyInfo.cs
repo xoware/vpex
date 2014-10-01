@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-/*
+
 [assembly: AssemblyCompany(AssemblyInfo.AssemblyCompany)]
 [assembly: AssemblyProduct(AssemblyInfo.AssemblyProduct)]
 [assembly: AssemblyCopyright(AssemblyInfo.AssemblyCopyright)]
@@ -16,4 +16,3 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion(AssemblyInfo.AssemblyVersion)]
 [assembly: AssemblyFileVersion(AssemblyInfo.AssemblyFileVersion)]
 [assembly: CLSCompliant(AssemblyInfo.ClsCompliant)]
- * */
