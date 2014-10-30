@@ -221,9 +221,10 @@ void listenToExoKeyBroadcast(){
     });
 #endif
 }
-
+#define DEBUG_MODE 0
 //Universal logger across all the different objects of the app (including the network tool)
 void ExoKeyLog(NSString* text){
+#if DEBUG_MODE
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_sync(queue, ^{
         NSLog(@"%@",text);
@@ -244,7 +245,7 @@ void ExoKeyLog(NSString* text){
         }
 
     });
-
+#endif
 }
 
 @implementation ExoKeyAppDelegate
@@ -332,7 +333,7 @@ void ExoKeyLog(NSString* text){
     [self authorize];
     
     //  Create the network tool daemon.
-    const unsigned int networkToolCreationRetries = 10;
+    const unsigned int networkToolCreationRetries = 3;
     for (int i = 0; i < networkToolCreationRetries; i++) {
         if([self initializeNetworkTool]){
             break;
@@ -354,10 +355,10 @@ void ExoKeyLog(NSString* text){
 //  XPC function allowed to be called from the network tool for logging.
 -(void)messageWrapper:(NSString*)text{
     ExoKeyLog(text);
-    
 }
 
 #pragma mark GUI Methods
+
 //Setup the GUI
 -(void)initializeGUI{
     self.ek_ConnectedDisplay.state = NSOffState;
@@ -387,19 +388,24 @@ void ExoKeyLog(NSString* text){
         
         //Sleep a bit after setting the IP
         ExoKeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
-        
-        //Device has appeared, close the waiting window
-        [self closeWaitWindow];
-        
+
         //Setup firewall/NAT rules only when EK is connected
         dispatch_sync(networkQueue,
             ^(void){
                 sleep(2.0);
                 [self setupFirewall];
-                //[webViewDel connectToExoKey:@""];
         });
+        
         //Device has appeared, close the waiting window
         [webViewDel connectToExoKey:@""];
+        
+        //Device has appeared, close the waiting window. Sleep a bit in order to let
+        //webkit load the page before the dialog is closed.
+        dispatch_async(networkQueue,
+            ^(void){
+                sleep(3.0);
+                [self closeWaitWindow];
+        });
     }
     if([notification.name isEqualToString:EXOKEY_UNPLUG]){
         ExoKeyLog(@"***ExoKey unplug event received.***");
@@ -573,6 +579,15 @@ void ExoKeyLog(NSString* text){
                     [self setupFirewall];
             });
         }
+        
+        //First cancel whatever is loading on the website. The stoploading
+        //message doesn't seem to work too well so first load a blank page
+        //then send the stopLoading message
+        NSURL* url = [NSURL URLWithString:@"about:blank"];
+        NSURLRequest* req = [NSURLRequest requestWithURL:url];
+        [[self.ek_WebView mainFrame] loadRequest:req];
+        [[self.ek_WebView mainFrame] stopLoading];
+        sleep(0.5);
         [webViewDel connectToExoKey:@""];
     }else{
         [self openWaitWindow];
@@ -618,7 +633,8 @@ void ExoKeyLog(NSString* text){
         CFErrorRef  cfError;
         
         //Remove the job if it exists.
-        SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError);
+        //@deprecated SMJobRemove has been deprecated and now causes com.apple.xpc.lanchd to crash
+        //SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError);
         
         /*
          

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CE0B7017193409B900905165 /* NetworkConfigTool in Resources */ = {isa = PBXBuildFile; fileRef = CE0B7016193409B900905165 /* NetworkConfigTool */; };
 		CE2EBF57191BE7E3007FACFB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE2EBF56191BE7E3007FACFB /* Cocoa.framework */; };
 		CE2EBF61191BE7E3007FACFB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CE2EBF5F191BE7E3007FACFB /* InfoPlist.strings */; };
 		CE2EBF63191BE7E3007FACFB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CE2EBF62191BE7E3007FACFB /* main.m */; };
@@ -21,7 +20,7 @@
 		CE63A569194BC52B0062A10A /* statusDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE63A568194BC52B0062A10A /* statusDelegate.m */; };
 		CEAFB9DD192E6FD6001EAE12 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEC098D01926B29B009774E7 /* Foundation.framework */; };
 		CEAFB9E0192E6FD6001EAE12 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CEAFB9DF192E6FD6001EAE12 /* main.m */; };
-		CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in Copy Files */ = {isa = PBXBuildFile; fileRef = CEAFB9DC192E6FD6001EAE12 /* ExoKey.NetworkConfigTool */; };
+		CEAFB9EB192E80A5001EAE12 /* ExoKey.NetworkConfigTool in Copy Files */ = {isa = PBXBuildFile; fileRef = CEAFB9DC192E6FD6001EAE12 /* ExoKey.NetworkConfigTool */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		CEAFB9EE192E8DAF001EAE12 /* NetworkConfigTool.m in Sources */ = {isa = PBXBuildFile; fileRef = CEC098C51926A4F8009774E7 /* NetworkConfigTool.m */; };
 		CEBA999F1982B24800EEDB98 /* XO_Ware_PNG_128.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA999B1982B24800EEDB98 /* XO_Ware_PNG_128.png */; };
 		CEBA99A01982B24800EEDB98 /* XO_Ware_PNG_16.png in Resources */ = {isa = PBXBuildFile; fileRef = CEBA999C1982B24800EEDB98 /* XO_Ware_PNG_16.png */; };
@@ -65,7 +64,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CE0B7016193409B900905165 /* NetworkConfigTool */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = NetworkConfigTool; path = ExoKey/HelperTool/NetworkConfigTool; sourceTree = SOURCE_ROOT; };
 		CE2EBF53191BE7E3007FACFB /* ExoKey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExoKey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE2EBF56191BE7E3007FACFB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		CE2EBF59191BE7E3007FACFB /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -230,7 +228,6 @@
 				CEAFB9E9192E7023001EAE12 /* NetworkConfigTool-Launchd.plist */,
 				CEC098C41926A4F8009774E7 /* NetworkConfigTool.h */,
 				CEC098C51926A4F8009774E7 /* NetworkConfigTool.m */,
-				CE0B7016193409B900905165 /* NetworkConfigTool */,
 				CEAFB9DF192E6FD6001EAE12 /* main.m */,
 				CEAFB9E1192E6FD6001EAE12 /* Supporting Files */,
 			);
@@ -304,7 +301,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = ExoKey;
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0600;
 				ORGANIZATIONNAME = x.o.ware;
 			};
 			buildConfigurationList = CE2EBF4E191BE7E2007FACFB /* Build configuration list for PBXProject "ExoKey" */;
@@ -332,7 +329,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE0B7017193409B900905165 /* NetworkConfigTool in Resources */,
 				CE2EBF61191BE7E3007FACFB /* InfoPlist.strings in Resources */,
 				CEBA99A11982B24800EEDB98 /* XO_Ware_PNG_32.png in Resources */,
 				CE2EBF6F191BE7E3007FACFB /* Images.xcassets in Resources */,
