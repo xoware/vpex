@@ -26,9 +26,10 @@ namespace EK_App.Mvvm
 
     public enum ExoKeyLoginState : int
     {
-        ExoKeyState_Init = 0,
-        ExoKeyState_Loggedout,
-        ExoKeyState_Loggedin,
+        ExoKeyLoginState_Init = 0,
+        ExoKeyLoginState_LoadingUi,
+        ExoKeyLoginState_Loggedout,
+        ExoKeyLoginState_Loggedin,
     }
 
     public delegate void EK_IP_Address_Detected_Handler(IPAddress ip);
@@ -123,7 +124,7 @@ namespace EK_App.Mvvm
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = null;
         private volatile ExoKeyState EK_State = ExoKeyState.ExoKeyState_Disconnected;
-        ExoKeyLoginState Login_State = ExoKeyLoginState.ExoKeyState_Init;
+        ExoKeyLoginState Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
   //      System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = true;
@@ -136,6 +137,7 @@ namespace EK_App.Mvvm
         private List<IPAddress> MCast_Listening;
         public int No_EK_Status_Error_Count = 0;
         public int EK_Intf_Down_Count = 0;
+        private int Ping_Error_Count = 0;
  //       bool Check_State_Timer_Running = false;
         NetworkInterface Exokey_Interface = null;
         NetworkInterface Internet_Interface = null;
@@ -145,6 +147,7 @@ namespace EK_App.Mvvm
         bool ICS_Configured = false;
         bool Network_Interfaces_OK = false;
         bool Has_Internet_Access = false;
+        DateTime Last_Vpn_Status = DateTime.Now;
         System.Threading.Thread State_Machine_Thread = null;
         public EK_App.ViewModels.BrowserTabViewModel Browser = null;
 
@@ -170,38 +173,58 @@ namespace EK_App.Mvvm
         }
         private void Check_Internet_Access()
         {
-            try
+            string[] Hosts = new string[] { "8.8.8.8",
+                "208.67.222.222",
+                "8.8.4.4",
+                "www.xoware.com",
+                "ns2.vpex.org"};
+
+            for (int i = 0; i < Hosts.Count(); i++)
             {
-                
-                Ping pingSender = new Ping();
-                PingOptions options = new PingOptions();
 
-                // Use the default Ttl value which is 128, 
-                // but change the fragmentation behavior.
-                options.DontFragment = true;
-
-                // Create a buffer of of data to be transmitted. 
-                string data = "Hello";
-                byte[] buffer = Encoding.ASCII.GetBytes(data);
-                int timeout = 120;
-                PingReply reply = pingSender.Send("www.google.com", timeout, buffer, options);
-                if (reply.Status == IPStatus.Success)
+                try
                 {
-                    Has_Internet_Access = true;
-                    Console.WriteLine("Address: {0}", reply.Address.ToString());
-                    Console.WriteLine("RoundTrip time: {0}", reply.RoundtripTime);
-                    Console.WriteLine("Time to live: {0}", reply.Options.Ttl);
-                    Console.WriteLine("Don't fragment: {0}", reply.Options.DontFragment);
-                    Console.WriteLine("Buffer size: {0}", reply.Buffer.Length);
-                } else {
-                    Has_Internet_Access = false;
-                }
 
-            }
-            catch (Exception ex)
-            {
-                Has_Internet_Access = false;
-                Console.WriteLine("Ping Ex: {0}", ex.Message);
+                    Ping pingSender = new Ping();
+                    PingOptions options = new PingOptions();
+
+                    // Use the default Ttl value which is 128, 
+                    // but change the fragmentation behavior.
+                    options.DontFragment = true;
+
+                    // Create a buffer of of data to be transmitted. 
+                    string data = "Hello";
+                    byte[] buffer = Encoding.ASCII.GetBytes(data);
+                    int timeout = 3210;
+                    PingReply reply = pingSender.Send(Hosts[i], timeout, buffer, options);
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        Has_Internet_Access = true;
+                        Console.WriteLine("Address: {0}", reply.Address.ToString());
+                        Console.WriteLine("RoundTrip time: {0}", reply.RoundtripTime);
+                        Console.WriteLine("Time to live: {0}", reply.Options.Ttl);
+                        Console.WriteLine("Don't fragment: {0}", reply.Options.DontFragment);
+                        Console.WriteLine("Buffer size: {0}", reply.Buffer.Length);
+                        Ping_Error_Count = 0;
+                        return;
+
+                    }
+                    else
+                    {
+                        Has_Internet_Access = false;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+
+                    Has_Internet_Access = false;
+                    Console.WriteLine("Ping Ex: {0}    Error_Count {1}", ex.Message, Ping_Error_Count);
+                    Ping_Error_Count++;
+                    if (Ping_Error_Count > 40) 
+                        InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
+                }
             }
         }
         private void Search_USB_Devices()
@@ -248,39 +271,63 @@ namespace EK_App.Mvvm
         {
             if (url.Contains("/ek/login"))
             {
-                Login_State = ExoKeyLoginState.ExoKeyState_Loggedout;
+                Login_State = ExoKeyLoginState.ExoKeyLoginState_Loggedout;
                 SetStatusMsg("Please login.");
             }
             else if (url.Contains("/ek/vpex"))
             {
-                Login_State = ExoKeyLoginState.ExoKeyState_Loggedin;
+                Login_State = ExoKeyLoginState.ExoKeyLoginState_Loggedin;
                 SetStatusMsg(" ");
+            }
+            else if (url.Contains("custom://cefsharp"))
+            {
+                Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
+            }
+            else if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && ICS_Configured)
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Debug, "Retry load UI");
+                InvokeExecuteJavaScript("setInterval(function(){ "
+                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
             }
         }
         private void Process_Browswer_Console_Msg(String msg)
         {
-
-            // if state change to connected
-            if (msg.Contains("VPNStatus=Connected=") && EK_State != ExoKeyState.ExoKeyState_Connected)
+            try
             {
-                String IP_Addr_Str = msg.Substring(msg.LastIndexOf("=")+1);
+                // if state change to connected
+                if (msg.Contains("VPNStatus=Connected=") && EK_State != ExoKeyState.ExoKeyState_Connected)
+                {
+                    String IP_Addr_Str = msg.Substring(msg.LastIndexOf("=") + 1);
+                    //             IPHostEntry hostEntry = Dns.GetHostEntry(IP_Addr_Str); // fixme check if host address
 
-                IPEndPoint Server = new IPEndPoint(IPAddress.Parse(IP_Addr_Str), 0);
-                Set_Sever_IPEndpoint(Server);
-                Set_EK_State(ExoKeyState.ExoKeyState_Connected);
-                SetStatusMsg("Connected to ExoNet at " + IP_Addr_Str);
+                    IPEndPoint Server = new IPEndPoint(IPAddress.Parse(IP_Addr_Str), 0);
+                    Set_Sever_IPEndpoint(Server);
+                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                    SetStatusMsg("Connected to ExoNet at " + IP_Addr_Str);
 
-                Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                }
+
+                if (msg.Contains("VPNStatus=Stopped"))
+                {
+                    if (Traffic_Routed_To_XoKey)
+                        Remove_Routes();
+
+                    Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+                    SetStatusMsg("Not connected to ExoNet");
+                }
+                Last_Vpn_Status = DateTime.Now;
             }
-
-            if (msg.Contains("VPNStatus=Stopped"))
+            catch (Exception ex)
             {
-                if (Traffic_Routed_To_XoKey)
-                   Remove_Routes();
-
-                Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
-                SetStatusMsg("Not connected to ExoNet");
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "Process_Browswer_Console_Msg ex " + msg);
             }
+        }
+        private void Load_Error(String url, String Error_Text, CefSharp.CefErrorCode code)
+        {
+            Send_Log_Msg(1, LogMsg.Priority.Debug, "Failed to load  " + url 
+                + "  Msg=" + Error_Text + "  Code=" + code);
+            Restart_Detection();
         }
         private void InvokeExecuteJavaScript(String s)
         {
@@ -312,6 +359,7 @@ namespace EK_App.Mvvm
                  return;
 
             Browser.Url_Changed_Event += Url_Changed;
+            Browser.Load_Error_Event += Load_Error;
             Browser.Console_Message_Event += Process_Browswer_Console_Msg;
             SetStatusMsg("Starting...");
 
@@ -330,28 +378,33 @@ namespace EK_App.Mvvm
                         + "$('#status_usb_hw_detected').text('Not Found');");
                     goto next_loop;
                 }
-
-                InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-success');"
+                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                    InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-success');"
                         + "$('#status_usb_hw_detected').text('OK');");
+
+                Check_Internet_Access();
 
                 if (!Has_Internet_Access)
                 {
                     if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
                     {
-                        InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-success');"
-                              + "$('#status_net_available').text('OK');");
+                        if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                              InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-success');"
+                                 + "$('#status_net_available').text('OK');");
                     }
                     else
                     {
-                        InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-danger');"
+                        if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                           InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-danger');"
                              + "$('#status_net_available').text('Failed');");
                     }
 
-                    Check_Internet_Access();
+                 //   Check_Internet_Access();
 
                     if (Has_Internet_Access)
                     {
                         // state changed
+
                         InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-success');"
                           + "$('#status_internet_connectity').text('OK');");
 
@@ -360,21 +413,23 @@ namespace EK_App.Mvvm
                     }
                 }
 
-                if (!Has_Internet_Access)
+                if (!Has_Internet_Access && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
                 {
+
                     InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-danger');"
                          + "$('#status_internet_connectity').text('Failed');");
                 }
 
 
-                if (!Dependency_Services_Running)
+                if (!Dependency_Services_Running )
                 {
-                    InvokeExecuteJavaScript("$('#status_windows_service_deps').attr('class', 'label label-primary');"
-                    + "$('#status_windows_service_deps').text('Checking');");
+                    if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                        InvokeExecuteJavaScript("$('#status_windows_service_deps').attr('class', 'label label-primary');"
+                        + "$('#status_windows_service_deps').text('Checking');");
                     Check_ICS_Dependencies();
                 }
 
-                if (Dependency_Services_Running)
+                if (Dependency_Services_Running && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
                 {
                     InvokeExecuteJavaScript("$('#status_windows_service_deps').attr('class', 'label label-success');"
                     + "$('#status_windows_service_deps').text('OK');");
@@ -386,15 +441,17 @@ namespace EK_App.Mvvm
                 if (!Network_Interfaces_OK)
                     Configure_Internet_Interfaces();
 
-                if (Network_Interfaces_OK)
+                if (Network_Interfaces_OK && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
                 {
+                 
                     InvokeExecuteJavaScript("$('#status_network_interfasces').attr('class', 'label label-success');"
                         + "$('#status_network_interfacees_msg').text('');"
                         + "$('#status_network_interfasces').text('OK');");
 
                 }
 
-                if (Network_Interfaces_OK && !ICS_Configured)
+                if (Network_Interfaces_OK && !ICS_Configured
+                    && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() && Has_Internet_Access)
                 {
                     Enable_ICS();
 
@@ -403,21 +460,31 @@ namespace EK_App.Mvvm
                     {
                         Check_Intf_Status();
 
-                        InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-success');"
-                          + "$('#status_windows_ics').text('OK');");
-                        InvokeExecuteJavaScript("setInterval(function(){ "
-                           + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                        if (Login_State != ExoKeyLoginState.ExoKeyLoginState_LoadingUi)
+                        {
+                            Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
+                            InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-success');"
+                              + "$('#status_windows_ics').text('OK');");
+                            InvokeExecuteJavaScript("setInterval(function(){ "
+                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                        }
 
                     }
                     else
                     {
-     
+                        InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-danger');"
+                                                 + "$('#status_windows_ics').text('Failed');");
                     }
                 }
                 if (!Keep_Running)
                     break;
 
-                if (ICS_Configured &&  Login_State ==  ExoKeyLoginState.ExoKeyState_Init)
+                if (!Has_Internet_Access || !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+                {
+                    InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-warning');"
+                    + "$('#status_windows_ics').text('Waiting for Internet Access');");
+                } 
+                else if (ICS_Configured && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
                 {
                     if (Client_USB_IP != null)
                     {
@@ -430,16 +497,20 @@ namespace EK_App.Mvvm
                             // Ingnore error OK. 
                         }
                     }
-                    InvokeExecuteJavaScript("setInterval(function() { "
-                           + " document.location.href='https://192.168.137.2/'; }, 2500);");
+                    if (Login_State != ExoKeyLoginState.ExoKeyLoginState_LoadingUi)
+                    {
+                        Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
+                        InvokeExecuteJavaScript("setInterval(function() { "
+                               + " document.location.href='https://192.168.137.2/'; }, 2500);");
+                    }
                 }
-                else if (Login_State == ExoKeyLoginState.ExoKeyState_Init)
+                else if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
                 {
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-danger');"
                     + "$('#status_windows_ics').text('Failed');");
                 }
 
-                if (Login_State == ExoKeyLoginState.ExoKeyState_Loggedin)
+                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Loggedin)
                     Get_VPN_Status();
 
             next_loop:
@@ -695,13 +766,15 @@ namespace EK_App.Mvvm
 
 
             //  Console.WriteLine("Received: {0}", bytes);
-            if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP))
+            if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP) && Has_Internet_Access && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected: " + New_IP.ToString());
                 XoKey_IP = New_IP;
 
                 if (Browser != null && New_IP.ToString() != "192.168.255.1")
                 {
+
+                    Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
                     InvokeExecuteJavaScript("setInterval(function(){ "
                      + " document.location.href='https://" + New_IP.ToString() + "/'; }, 2000);");
                 }
@@ -958,27 +1031,76 @@ namespace EK_App.Mvvm
             }
 
         }
+        void Restart_Detection()
+        {
+            Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+
+            Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
+            Stop_VPN();
+            Remove_Routes();
+            DisableICS();
+
+            Has_Internet_Access = false;
+            Network_Interfaces_OK = false;
+            Internet_Interface = null;
+            Server_IPEndPoint = null;
+            USB_Dev_ID_Found = false;
+            InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
+
+        }
 
         void Check_Intf_Status()
         {
             bool EK_Is_Up = false;
+            NetworkInterface EK_Interface = null;
+            bool Interenet_Interface_Found = false;
 
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface n in adapters)
             {
                 Send_Log_Msg(1, LogMsg.Priority.Debug, n.Name + " : " + n.Description + " is " + n.OperationalStatus);
 
-                if (n.OperationalStatus == OperationalStatus.Up
+                if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware")){
+                    EK_Interface = n;
+                    
+                    if (n.OperationalStatus == OperationalStatus.Up)  
+                    {
+                        EK_Is_Up = true;
+                        EK_Intf_Down_Count = 0;
+                        // Needed for possible restart or plug, unplug, replug
+                        StartMultiCastReciever();
+                    }
+                }  else if (n.OperationalStatus == OperationalStatus.Down && EK_State == ExoKeyState.ExoKeyState_Connected
                     && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
-                    EK_Is_Up = true;
-                    EK_Intf_Down_Count = 0;
-                    // Needed for possible restart or plug, unplug, replug
-                    StartMultiCastReciever();
-
+                    Send_Log_Msg(1, LogMsg.Priority.Error, "ExoKey Down");
+                }
+                if (Internet_Interface != null && Internet_Interface.Id == n.Id)
+                {
+                    Interenet_Interface_Found = true;
+                    if (n.OperationalStatus == OperationalStatus.Down)
+                    {
+                        // load custom://cefsharp/home
+                        Send_Log_Msg(1, LogMsg.Priority.Debug, "Internet interface down");
+                      //  Restart_Detection();              
+                    }
                 }
             }
-            if (!EK_Is_Up)
+
+            // if internet interface disappeared. eg  Wifi disabled
+            if (Internet_Interface != null && !Interenet_Interface_Found)
+                Restart_Detection();
+
+            // EK must have been removed
+            if (Exokey_Interface != null && EK_Interface == null)
+            {
+                Exokey_Interface = null;
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "ExoKey Interface down");
+                Restart_Detection();
+                Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
+            }
+
+            if (!EK_Is_Up || EK_Interface == null)
             {
                 EK_Intf_Down_Count++;
                 if (EK_Intf_Down_Count > 25)
@@ -1026,34 +1148,7 @@ namespace EK_App.Mvvm
             Console.WriteLine("ExoKey: " + Log_Msg);
             App.Log("EK APP:" + Log_Msg);
         }
-        /*
-        private void Ping_For_Client_IP()
-        {
-            WebRequest wr = WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/Ping");
-            wr.Method = "GET";
-            WebResponse response = wr.GetResponse();
-            Send_Log_Msg("Ping_For_Client_IP: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
-            // Get the stream containing content returned by the server.
-            System.IO.Stream dataStream = response.GetResponseStream();
-            // Open the stream using a StreamReader for easy access.
-            //            StreamReader reader = new StreamReader(dataStream);
-            // Read the content.
-            //          string responseFromServer = reader.ReadToEnd();
-            //          Send_Log_Msg(0, LogMsg.Priority.Debug, "Ping_For_Client_IP: responseFromServer=" + responseFromServer);
-
-            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.PingResponse));
-            object objResp = jsonSerializer.ReadObject(dataStream);
-            XoKeyApi.PingResponse ping_response = objResp as XoKeyApi.PingResponse;
-
-            if (ping_response != null && ping_response.client_ip.Length > 4)
-            {
-                Client_USB_IP = IPAddress.Parse(ping_response.client_ip);
-            }
-            //      reader.Close(); // cleanup
-            response.Close(); // cleanup;
-        }
-        */
         public void Stop_VPN()
         {
             if (Browser != null)
@@ -1110,8 +1205,14 @@ namespace EK_App.Mvvm
         private void Get_VPN_Status()
         {
 
-            if (Browser == null || Login_State != ExoKeyLoginState.ExoKeyState_Loggedin)
+            if (Browser == null || Login_State != ExoKeyLoginState.ExoKeyLoginState_Loggedin)
                 return;
+
+            int diff = DateTime.Compare(DateTime.Now , Last_Vpn_Status);
+
+            if (diff < 3)
+                return;
+
 
             InvokeExecuteJavaScript(@"jQuery.getJSON('/api/GetVpnStatus',  function( response ) {
              if (!response || response == undefined)
@@ -1122,11 +1223,23 @@ namespace EK_App.Mvvm
                 return;
             }
 
-            if (response.active_vpn.state == 'Connected'  && response.active_vpn.address
-                &&  response.active_vpn.address[0].ip )
-                console.log('VPNStatus=Connected='+response.active_vpn.address[0].ip);
-            else
+            if (response.active_vpn.state == 'Connected'  && response.active_vpn.address)
+            {
+                if(response.active_vpn.address[0].ip != undefined)
+                    console.log('VPNStatus=Connected='+response.active_vpn.address[0].ip);
+                else
+                    console.log('VPNStatus=Connected='+response.active_vpn.address[0].host);
+            } else
                 console.log('VPNStatus=Stopped');
+}).fail( function(jqxhr, textStatus, error) {
+  var err = textStatus + ' : ' + error;
+  console.log('ERROR:' + err);
+  if (jqxhr && jqxhr.status)
+    console.log('status code' +  jqxhr.status);
+  else
+    console.log('ExoKeyStatus=NotReachable');
+
+  
 });");
 
             /*
@@ -1529,9 +1642,10 @@ namespace EK_App.Mvvm
             if (XoKey_IP == null)
                 XoKey_IP = IPAddress.Parse("192.168.137.2");
 
-            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " MASK 255.255.255.255 " + default_route.GetForardNextHopIPStr());
+            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " MASK 255.255.255.255 "
+                + default_route.GetForardNextHopIPStr() + " METRIC 2" );
             Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
-            Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+            Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
 
             Traffic_Routed_To_XoKey = true;
         }
@@ -1556,49 +1670,7 @@ namespace EK_App.Mvvm
 
 
         }
-        /*
-        private void Set_XoKey_Socks_Server()
-        {
-            try
-            {
-                Ping_For_Client_IP();
-
-                HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/SetSocksServer?host="
-                        + Client_USB_IP.ToString() + "&port=" + Properties.Settings.Default.Socks_Port);
-                wr.Method = "GET";
-                wr.CookieContainer = new CookieContainer();
-                Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
-                wr.CookieContainer.Add(cook);
-
-                WebResponse response = wr.GetResponse();
-                Send_Log_Msg(0, LogMsg.Priority.Debug, "Set_XoKey_Socks_Server: status=" + ((HttpWebResponse)response).StatusDescription);
-
-                // Get the stream containing content returned by the server.
-                Stream dataStream = response.GetResponseStream();
-
-                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.RespMsg));
-                object objResp = jsonSerializer.ReadObject(dataStream);
-                XoKeyApi.RespMsg resp_msg = objResp as XoKeyApi.RespMsg;
-
-                if (resp_msg.ack.status != 0)
-                {
-                    Send_Log_Msg(1, LogMsg.Priority.Error, "Set_XoKey_Socks_Server: Error setting SOCKS proxy");
-                }
-                else
-                {
-                    Send_Log_Msg(1, LogMsg.Priority.Debug, "Set_XoKey_Socks_Server: Set SOCKS proxy OK");
-                }
-
-
-                response.Close(); // cleanup;
-            }
-            catch (Exception ex)
-            {
-                Send_Log_Msg(1, LogMsg.Priority.Error, "Set_XoKey_Socks_Server: Exception setting SOCKS proxy " + ex.Message.ToString());
-                throw;
-            }
-        }
-     */
+       
         public void On_Power_Change(Microsoft.Win32.PowerModes Power_Mode)
         {
             switch (Power_Mode)
@@ -1612,10 +1684,11 @@ namespace EK_App.Mvvm
             }
         }
 
-        public static void DisableICS()
+        public void DisableICS()
         {
             IcsManager.DisableAllShares();
             var currentShare = IcsManager.GetCurrentlySharedConnections();
+            ICS_Configured = false;
             if (!currentShare.Exists)
             {
                 Console.WriteLine("Internet Connection Sharing is already disabled");
@@ -1658,6 +1731,7 @@ namespace EK_App.Mvvm
             try
             {
                 IcsManager.ShareConnection(connectionToShare, homeConnection);
+                ICS_Configured = true;
             }
             catch
             {
@@ -1749,6 +1823,9 @@ namespace EK_App.Mvvm
             {
                 List<NetworkInterface> Interface_List = null;
                 Network_Interfaces_OK = false; // INIT
+
+                if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+                    return;
                 
              // Create a UDP client, so we can figure out what interface has a route to the internet. 
                 UdpClient udp_cli = new UdpClient("8.8.8.8", 53);
@@ -1890,7 +1967,7 @@ Invalid Configuration.
             {
                 EnableICS(Internet_Interface.Id, Exokey_Interface.Id, true);
 
-                ICS_Configured = true;
+                
                 // Internet_Interface
                 //  IcsManager.ShareConnection(Internet_Interface as NETCONLib.INetConnection, Exokey_Interface as NETCONLib.INetConnection);
             }

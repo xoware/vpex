@@ -4,6 +4,7 @@
         xmlns:controls="clr-namespace:EK_App.Controls"
         Title="EK Host Application"
         Closing="MainWindow_Closing"
+        Icon="vpex.ico"
         WindowState="Normal">
     <Window.InputBindings> <!--
         <KeyBinding Key="T" Modifiers="Control" Command="New"/>

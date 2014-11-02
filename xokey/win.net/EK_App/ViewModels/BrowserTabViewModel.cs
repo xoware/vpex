@@ -20,6 +20,7 @@ namespace EK_App.ViewModels
 
         public delegate void Str_Msg_Handler(string msg);
         public delegate void Url_Changed(String url);
+        public delegate void Load_Error(String url, String Error_Text, CefErrorCode code);
         public delegate void Console_Message_Handler(String msg);
 
         private string address;
@@ -85,6 +86,7 @@ namespace EK_App.ViewModels
             set { PropertyChanged.ChangeAndNotify(ref showConsoleMessage, value, () => ShowConsoleMessage); }
         }
         public event Url_Changed Url_Changed_Event = null;
+        public event Load_Error Load_Error_Event = null;
         public event Console_Message_Handler Console_Message_Event = null;
         public ICommand GoCommand { get; set; }
         public ICommand HomeCommand { get; set; }
@@ -182,6 +184,7 @@ namespace EK_App.ViewModels
                         // TODO: focus "too early" in the loading process...
                         WebBrowser.FrameLoadEnd += delegate { Application.Current.Dispatcher.BeginInvoke((Action)(() => webBrowser.Focus())); };
                         WebBrowser.FrameLoadEnd += FrameLoadEndEventHandler;
+
                     }
 
                     break;
@@ -242,6 +245,10 @@ namespace EK_App.ViewModels
                       ").</h2></body></html>";
 
                 webBrowser.LoadHtml(errorMessage, args.FailedUrl);
+
+                if (Load_Error_Event != null)
+                    Load_Error_Event(args.FailedUrl, args.ErrorText, args.ErrorCode);
+
                 return;
             }
             Retries++;
