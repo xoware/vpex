@@ -23,18 +23,20 @@
                                 <RowDefinition x:Name="RowDefinition1" Height="*" />
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal">
-                                <TabPanel x:Name="HeaderPanel"
+                              <TabPanel x:Name="HeaderPanel"
                                           Margin="0,0,0,-1"
                                           VerticalAlignment="Bottom"
                                           Panel.ZIndex="1"
                                           IsItemsHost="True"
-                                          KeyboardNavigation.TabIndex="1" />
+                                          KeyboardNavigation.TabIndex="1" Visibility="Visible" />
+                      <!--            
                                 <Button Content="+"
                                         FontSize="12"
                                         FontWeight="Bold"
                                         Margin="10, 0, 0, 0"
                                         Width="25"
-                                        Command="ApplicationCommands.New" />
+                                        Command="ApplicationCommands.New" /> -->
+<!-- New tab + sign -->
                             </StackPanel>
                             <Border x:Name="ContentPanel"
                                     Grid.Row="1"
@@ -78,9 +80,9 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
         <DataTemplate DataType="{x:Type viewModel:BrowserTabViewModel}">
             <view:BrowserTabView />
         </DataTemplate>
+       
     </Application.Resources>
 </Application>

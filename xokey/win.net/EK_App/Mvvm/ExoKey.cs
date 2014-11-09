@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Management;
+using System.Windows;
 
 namespace EK_App.Mvvm
 {
@@ -170,6 +171,15 @@ namespace EK_App.Mvvm
 
             State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Main);
             State_Machine_Thread.Start();
+
+
+            /*
+            App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
+           () =>
+           {
+               var notify = new NotificationWindow();
+               notify.Show("Starting");
+           }));*/
         }
         private void Check_Internet_Access()
         {
@@ -1626,8 +1636,26 @@ namespace EK_App.Mvvm
                 System.Diagnostics.Debug.WriteLine("Remove_Routes def ex " + ex.ToString());
             }
 
-            Server_IPEndPoint = null;
+           
             Traffic_Routed_To_XoKey = false;
+            if (Server_IPEndPoint != null)
+            {
+                App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
+                () =>
+                {
+                    //           var notify = new NotificationWindow();
+                    //            notify.Show("Disconnected");
+
+                    var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+                     "ExoKey",
+                     "Disconnected",
+                     null,
+                     Mantin.Controls.Wpf.Notification.NotificationType.Information);
+                     toast.Show();
+                }));
+            }
+
+            Server_IPEndPoint = null;
         }
 
         private void Load_Routes()
@@ -1646,8 +1674,21 @@ namespace EK_App.Mvvm
                 + default_route.GetForardNextHopIPStr() + " METRIC 2" );
             Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
             Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
-
             Traffic_Routed_To_XoKey = true;
+
+
+
+            App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
+           () =>
+           {
+               var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+  "ExoKey",
+  "Connected to: " + Server_IPEndPoint.Address.ToString(),
+  null,
+  Mantin.Controls.Wpf.Notification.NotificationType.Information);
+               toast.Show();
+           }));
+
         }
         private void Set_Sever_IPEndpoint(IPEndPoint Server)
         {

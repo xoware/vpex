@@ -324,15 +324,26 @@ namespace CefSharp.Example.Properties {
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
         ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
         ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;title&gt;Getting started &amp;middot; CefSharp &lt;/title&gt;
+        ///    &lt;title&gt; Starting &amp;middot; ExoKey &lt;/title&gt;
         ///    &lt;!-- Bootstrap core CSS --&gt;
         ///    &lt;link href=&quot;bootstrap/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
         ///    &lt;!-- Page-specific extras --&gt;
-        ///    &lt;link href=&quot;assets/css/docs.css&quot; rel=&quot;stylesheet [rest of string was truncated]&quot;;.
+        ///    &lt;link href=&quot;assets/css/docs.css&quot; rel=&quot;stylesheet&quot;&gt;
+        ///     [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string home_html {
             get {
                 return ResourceManager.GetString("home_html", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap logo_transparent {
+            get {
+                object obj = ResourceManager.GetObject("logo_transparent", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -363,24 +374,6 @@ namespace CefSharp.Example.Properties {
         ///		&lt;title&gt;Scheme Handler Test&lt;/title&gt;
         ///	&lt;/head&gt;
         ///	&lt;body&gt;
-        ///	&lt;h1&gt;Success&lt;/h1&gt;
-        ///	&lt;p&gt;Scheme Handler Functioned Correctly&lt;/p&gt;
-        ///	&lt;/body&gt;
-        ///&lt;/html&gt;.
-        /// </summary>
-        internal static string SchemeTest {
-            get {
-                return ResourceManager.GetString("SchemeTest", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0 Transitional//EN&quot;&gt;
-        ///&lt;html&gt;
-        ///	&lt;head&gt;
-        ///		&lt;title&gt;Scheme Handler Test&lt;/title&gt;
-        ///	&lt;/head&gt;
-        ///	&lt;body&gt;
         ///        &lt;form&gt;
         ///            &lt;input type=&quot;text&quot; size=25 title=&quot;This is the first tooltip&quot;&gt;
         ///            &lt;br /&gt;
@@ -395,6 +388,28 @@ namespace CefSharp.Example.Properties {
         internal static string TooltipTest {
             get {
                 return ResourceManager.GetString("TooltipTest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///&lt;head&gt;
+        ///    &lt;!-- Meta, title, CSS, favicons, etc. --&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
+        ///    &lt;title&gt; Starting &amp;middot; ExoKey &lt;/title&gt;
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///    &lt;link href=&quot;bootstrap/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+        ///    &lt;!-- Page-specific extras --&gt;
+        ///    &lt;link href=&quot;assets/css/docs.css&quot; rel=&quot;stylesheet&quot;&gt;
+        ///     [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Trouble {
+            get {
+                return ResourceManager.GetString("Trouble", resourceCulture);
             }
         }
     }

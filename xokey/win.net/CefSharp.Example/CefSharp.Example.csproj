@@ -91,6 +91,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -124,13 +125,16 @@
     <Content Include="Resources\assets\js\jquery.js" />
     <Content Include="Resources\assets\js\shBrushCSharp.js" />
     <Content Include="Resources\assets\js\shCore.js" />
+    <Content Include="Resources\logo_transparent.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\BindingTest.html" />
     <Content Include="Resources\bootstrap\bootstrap-theme.min.css" />
     <Content Include="Resources\bootstrap\bootstrap.min.css" />
     <Content Include="Resources\bootstrap\bootstrap.min.js" />
     <Content Include="Resources\home.html" />
     <Content Include="Resources\PopupTest.html" />
-    <Content Include="Resources\SchemeTest.html" />
+    <Content Include="Resources\trouble.html" />
     <Content Include="Resources\TooltipTest.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

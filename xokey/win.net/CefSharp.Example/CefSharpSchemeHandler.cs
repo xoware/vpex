@@ -30,8 +30,9 @@ namespace CefSharp.Example
 
                 { "/BindingTest.html", Resources.BindingTest },
                 { "/PopupTest.html", Resources.PopupTest },
-                { "/SchemeTest.html", Resources.SchemeTest },
+                { "/trouble.html", Resources.Trouble },
                 { "/TooltipTest.html", Resources.TooltipTest },
+      
             };
         }
 
@@ -51,6 +52,22 @@ namespace CefSharp.Example
                 requestCompletedCallback();
 
                 return true;
+            }
+            try
+            {
+
+                if (request.Url.EndsWith(".png"))
+                {
+                    var bytes = File.ReadAllBytes(request.Url.Replace("custom://cefsharp/", ""));
+                    response.ResponseStream = new MemoryStream(bytes);
+                    response.MimeType = "image/png";
+                    requestCompletedCallback();
+                    return true;
+                }
+            }
+            catch
+            {
+
             }
 
             return false;
