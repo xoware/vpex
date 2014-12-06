@@ -459,6 +459,13 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-warning');"
                         + "$('#status_usb_hw_detected').text('Not Found');");
 
+                    InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('"
+                       + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
+                       + "ExoKey USB Device not found.  "
+                       + " Please try to reinsert the ExoKey or plugging in a different USB port. "
+                       + " After you plug the ExoKey in it should show up here in 10 to 15 seconds. "
+                       + "If the problem persists after retrying, try a different USB cable."
+                       + "</div>');");
                 }
 
                 if (!ExoKey_Driver_Found) {
@@ -466,7 +473,7 @@ namespace EK_App.Mvvm
                         + "$('#status_driver').text('Not Found');");
                     InvokeExecuteJavaScript("$('#status_driver_msg').html('"
                        + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
-                       + "ExoKey Network driver not found.  "
+                       + "ExoKey network driver not found.  "
                        + " Please try rebooting your PC, or reinstalling the driver or plugging in a different USB port. "
                        + " If the problem persists after retrying, look for the ExoKey Device in the device manager as a Network Adapter."
                        + "</div>');");
@@ -475,8 +482,12 @@ namespace EK_App.Mvvm
 
 
                 if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && USB_Dev_ID_Found)
+                {
                     InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-success');"
                         + "$('#status_usb_hw_detected').text('OK');");
+
+                    InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('');");
+                }
 
                 if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && ExoKey_Driver_Found)
                 {
