@@ -27,6 +27,7 @@
     <Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="localesComponent" />
+      <ComponentGroupRef Id="ResourceComponent" />  
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="ProgramMenuDir"/>
 		</Feature>
@@ -46,6 +47,7 @@
 			<Directory Id="ProgramFilesFolder">
 				<Directory Id="INSTALLFOLDER" Name="XoWare">
           <Directory Id="localesFolder" Name="locales" />
+          <Directory Id="ResourcesFolder" Name="Resources" />
         </Directory>
 			</Directory>
       
@@ -99,8 +101,8 @@
         <File Source="$(var.EK_App.TargetDir)\d3dcompiler_46.dll" />
         <File Source="$(var.EK_App.TargetDir)\devtools_resources.pak" />
         <File Source="$(var.EK_App.TargetDir)\EK.BrowserSubprocess.exe" />
-
-		 </Component>
+        <File Source="$(var.EK_App.TargetDir)\Mantin.Controls.Wpf.Notification.dll" />    
+      </Component>
 
       <Component Id="ffmpeg" Guid="*">
         <File Source="$(var.EK_App.TargetDir)\ffmpegsumo.dll" />
@@ -144,7 +146,13 @@
       -->
 		</ComponentGroup>
    </Fragment>
-  
+  <Fragment>
+    <ComponentGroup Id="ResourceComponent" Directory="ResourcesFolder">
+      <Component Id="LogoTransComponent" Guid="*">
+        <File Source="$(var.EK_App.TargetDir)\Resources\logo_transparent.png" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
   <Fragment>
     <ComponentGroup Id="localesComponent" Directory="localesFolder">
       <Component Id="enUsPakComponent" Guid="*">

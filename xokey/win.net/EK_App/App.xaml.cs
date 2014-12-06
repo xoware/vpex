@@ -118,6 +118,15 @@ namespace EK_App
         private App()
         {
             ProcessArgs();
+            if (System.Diagnostics.Process.GetProcessesByName(
+                System.IO.Path.GetFileNameWithoutExtension(
+                System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
+            {
+                Console.WriteLine("Already Running");
+                return;
+            } 
+
+            
             CefExample.Init(Cef_LogFile, App.Debug);
         }
     }

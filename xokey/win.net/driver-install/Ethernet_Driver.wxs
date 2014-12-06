@@ -33,7 +33,16 @@
       </Directory>
 		</Directory>
 	</Fragment>
-
+  <!--
+  <Fragment>
+    <UI>
+      <BillboardAction Id="BillboardID1">
+        <Billboard Id="Billb1" Feature="TestFeature">
+        </Billboard>
+      </BillboardAction>
+    </UI>
+  </Fragment>
+   -->
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->

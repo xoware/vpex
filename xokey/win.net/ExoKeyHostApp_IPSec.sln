@@ -17,6 +17,9 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "EK_HostApp_Setup", "EK_Host
 	EndProjectSection
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "EK_Installer", "EK_Installer\EK_Installer.wixproj", "{AB691316-6596-4B28-A649-CC0299E92622}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4828DAEC-EF99-4553-B674-4374F77C6D66} = {4828DAEC-EF99-4553-B674-4374F77C6D66}
+	EndProjectSection
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "driver-install", "driver-install\driver-install.wixproj", "{D43A8351-400C-459A-A3DD-175F0149FBF7}"
 EndProject

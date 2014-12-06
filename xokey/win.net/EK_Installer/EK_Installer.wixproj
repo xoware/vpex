@@ -68,10 +68,22 @@ signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestam
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
+	Other similar extension points exist, see Wix.targets.	-->
 	<Target Name="BeforeBuild">
+		<GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\EK_App.exe">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<PropertyGroup>
+			<DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+		</PropertyGroup>
 	</Target>
 	<Target Name="AfterBuild">
+		<GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\EK_App.exe">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<!--
+		<Copy SourceFiles=".\bin\$(Configuration)\$(OutputName).exe" DestinationFiles=".\bin\$(Configuration)\$(OutputName)_%(AssemblyVersion.Version).exe" />
+		<Delete Files=".\bin\$(Configuration)\$(OutputName).exe" /> -->
 	</Target>
-	-->
+
 </Project>

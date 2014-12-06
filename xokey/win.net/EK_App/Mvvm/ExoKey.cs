@@ -128,7 +128,7 @@ namespace EK_App.Mvvm
         ExoKeyLoginState Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
   //      System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
-        Boolean Traffic_Routed_To_XoKey = true;
+        Boolean Traffic_Routed_To_XoKey = false;
         Boolean Firewall_Opened = false;
         private volatile Boolean Disposing = false;
         //  UdpClient Mcast_UDP_Client = null;
@@ -145,6 +145,7 @@ namespace EK_App.Mvvm
         bool Keep_Running = true;
         bool Dependency_Services_Running = false;
         bool USB_Dev_ID_Found = false;
+        bool ExoKey_Driver_Found = false;
         bool ICS_Configured = false;
         bool Network_Interfaces_OK = false;
         bool Has_Internet_Access = false;
@@ -237,6 +238,62 @@ namespace EK_App.Mvvm
                 }
             }
         }
+
+        // parse something like // "\\KARL-PC\root\cimv2:Win32_PnPEntity.DeviceID="USB\\VID_29B7&PID_0101\\123"
+        private void Check_Dev_Desc(String id_str)
+        {
+            string Device_ID_Str = "DeviceID=";
+            int pos = id_str.LastIndexOf(Device_ID_Str);
+
+            if (pos < 0)
+                return;
+
+            pos += Device_ID_Str.Length;
+            String ID_Value = id_str.Substring(pos);
+            ID_Value = ID_Value.Replace("\"", "");
+            
+            ManagementObjectCollection collection;
+            using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_PnPSignedDriver Where DeviceID = '" + ID_Value + "'")) // Win32_USBDevice Win32_USBHub
+                collection = searcher.Get();
+
+            foreach (var entity in collection)
+            {
+                Console.WriteLine("entity=" + entity.ToString());
+            }
+            try
+            {
+                string ComputerName = "localhost";
+                ManagementScope Scope;
+                Scope = new ManagementScope(String.Format("\\\\{0}\\root\\CIMV2", ComputerName), null);
+
+                Scope.Connect();
+                ObjectQuery Query = new ObjectQuery("SELECT * FROM Win32_PnPSignedDriver Where DeviceID = '" + ID_Value + "'");
+                ManagementObjectSearcher Searcher = new ManagementObjectSearcher(Scope, Query);
+
+                foreach (ManagementObject WmiObject in Searcher.Get())
+                {
+                    Console.WriteLine("{0,-35} {1,-40}", "ClassGuid", WmiObject["ClassGuid"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "DeviceClass", WmiObject["DeviceClass"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "DeviceID", WmiObject["DeviceID"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "DeviceName", WmiObject["DeviceName"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "Manufacturer", WmiObject["Manufacturer"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "Name", WmiObject["Name"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "Status", WmiObject["Status"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "DriverName", WmiObject["DriverName"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "DriverVersion", WmiObject["DriverVersion"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "FriendlyName", WmiObject["FriendlyName"]);// String
+                    Console.WriteLine("{0,-35} {1,-40}", "Started", WmiObject["Started"]);// String
+                    if (WmiObject["DeviceName"] != null && WmiObject["DriverVersion"] != null
+                       && WmiObject["DeviceName"].ToString().Length > 4 && WmiObject["DriverVersion"].ToString().Length > 3)
+                       ExoKey_Driver_Found = true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
+            }
+        }
+
         private void Search_USB_Devices()
         {
 
@@ -265,8 +322,23 @@ namespace EK_App.Mvvm
                         {
                             System.Diagnostics.Debug.WriteLine("Found: VID_29B7&PID_0101");
                             USB_Dev_ID_Found = true;  // Xoware
-                        }
 
+
+                            PropertyDataCollection system_properties = device.SystemProperties;
+                            foreach (PropertyData sys_prop in system_properties)
+                            {
+                                Console.WriteLine("sys_prop=" + sys_prop.Name + " Value = " +
+                                 (property.Value == null ? "null" : sys_prop.Value.ToString()));
+                            }
+
+                            QualifierDataCollection qualifiers = device.Qualifiers;
+                            foreach (QualifierData qdata in qualifiers)
+                            {
+                                Console.WriteLine("qdata=" + qdata.Name + " Value = " +
+                                (property.Value == null ? "null" : qdata.Value.ToString()));
+                            }
+                            Check_Dev_Desc(property.Value.ToString());
+                        }
                     }
 
                 }
@@ -375,7 +447,7 @@ namespace EK_App.Mvvm
 
             while(Keep_Running)
             {
-                if (!USB_Dev_ID_Found)
+                if (!USB_Dev_ID_Found || !ExoKey_Driver_Found)
                 {
 //                    InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-primary');"
 //                        + "$('#status_usb_hw_detected').text('Checking');");
@@ -386,11 +458,37 @@ namespace EK_App.Mvvm
                 {
                     InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-warning');"
                         + "$('#status_usb_hw_detected').text('Not Found');");
-                    goto next_loop;
+
                 }
-                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+
+                if (!ExoKey_Driver_Found) {
+                    InvokeExecuteJavaScript("$('#status_driver').attr('class', 'label label-warning');"
+                        + "$('#status_driver').text('Not Found');");
+                    InvokeExecuteJavaScript("$('#status_driver_msg').html('"
+                       + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
+                       + "ExoKey Network driver not found.  "
+                       + " Please try rebooting your PC, or reinstalling the driver or plugging in a different USB port. "
+                       + " If the problem persists after retrying, look for the ExoKey Device in the device manager as a Network Adapter."
+                       + "</div>');");
+                }
+
+
+
+                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && USB_Dev_ID_Found)
                     InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-success');"
                         + "$('#status_usb_hw_detected').text('OK');");
+
+                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && ExoKey_Driver_Found)
+                {
+                    InvokeExecuteJavaScript("$('#status_driver').attr('class', 'label label-success');"
+                        + "$('#status_driver').text('OK');");
+                    InvokeExecuteJavaScript("$('#status_driver_msg').html('');");
+                }
+
+                if (!USB_Dev_ID_Found || !ExoKey_Driver_Found)
+                {
+                    goto next_loop;
+                }
 
                 Check_Internet_Access();
 
@@ -1055,6 +1153,7 @@ namespace EK_App.Mvvm
             Internet_Interface = null;
             Server_IPEndPoint = null;
             USB_Dev_ID_Found = false;
+            ExoKey_Driver_Found = false;
             InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
 
         }
@@ -1539,6 +1638,21 @@ namespace EK_App.Mvvm
                     + System.Reflection.Assembly.GetExecutingAssembly().Location + "\" enable=yes");
 
             Firewall_Opened = true;
+
+            try
+            {
+
+                Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 192.168.255.1");
+                Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 192.168.255.1");
+                Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 192.168.137.2");
+                Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 192.168.137.2");
+
+            }
+            catch
+            {
+                // ignore
+            }
+
         }
         private void Run_Route_Cmd(String Command)
         {
@@ -1600,6 +1714,7 @@ namespace EK_App.Mvvm
                 Send_Log_Msg("Route Output:" + outLine.Data);
             }
         }
+
         private void Remove_Routes(IPEndPoint Old_Server = null)
         {
             if (Old_Server == null)
@@ -1622,6 +1737,12 @@ namespace EK_App.Mvvm
             {
                 if (XoKey_IP != null && XoKey_IP.ToString().Length > 3)
                 {
+                    //System.Windows.Application.Current.MainWindow,
+                  MessageBox.Show(
+                      "Your network traffic is no longer encrypted by the ExoKey",
+                       "Disconnected from ExoNet", MessageBoxButton.OK, MessageBoxImage.Warning,
+                       MessageBoxResult.OK,  MessageBoxOptions.ServiceNotification );
+
                     Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
                     Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
                 }
@@ -1933,7 +2054,7 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_network_interfacees_msg').html('"
                         + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
                         + "ExoKey interface not found.  "
-                        + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
+                        + " If this is the 1st time, please wait and ensure Windows has completed the driver install. Try rebooting your PC. "
                         + " If the problem persists after retrying, look for the ExoKey Device in the device manager as a Network Adapter."
                         + "</div>');");
 
