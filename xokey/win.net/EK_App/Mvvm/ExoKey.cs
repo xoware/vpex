@@ -1906,12 +1906,13 @@ namespace EK_App.Mvvm
                 IcsManager.ShareConnection(connectionToShare, homeConnection);
                 ICS_Configured = true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
                 Send_Log_Msg(0, LogMsg.Priority.Critical,
                     "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
                     + " If the problem persists contact support. Internet: " + shared + " ExoKey:" + home);
-
+                Send_Log_Msg(0, LogMsg.Priority.Critical, String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
                 try
                 {
                     Debug_Services();
