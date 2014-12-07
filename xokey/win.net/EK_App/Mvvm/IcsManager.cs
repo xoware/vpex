@@ -102,6 +102,12 @@ namespace EK_App.Mvvm
             if (homeConnection != null)
             {
                 var hc = GetConfiguration(homeConnection);
+                bool fw_enabled = hc.InternetFirewallEnabled;
+                bool ics_enabled = hc.SharingEnabled;
+                Console.WriteLine("fw_enabled=" + fw_enabled + "  ics_enabld=" + ics_enabled);
+                if (fw_enabled == false) {
+                    hc.EnableInternetFirewall();
+                }
                 hc.EnableSharing(tagSHARINGCONNECTIONTYPE.ICSSHARINGTYPE_PRIVATE);
             }
         }

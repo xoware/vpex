@@ -1857,6 +1857,50 @@ namespace EK_App.Mvvm
             }
         }
 
+        // Disable ICS on any network iterfaces which may no longer be present in the system
+        public void Disable_ICS_WMI()
+        {
+            ManagementScope scope = new ManagementScope("\\\\.\\ROOT\\Microsoft\\HomeNet");
+
+            //create object query
+            ObjectQuery query = new ObjectQuery("SELECT * FROM HNet_ConnectionProperties ");
+
+            //create object searcher
+            ManagementObjectSearcher searcher =
+                                    new ManagementObjectSearcher(scope, query);
+
+            //get a collection of WMI objects
+            ManagementObjectCollection queryCollection = searcher.Get();
+
+      
+            //enumerate the collection.
+            foreach (ManagementObject m in queryCollection)
+            {
+                // access properties of the WMI object
+                Console.WriteLine("Connection : {0}", m["Connection"]);
+
+                try
+                {
+                    PropertyDataCollection properties = m.Properties;
+                    foreach(PropertyData  prop in properties)
+                    {
+                       Console.WriteLine("name = {0}   ,  value = {1}", prop.Name, prop.Value);
+                       if (prop.Name == "IsIcsPrivate" && ((Boolean) prop.Value ) == true)
+                       {
+                           prop.Value = false;
+                           m.Put();
+                       }
+                    }
+          
+                    
+                } catch (Exception e)
+                {
+                    Console.WriteLine("ex " + e.Message);
+                    continue;
+                }
+            }
+        }
+
         public void DisableICS()
         {
             IcsManager.DisableAllShares();
@@ -1865,6 +1909,7 @@ namespace EK_App.Mvvm
             if (!currentShare.Exists)
             {
                 Console.WriteLine("Internet Connection Sharing is already disabled");
+                Disable_ICS_WMI();
                 return;
             }
             Console.WriteLine("Internet Connection Sharing will be disabled:");
@@ -1909,6 +1954,7 @@ namespace EK_App.Mvvm
             catch (Exception e)
             {
                 Console.WriteLine(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
+               
                 Send_Log_Msg(0, LogMsg.Priority.Critical,
                     "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
                     + " If the problem persists contact support. Internet: " + shared + " ExoKey:" + home);
@@ -1941,6 +1987,7 @@ namespace EK_App.Mvvm
             string[] deps = { 
                 "TapiSrv", // Telephony
                 "ALG", // Application Layer Gateway
+                "dot3svc", // Wired AutoConfig Service
                 "Netman", // Network connections
                 "NlaSvc", // Network location awarenes
                 "PlugPlay",
@@ -2013,7 +2060,8 @@ namespace EK_App.Mvvm
                 Exokey_Interface = null; // init
                 Internet_Interface = null;
                 int i = 0;
-                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+                NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                foreach (NetworkInterface nic in interfaces)
                 {
 
                     if (!nic.Supports(NetworkInterfaceComponent.IPv4))
