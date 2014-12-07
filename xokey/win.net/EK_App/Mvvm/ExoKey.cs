@@ -402,7 +402,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                Send_Log_Msg(1, LogMsg.Priority.Debug, "Process_Browswer_Console_Msg ex " + msg);
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "Process_Browswer_Console_Msg ex " + ex.Message);
             }
         }
         private void Load_Error(String url, String Error_Text, CefSharp.CefErrorCode code)
