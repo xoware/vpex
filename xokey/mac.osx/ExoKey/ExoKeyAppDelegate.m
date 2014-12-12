@@ -400,8 +400,9 @@ void ExoKeyLog(NSString* text){
         [webViewDel connectToExoKey:@""];
         
         //Device has appeared, close the waiting window. Sleep a bit in order to let
-        //webkit load the page before the dialog is closed.
-        dispatch_async(networkQueue,
+        //webkit load the page before the dialog is closed. Note, function calls to the
+        //Autolayout engine must occur on the main thread.
+        dispatch_async(dispatch_get_main_queue(),
             ^(void){
                 sleep(3.0);
                 [self closeWaitWindow];
@@ -544,11 +545,17 @@ void ExoKeyLog(NSString* text){
 }
 
 -(void)openWaitWindow{
-    [NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+    // This method has been depracated in OS X 10.10.1
+    //[NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+    [self.window beginSheet:self.waitWindow completionHandler:^(NSModalResponse response){
+                //Nothing relaly needs to be done in the wait window
+                }];
 }
 
 -(void)closeWaitWindow{
-    [NSApp endSheet:self.waitWindow];
+    // This method has been depracated in OS X 10.10.1
+    //[NSApp endSheet:self.waitWindow];
+    [self.window endSheet:self.waitWindow];
 }
 
 - (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
