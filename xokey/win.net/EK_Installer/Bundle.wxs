@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Bundle Name="x.o.ware ExoKey" Version="1.0.0.0" Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
-		<BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense" />
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+  <Bundle Name="x.o.ware ExoKey" Version="$(var.BuildVersion)"  Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication
+     LicenseFile="License.rtf"
+     LogoFile="xo.png" ShowVersion="yes"
+            />
+    </BootstrapperApplicationRef>
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\Exokey"/>
 
+    
 
 		<Chain>
 			<!-- TODO: Define the list of chained packages. -->
@@ -15,7 +21,7 @@
        <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
-      <MsiPackage  Id="HostAppSetup"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
+      <MsiPackage  Id="EK_App"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
 		</Chain>

@@ -42,7 +42,7 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.Log_tabPage = new System.Windows.Forms.TabPage();
             this.PopupErrors_checkBox = new System.Windows.Forms.CheckBox();
             this.Log_dataGridView = new System.Windows.Forms.DataGridView();
             this.Date_Time_Col = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -56,7 +56,7 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
+            this.Log_tabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Log_dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -68,7 +68,8 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1167, 28);
+            this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
+            this.menuStrip1.Size = new System.Drawing.Size(875, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -78,13 +79,13 @@
             this.exitToolStripMenuItem,
             this.exportLogToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -93,13 +94,13 @@
             this.exportLogToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveToFileToolStripMenuItem});
             this.exportLogToolStripMenuItem.Name = "exportLogToolStripMenuItem";
-            this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(150, 24);
+            this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
             this.exportLogToolStripMenuItem.Text = "Export Log";
             // 
             // saveToFileToolStripMenuItem
             // 
             this.saveToFileToolStripMenuItem.Name = "saveToFileToolStripMenuItem";
-            this.saveToFileToolStripMenuItem.Size = new System.Drawing.Size(154, 24);
+            this.saveToFileToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
             this.saveToFileToolStripMenuItem.Text = "Save to File";
             this.saveToFileToolStripMenuItem.Click += new System.EventHandler(this.saveLogExportFileToolStripMenuItem_Click);
             // 
@@ -109,20 +110,20 @@
             this.debugToolStripMenuItem,
             this.devToolsToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // debugToolStripMenuItem
             // 
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(144, 24);
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.debugToolStripMenuItem.Text = "Debug";
             this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
             // 
             // devToolsToolStripMenuItem
             // 
             this.devToolsToolStripMenuItem.Name = "devToolsToolStripMenuItem";
-            this.devToolsToolStripMenuItem.Size = new System.Drawing.Size(144, 24);
+            this.devToolsToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.devToolsToolStripMenuItem.Text = "Dev Tools";
             this.devToolsToolStripMenuItem.Click += new System.EventHandler(this.devToolsToolStripMenuItem_Click);
             // 
@@ -131,13 +132,13 @@
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(119, 24);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -147,43 +148,47 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Location = new System.Drawing.Point(0, 31);
+            this.tabControl1.Controls.Add(this.Log_tabPage);
+            this.tabControl1.Location = new System.Drawing.Point(0, 25);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1167, 539);
+            this.tabControl1.Size = new System.Drawing.Size(875, 438);
             this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
             // 
-            this.tabPage1.Location = new System.Drawing.Point(4, 25);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1159, 510);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage1.Size = new System.Drawing.Size(867, 412);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Key";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // tabPage2
+            // Log_tabPage
             // 
-            this.tabPage2.Controls.Add(this.PopupErrors_checkBox);
-            this.tabPage2.Controls.Add(this.Log_dataGridView);
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1159, 510);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Log";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.Log_tabPage.Controls.Add(this.PopupErrors_checkBox);
+            this.Log_tabPage.Controls.Add(this.Log_dataGridView);
+            this.Log_tabPage.Location = new System.Drawing.Point(4, 22);
+            this.Log_tabPage.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Log_tabPage.Name = "Log_tabPage";
+            this.Log_tabPage.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Log_tabPage.Size = new System.Drawing.Size(867, 412);
+            this.Log_tabPage.TabIndex = 1;
+            this.Log_tabPage.Text = "Log";
+            this.Log_tabPage.UseVisualStyleBackColor = true;
             // 
             // PopupErrors_checkBox
             // 
             this.PopupErrors_checkBox.AutoSize = true;
             this.PopupErrors_checkBox.Checked = true;
             this.PopupErrors_checkBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.PopupErrors_checkBox.Location = new System.Drawing.Point(20, 20);
+            this.PopupErrors_checkBox.Location = new System.Drawing.Point(15, 16);
+            this.PopupErrors_checkBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PopupErrors_checkBox.Name = "PopupErrors_checkBox";
-            this.PopupErrors_checkBox.Size = new System.Drawing.Size(122, 21);
+            this.PopupErrors_checkBox.Size = new System.Drawing.Size(93, 17);
             this.PopupErrors_checkBox.TabIndex = 1;
             this.PopupErrors_checkBox.Text = "Popup Errors?";
             this.PopupErrors_checkBox.UseVisualStyleBackColor = true;
@@ -200,10 +205,11 @@
             this.Code_Col,
             this.Level_Col,
             this.Message_Col});
-            this.Log_dataGridView.Location = new System.Drawing.Point(3, 47);
+            this.Log_dataGridView.Location = new System.Drawing.Point(2, 38);
+            this.Log_dataGridView.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Log_dataGridView.Name = "Log_dataGridView";
             this.Log_dataGridView.RowTemplate.Height = 24;
-            this.Log_dataGridView.Size = new System.Drawing.Size(1153, 435);
+            this.Log_dataGridView.Size = new System.Drawing.Size(865, 353);
             this.Log_dataGridView.TabIndex = 0;
             // 
             // Date_Time_Col
@@ -238,9 +244,10 @@
             // 
             this.Location_textBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.Location_textBox.Location = new System.Drawing.Point(364, 6);
+            this.Location_textBox.Location = new System.Drawing.Point(273, 5);
+            this.Location_textBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Location_textBox.Name = "Location_textBox";
-            this.Location_textBox.Size = new System.Drawing.Size(709, 22);
+            this.Location_textBox.Size = new System.Drawing.Size(533, 20);
             this.Location_textBox.TabIndex = 2;
             this.Location_textBox.Text = "https://192.168.255.1/ek/login.html";
             this.Location_textBox.Enter += new System.EventHandler(this.Location_textBox_Enter);
@@ -248,9 +255,10 @@
             // Go_button
             // 
             this.Go_button.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.Go_button.Location = new System.Drawing.Point(317, 18);
+            this.Go_button.Location = new System.Drawing.Point(238, 15);
+            this.Go_button.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Go_button.Name = "Go_button";
-            this.Go_button.Size = new System.Drawing.Size(41, 23);
+            this.Go_button.Size = new System.Drawing.Size(31, 19);
             this.Go_button.TabIndex = 3;
             this.Go_button.Text = "Go";
             this.Go_button.UseVisualStyleBackColor = true;
@@ -259,9 +267,10 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 573);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 461);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1167, 22);
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 10, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(875, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
@@ -280,11 +289,11 @@
             // 
             // ExoKeyHostAppForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(1167, 595);
+            this.ClientSize = new System.Drawing.Size(875, 483);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.Go_button);
             this.Controls.Add(this.Location_textBox);
@@ -292,6 +301,7 @@
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "ExoKeyHostAppForm";
             this.Text = "ExoKey";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ExoKeyHostAppForm_FormClosing);
@@ -299,8 +309,8 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.tabControl1.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
+            this.Log_tabPage.ResumeLayout(false);
+            this.Log_tabPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Log_dataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -317,7 +327,7 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage Log_tabPage;
         private System.Windows.Forms.TextBox Location_textBox;
         private System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
         private System.Windows.Forms.CheckBox PopupErrors_checkBox;

@@ -45,11 +45,23 @@ namespace XoKeyHostApp
         private volatile IPAddress XoKey_IP;
         private System.Windows.Forms.ContextMenu notify_contextMenu;
         private System.Windows.Forms.MenuItem notify_exit_menuItem;
+        private String Log_File_Name = "";
+        System.IO.StreamWriter Log_File_Stream = null;
 
 
-        public ExoKeyHostAppForm()
+        public ExoKeyHostAppForm(bool Enable_Debug, String Log_File)
         {
             InitializeComponent();
+
+            try {
+                Log_File_Name = Log_File;
+                if (Log_File.Length > 2)
+                    Log_File_Stream = new System.IO.StreamWriter(Log_File);
+            }
+            catch
+            {
+                Log_File_Stream = null;
+            }
 
             // Subscribe to Event(s) with the WindowsInterop Class
             WindowsInterop.SecurityAlertDialogWillBeShown +=
@@ -83,7 +95,9 @@ namespace XoKeyHostApp
 
             notifyIcon1.ContextMenu = notify_contextMenu;
 
+            Properties.Settings.Default.Debug = Enable_Debug;
        //     shutdown_bw.RunWorkerCompleted += Shutdown_Worker_Complete;
+
 
         }
         private const string CLSID_FIREWALL_MANAGER = "{304CE942-6E39-40D8-943A-B913C40C9CD4}";
@@ -305,6 +319,7 @@ namespace XoKeyHostApp
 
         public static void DisableICS()
         {
+            IcsManager.DisableAllShares();
             var currentShare = IcsManager.GetCurrentlySharedConnections();
             if (!currentShare.Exists)
             {
@@ -351,8 +366,19 @@ namespace XoKeyHostApp
             }
             catch
             {
-                __Log_Msg(0, LogMsg.Priority.Error,
-                    "Internet Connection Sharing to ExoKey Failed.  Internet: " + shared + " ExoKey:" + home);
+                __Log_Msg(0, LogMsg.Priority.Critical,
+                    "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
+                    +" If the problem persists contact support. Internet: " + shared + " ExoKey:" + home);
+                
+                try
+                {
+                    Debug_Services();
+                    DisableICS();
+                } catch
+                {
+
+                }
+
             }
 
         }
@@ -426,105 +452,121 @@ namespace XoKeyHostApp
             {
 
             }
-            Init_Dialog.Recv_Status_Text("Checking Internet Route");
-            Init_Dialog.Recv_Progress_Val(20);
 
-            // Create a UDP client, so we can figure out what interface has a route to the internet. 
-            UdpClient u = new UdpClient("8.8.8.8", 53);
-            IPAddress localAddr = ((IPEndPoint)u.Client.LocalEndPoint).Address; // This bound address is internet facing
-
-
-            NetworkInterface Def_Intf =  NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault();
-            Interface_List = new  List<NetworkInterface>();
-
-     
-            Exokey_Interface = null; // init
-            Internet_Interface = null;
-            int i = 0;
-            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            try
             {
-              
-              //  var connection = IcsManager.GetConnectionById(nic.Id);
-            //    var properties = IcsManager.GetProperties(connection);
-              //  var configuration = IcsManager.GetConfiguration(connection);
-                /*
-                var record = new
-                                 {
-                                     Name = nic.Name,
-                                     GUID = nic.Id,
-                                     MAC = nic.GetPhysicalAddress(),
-                                     Description = nic.Description,
-                                     SharingEnabled = configuration.SharingEnabled,
-                                     NetworkAdapter = nic,
-                                     Configuration = configuration, 
-                                     Properties = properties,
-                                 };
-                 */
- //               if (nic.OperationalStatus == OperationalStatus.Down)
- //                   continue;
-                if (!nic.Supports(NetworkInterfaceComponent.IPv4))
-                    continue;
-                if (! (nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet
-                        || nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
-                        || nic.NetworkInterfaceType == NetworkInterfaceType.GigabitEthernet))
-                    continue;
+                Init_Dialog.Recv_Status_Text("Checking Internet Route");
+                Init_Dialog.Recv_Progress_Val(20);
+
+                // Create a UDP client, so we can figure out what interface has a route to the internet. 
+                UdpClient udp_cli = new UdpClient("8.8.8.8", 53);
+                IPAddress localAddr = ((IPEndPoint)udp_cli.Client.LocalEndPoint).Address; // This bound address is internet facing
 
 
-                IPInterfaceProperties ipProps = nic.GetIPProperties();
-                UnicastIPAddressInformationCollection uniCast = ipProps.UnicastAddresses;
+                NetworkInterface Def_Intf = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault();
+                Interface_List = new List<NetworkInterface>();
 
-                if (uniCast == null) {
-                    // no address
-                    continue;
-                }
 
-         //       Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
-                Interface_List.Add(nic);
-                __Log_Msg(0, LogMsg.Priority.Debug, "interface: "  + nic.Name + "  Desc: "+ nic.Description + " Status:" + nic.OperationalStatus.ToString());
-                if (nic.Description.Contains("XoWare") || nic.Description.Contains("x.o.ware"))
+                Exokey_Interface = null; // init
+                Internet_Interface = null;
+                int i = 0;
+                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
                 {
-                    Exokey_Interface = nic;
-                    __Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description);
-                }
-                foreach (UnicastIPAddressInformation uni in uniCast)
-                {
-                    if (uni.Address.Equals(localAddr))
+
+                    //  var connection = IcsManager.GetConnectionById(nic.Id);
+                    //    var properties = IcsManager.GetProperties(connection);
+                    //  var configuration = IcsManager.GetConfiguration(connection);
+                    /*
+                    var record = new
+                                     {
+                                         Name = nic.Name,
+                                         GUID = nic.Id,
+                                         MAC = nic.GetPhysicalAddress(),
+                                         Description = nic.Description,
+                                         SharingEnabled = configuration.SharingEnabled,
+                                         NetworkAdapter = nic,
+                                         Configuration = configuration, 
+                                         Properties = properties,
+                                     };
+                     */
+                    //               if (nic.OperationalStatus == OperationalStatus.Down)
+                    //                   continue;
+                    if (!nic.Supports(NetworkInterfaceComponent.IPv4))
+                        continue;
+                    if (!(nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet
+                            || nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
+                            || nic.NetworkInterfaceType == NetworkInterfaceType.GigabitEthernet))
+                        continue;
+
+
+                    IPInterfaceProperties ipProps = nic.GetIPProperties();
+                    UnicastIPAddressInformationCollection uniCast = ipProps.UnicastAddresses;
+
+                    if (uniCast == null)
                     {
-                //        Intf_comboBox.SelectedIndex = i;
-                        Internet_Interface = nic;
-                        __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description);
+                        // no address
+                        continue;
                     }
+
+                    //       Intf_comboBox.Items.Add(nic.Name + " " + nic.Description);
+                    Interface_List.Add(nic);
+                    __Log_Msg(0, LogMsg.Priority.Debug, "interface: " + nic.Name + "  Desc: " + nic.Description + " Status:" + nic.OperationalStatus.ToString());
+                    if (nic.Description.Contains("XoWare") || nic.Description.Contains("x.o.ware"))
+                    {
+                        Exokey_Interface = nic;
+                        __Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description + " " + nic.Id);
+                    }
+                    foreach (UnicastIPAddressInformation uni in uniCast)
+                    {
+                        if (uni.Address.Equals(localAddr))
+                        {
+                            //        Intf_comboBox.SelectedIndex = i;
+                            Internet_Interface = nic;
+                            __Log_Msg(0, LogMsg.Priority.Debug, "Internet interface: " + nic.Description + " " + nic.Id);
+                        }
+                    }
+
+                    i++;
+
+                    Init_Dialog.Recv_Status_Text("Checking Interface " + (i + 1));
+                    Init_Dialog.Recv_Progress_Val(20 + i);
                 }
+                Init_Dialog.Recv_Status_Text("Checking services");
 
-                i++;
+                Check_ICS_Dependencies();
+                Init_Dialog.Recv_Progress_Val(70);
 
+                Init_Dialog.Recv_Status_Text("Enabling Internet Connection Sharing");
+                Init_Dialog.Recv_Progress_Val(85);
+
+                //    Intf_comboBox.Update();
+
+                if (Exokey_Interface == null)
+                {
+                    Init_Dialog.Recv_Status_Text("Exokey not found");
+                    __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found.  "
+                        + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
+                        + " If the problem persists after retrying, look for the ExoKey Device in the device manager.");
+                    return;
+                }
+                else if (Internet_Interface == null)
+                {
+                    __Log_Msg(0, LogMsg.Priority.Critical, "Internet interface not found.  Please check that you have internet connectivity");
+                    return;
+                }
+                else if (Internet_Interface.Equals(Exokey_Interface))
+                {
+                    __Log_Msg(0, LogMsg.Priority.Critical, "Exokey Is internet interface.  Invalid configuration.");
+                    return;
+                }
             }
-            Init_Dialog.Recv_Status_Text("Checking services");
-           
-            Check_ICS_Dependencies();
-            Init_Dialog.Recv_Progress_Val(70);
-
-            Init_Dialog.Recv_Status_Text("Enabling Internet Connection Sharing");
-            Init_Dialog.Recv_Progress_Val(85);
-            
-        //    Intf_comboBox.Update();
-
-            if (Exokey_Interface == null)
+            catch (Exception ex)
             {
-                Init_Dialog.Recv_Status_Text("Exokey not found");
-                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey interface not found.  "
-                    + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
-                    + " If the problem persists after retrying, look for the ExoKey Device in the device manager.");
-                return;
-            } else if (Internet_Interface == null)
-            {
-                __Log_Msg(0, LogMsg.Priority.Critical, "Internet interface not found");
-                return;
-            } else if (Internet_Interface.Equals(Exokey_Interface))
-            {
-                __Log_Msg(0, LogMsg.Priority.Critical, "Exokey Is internet interface.  Invalid configuration.");
-                return;
+                Debug_Services();
+                __Log_Msg(0, LogMsg.Priority.Critical, "Exception " + ex.ToString());
             }
+
+
             try
             {
                 EnableICS(Internet_Interface.Id, Exokey_Interface.Id, true);
@@ -571,11 +613,24 @@ namespace XoKeyHostApp
             __Log_Msg(0, LogMsg.Priority.Debug, "OS ServicePack: " + OSInfo.ServicePack);
             __Log_Msg(0, LogMsg.Priority.Debug, "OS Bits: " + OSInfo.Bits);
 
+            if (Log_File_Stream != null)
+            {
+                __Log_Msg(0, LogMsg.Priority.Debug, "Logging To: " + Log_File_Name);
+            }
+
             try
             {
                 INetFwMgr manager = GetFirewallManager();
+                Boolean FW_Enabled = manager.LocalPolicy.CurrentProfile.FirewallEnabled;
 
-                __Log_Msg(0, LogMsg.Priority.Debug, "FW Enabled: " + manager.LocalPolicy.CurrentProfile.FirewallEnabled.ToString());
+                __Log_Msg(0, LogMsg.Priority.Debug, "FW Enabled: " + FW_Enabled.ToString());
+
+                if (!FW_Enabled)
+                {
+                    MessageBox.Show("Windows Firewall must be enabled for this application to work");
+                    this.Close();
+                    return;
+                }
 
                 // Get Reference to the current Process
                 System.Diagnostics.Process thisProc = System.Diagnostics.Process.GetCurrentProcess();
@@ -656,7 +711,7 @@ namespace XoKeyHostApp
             {
 
                 Log_Msg_Handler callback = new Log_Msg_Handler(Add_Log_Entry);
-                Log_dataGridView.Invoke(callback, new object[] { Msg });
+                this.Invoke(callback, new object[] { Msg });
             }
             catch (Exception e)
             {
@@ -688,7 +743,23 @@ namespace XoKeyHostApp
             debugToolStripMenuItem.Checked = value;
             Go_button.Visible = false;
             Location_textBox.Visible = value;
+            devToolsToolStripMenuItem.Visible = value;
+            saveToFileToolStripMenuItem.Visible = value;
+            exportLogToolStripMenuItem.Visible = value;
 
+            if (value)
+            {
+                if (!tabControl1.Contains(Log_tabPage)) 
+                    tabControl1.TabPages.Add(Log_tabPage);
+            }
+            else
+            {
+                if (tabControl1.Contains(Log_tabPage))
+                    tabControl1.TabPages.Remove(Log_tabPage);
+            }
+ 
+//            Log_tabPage.Enabled = value;
+//            Log_tabPage.Visible = value;
         }
 
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
@@ -702,22 +773,37 @@ namespace XoKeyHostApp
         public void Add_Log_Entry(LogMsg Msg)
         {
 
-            if (PopupErrors_checkBox.Checked && Msg.Level <= LogMsg.Priority.Critical)
-                MessageBox.Show(Msg.Message);
-
-
-
-            //Log_Message_List.Add(Msg);
-            lock (Log_dataGridView)
+            try
             {
-                Log_dataGridView.Rows.Insert(0, 1);
-                Log_dataGridView.Rows[0].Cells[0].Value = Msg.Time;
-                Log_dataGridView.Rows[0].Cells[1].Value = Msg.Code;
-                Log_dataGridView.Rows[0].Cells[2].Value = Msg.Level;
-                Log_dataGridView.Rows[0].Cells[3].Value = Msg.Message;
-            }
-            //Log_dataGridView.Invoke(new Update_Log_Data_Grid_Callback(Update_Log_Data_Grid) );
 
+                if (Log_File_Stream != null)
+                {
+                    String Out_Line;
+                    Out_Line = Msg.Time + "\t" + Msg.Code + "\t" + Msg.Level + "\t" + Msg.Message;
+                    Log_File_Stream.WriteLine(Out_Line);
+                    Log_File_Stream.Flush();
+                }
+            
+                if (PopupErrors_checkBox.Checked && Msg.Level <= LogMsg.Priority.Critical)
+                    MessageBox.Show(Msg.Message);
+
+
+
+                //Log_Message_List.Add(Msg);
+                lock (Log_dataGridView)
+                {
+                    Log_dataGridView.Rows.Insert(0, 1);
+                    Log_dataGridView.Rows[0].Cells[0].Value = Msg.Time;
+                    Log_dataGridView.Rows[0].Cells[1].Value = Msg.Code;
+                    Log_dataGridView.Rows[0].Cells[2].Value = Msg.Level;
+                    Log_dataGridView.Rows[0].Cells[3].Value = Msg.Message;
+                }
+                //Log_dataGridView.Invoke(new Update_Log_Data_Grid_Callback(Update_Log_Data_Grid) );
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Ex:" + e.Message + "   " + Msg.Message);
+            }
 
         }
         private bool Search_For_ExoKey()
@@ -862,6 +948,9 @@ namespace XoKeyHostApp
         {
             try
             {
+                if (web_view == null)
+                    return;
+
                 web_view.Load(address);
             }
             catch (System.UriFormatException)
@@ -869,6 +958,10 @@ namespace XoKeyHostApp
                 __Log_Msg(0, LogMsg.Priority.Error, "URI Format Error");
                 return;
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Load_Url ex:" + ex.Message);
+            } 
         }
         private void Navigate( String address = null)
         {
@@ -970,7 +1063,7 @@ namespace XoKeyHostApp
                 if (xokey != null)
                 {
                     System.Diagnostics.Debug.WriteLine("stop xokey ");
-                    xokey.Stop();
+                    xokey.Stop();  // at first just stop timers and doing more polling
                 }
             }
             catch (Exception ex)
@@ -978,51 +1071,88 @@ namespace XoKeyHostApp
                 Console.WriteLine("Stop ex: " + ex.ToString());
             }
 
+
+
+            try
+            {
+                //       web_view.Dispose();
+                if (xokey != null)
+                {
+
+                    Init_Dialog.Set_Status_Text("Cleaningup ExoKey Service");
+                    Init_Dialog.Set_Progress_Bar(20);
+                    System.Diagnostics.Debug.WriteLine("dispose xokey ");
+                    xokey.Dispose();
+                    xokey = null;
+                    Console.WriteLine("xokey disposed ");
+                }
+                            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Stop ex: " + ex.ToString());
+            }
+
+            try
+            {
+                Init_Dialog.Set_Status_Text("Closing UI View");
+                Init_Dialog.Set_Progress_Bar(30); 
+                System.Diagnostics.Debug.WriteLine("Close Dev");
+                web_view.CloseDevTools();
+
+                Init_Dialog.Set_Progress_Bar(40);
+                Console.WriteLine("Close WebView");
+                Console.WriteLine("stop web_view");
+                web_view.Stop();
+                try
+                {
+                    Console.WriteLine("dispose web_view");
+                    web_view.Dispose();
+                    web_view = null;
+                    Init_Dialog.Set_Progress_Bar(50);
+                } catch (Exception ex)
+                {
+                     Console.WriteLine("Exception dispose webview: " + ex.Message);
+                     Console.WriteLine("Exception dispose webview: " + ex.StackTrace.ToString());
+                }
+
+            }
+            catch (Exception ex) {
+                Console.WriteLine("Exception closing: " + ex.Message);
+                Console.WriteLine("Exception closing: " + ex.StackTrace.ToString());
+            }
+
             try
             {
                 Init_Dialog.Set_Status_Text("Disable Windows ICS with ExoKey");
-                Init_Dialog.Set_Progress_Bar(20);
+                Init_Dialog.Set_Progress_Bar(60);
                 Console.WriteLine("DisableICS");
-                System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
+                System.Diagnostics.Debug.WriteLine("DisableICS2 ");
                 DisableICS();
 
                 Init_Dialog.Set_Status_Text("Windows ICS Disabled");
-                Init_Dialog.Set_Progress_Bar(30);
-  
-                System.Diagnostics.Debug.WriteLine("DisableICS2 "); 
+                Init_Dialog.Set_Progress_Bar(90);
+
+                Console.WriteLine("DisableICS2 ");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Disable ICS ex: " + ex.ToString());
             }
-     //       web_view.Dispose();
-            if (xokey != null)
+
+            try
             {
-  
-                Init_Dialog.Set_Status_Text("Cleaningup Configuration");
-                Init_Dialog.Set_Progress_Bar(85);
-                System.Diagnostics.Debug.WriteLine("dispose xokey "); 
-                xokey.Dispose();
-                xokey = null;
-                System.Diagnostics.Debug.WriteLine("xokey disposed "); 
+                Console.WriteLine("dispose this object");
+                //  this.Dispose();
+                Init_Dialog.Invoke_Close();
+                Console.WriteLine("Form closing dispose done.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception closing: " + ex.Message);
+                Console.WriteLine("Exception closing: " + ex.StackTrace.ToString());
             }
 
-            Init_Dialog.Set_Status_Text("Closing");
-            Init_Dialog.Set_Progress_Bar(90);
-            System.Diagnostics.Debug.WriteLine("Close Dev"); 
-            web_view.CloseDevTools();
-
-            Init_Dialog.Set_Progress_Bar(92);
-            System.Diagnostics.Debug.WriteLine("Close WebView");
-            System.Diagnostics.Debug.WriteLine("stop web_view"); 
-            web_view.Stop();
-            System.Diagnostics.Debug.WriteLine("dispose web_view"); 
-            web_view.Dispose();
-            web_view = null;
-            System.Diagnostics.Debug.WriteLine("dispose this object"); 
-          //  this.Dispose();
-            Init_Dialog.Invoke_Close();
-            System.Diagnostics.Debug.WriteLine("Form closing dispose done."); 
+            System.Threading.Thread.Sleep(123);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)

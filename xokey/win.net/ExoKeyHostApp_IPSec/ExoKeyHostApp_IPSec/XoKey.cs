@@ -137,6 +137,7 @@ namespace XoKeyHostApp
         private List<IPAddress> MCast_Listening;
         public int No_EK_Status_Error_Count = 0;
         public int EK_Intf_Down_Count = 0;
+        bool Check_State_Timer_Running = false;
 
         public XoKey( Action<Action> gui_invoke, Log_Msg_Handler Log_Event_Handler = null)
         {
@@ -208,22 +209,38 @@ namespace XoKeyHostApp
         }
         public void Stop()
         {
-            
-            Check_State_Timer.Enabled = false;
-            Check_State_Timer.Stop();
+
+            if (Check_State_Timer != null)
+            {
+                Check_State_Timer.Enabled = false;
+                Check_State_Timer.Stop();
+                Check_State_Timer.Dispose();
+                Check_State_Timer = null;
+            }
             
             Stop_VPN();
             Disposing = true;
-            Check_State_Timer.Dispose();
+
+            if (Check_State_Timer_Running)
+            {
+                Console.WriteLine("Check_State_Timer_Running");
+                for (int i = 0; i < 10 && Check_State_Timer_Running; i++)
+                {
+                    System.Threading.Thread.Sleep(500);
+                }
+            }
             Log_Msg_Send_Event = null;
-            System.Diagnostics.Debug.WriteLine("XoKey stop done.");  
+            Console.WriteLine("XoKey stop done.");  
         }
         public void Dispose()
         {
             Disposing = true;
-            Check_State_Timer.Enabled = false;
-            Check_State_Timer.Dispose();
-            Check_State_Timer = null;
+            if (Check_State_Timer != null)
+            {
+                Check_State_Timer.Enabled = false;
+                Check_State_Timer.Dispose();
+                Check_State_Timer = null;
+            }
             
             if (Traffic_Routed_To_XoKey)
             {
@@ -263,7 +280,7 @@ namespace XoKeyHostApp
          */
         public void SysLog_ReceiveCallback(IAsyncResult ar)
         {
-            IEnumerable<UnicastIPAddressInformation> addresses;
+   //         IEnumerable<UnicastIPAddressInformation> addresses;
             UdpClient udp_client = (UdpClient)((UdpState)(ar.AsyncState)).udp_client;
             IPEndPoint end_point = (IPEndPoint)((UdpState)(ar.AsyncState)).end_point;
             PriStruct Pri;
@@ -429,6 +446,8 @@ namespace XoKeyHostApp
             }
             return addresses;
         }
+
+        // Return the IP address of the EK IP
         private IEnumerable<IPAddress> GetLocalIpAddresses()
         {
           //  IEnumerable<IPAddress> addresses = new IEnumerable<IPAddress>();
@@ -578,8 +597,9 @@ namespace XoKeyHostApp
                 Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever bound " + Local_IP.ToString());
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
+
 //                Send_Log_Msg(1, LogMsg.Priority.Debug, "Syslog MultiCastReciever ex " + Local_IP.ToString() + " "
 //                    + ex.Message.ToString() + " Retries Remaining:" + retries);
                 return false;
@@ -645,7 +665,7 @@ namespace XoKeyHostApp
             if (!EK_Is_Up)
             {
                 EK_Intf_Down_Count++;
-                if (EK_Intf_Down_Count > 10)
+                if (EK_Intf_Down_Count > 25)
                     Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
             }
         }
@@ -774,7 +794,7 @@ namespace XoKeyHostApp
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/GetVpnStatus");
             wr.Method = "GET";
-            wr.Timeout = 5000;
+            wr.Timeout = 6000;
             wr.CookieContainer = new CookieContainer();
             Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
             wr.CookieContainer.Add(cook);
@@ -784,11 +804,13 @@ namespace XoKeyHostApp
                 response = wr.GetResponse();
 
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("Exception Get_VPN_Status: " + ex.Message);
+                Console.WriteLine("Exception Get_VPN_Status: " + ex.StackTrace.ToString());
                 No_EK_Status_Error_Count++;
                 Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
-                if (No_EK_Status_Error_Count > 5)
+                if (No_EK_Status_Error_Count > 10)
                     Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
                 return;
             }
@@ -838,11 +860,13 @@ namespace XoKeyHostApp
                     IPEndPoint Server = new IPEndPoint(addresslist[0],0);
                     Set_Sever_IPEndpoint(Server);
                     Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+     
                 }
                 else
                 {
                     Remove_Routes();
                     Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+                    No_EK_Status_Error_Count = 0; //OK
                 }
 
             } catch (Exception ex) {
@@ -1164,6 +1188,11 @@ namespace XoKeyHostApp
             {
                 if (Disposing)
                     return;
+                if (Check_State_Timer_Running)
+                    return;
+
+                Check_State_Timer_Running = true;
+
                 Check_State_Timer.Enabled = false;  // avoid timer overrun
                 // Send_Log_Msg("Check_State_Timer_Expired", LogMsg.Priority.Debug);
 
@@ -1189,7 +1218,9 @@ namespace XoKeyHostApp
             finally
             {
                 if (!Disposing && Check_State_Timer != null)
-                    Check_State_Timer.Enabled = true;
+                    Check_State_Timer.Enabled = true; // reenable timer
+
+                Check_State_Timer_Running = false;
             }
         }
       

@@ -27,9 +27,9 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExoKeyHostApp_IPSec\ExoKeyHostApp_IPSec\ExoKeyHostApp.csproj">
-      <Name>ExoKeyHostApp</Name>
-      <Project>{6cba1945-28d2-4d15-87c2-8629c5ddb80f}</Project>
+    <ProjectReference Include="..\EK_App\EK_App.csproj">
+      <Name>EK_App</Name>
+      <Project>{4828daec-ef99-4553-b674-4374f77c6d66}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>

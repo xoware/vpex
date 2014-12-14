@@ -1,0 +1,91 @@
+﻿<Window x:Class="EK_App.NotificationWindow"
+     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="NotificationWindow" Height="70" Width="300" ShowInTaskbar="False"
+    WindowStyle="None" AllowsTransparency="True" 
+    Background="White">
+
+
+    <Grid RenderTransformOrigin="0,1" DataContext="{Binding ElementName=NotificationWindow, Path=.}" >
+        <Border BorderThickness="2"  BorderBrush="DarkGray" CornerRadius="7">
+            <Grid Margin="0,0,0,22">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="24"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Image Grid.Column="0" 
+                   Grid.RowSpan="2" 
+                   Source="vpex.ico" 
+                   Width="40" Height="40" 
+                   VerticalAlignment="Center" 
+                   HorizontalAlignment="Center"/>
+
+                <Image Grid.Column="2" 
+                   Source="vpex.ico"
+                   Width="20" 
+                   Height="20" 
+                   VerticalAlignment="Center" 
+                   ToolTip="Close"
+                   HorizontalAlignment="Center" 
+                   Cursor="Hand" MouseUp="ImageMouseUp"/>
+
+                <TextBlock Grid.Column="1" 
+                       Grid.Row="0"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Right"
+                       FontWeight="Bold" FontSize="15"
+                   
+                       Text="{Binding UpdateSourceTrigger=PropertyChanged, Path=Status_Message }" Margin="0,5,12,5"/>
+                <!--
+                <Button Grid.Column="1"
+                    Grid.Row="1"
+                    FontSize="15"
+                    Margin="0,-3,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="Click Here to View" 
+                   /> -->
+            </Grid>
+        </Border>
+
+        <!-- Animation -->
+        <Grid.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard x:Name="StoryboardLoad">
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="0.0" To="1.0" Duration="0:0:2" />
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.0" Duration="0:0:8" BeginTime="0:0:5" Completed="DoubleAnimationCompleted"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+
+            <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                <EventTrigger.Actions>
+                    <RemoveStoryboard BeginStoryboardName="StoryboardLoad"/>
+                    <RemoveStoryboard BeginStoryboardName="StoryboardFade"/>
+                </EventTrigger.Actions>
+            </EventTrigger>
+
+            <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                <BeginStoryboard x:Name="StoryboardFade">
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.0" Duration="0:0:8" BeginTime="0:0:2" Completed="DoubleAnimationCompleted"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+
+        </Grid.Triggers>
+
+        <Grid.RenderTransform>
+            <ScaleTransform ScaleY="1" />
+        </Grid.RenderTransform>
+    </Grid>
+</Window>
