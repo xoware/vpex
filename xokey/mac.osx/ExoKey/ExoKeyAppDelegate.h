@@ -62,24 +62,16 @@ void ExoKeyLog(NSString* text);
 -(IBAction)reconnect:(id)sender;
 - (IBAction)closeModalDialog:(id)sender;
 
-//Other Windows
+//Wait Window Methods
 -(void)openWaitWindow;
--(void)closeWaitWindow;
+-(void)closeWaitWindow:(NSTimer*)timer;
 -(void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
         contextInfo:(void *)contextInfo;
 
-
-//- (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr;
-
-/*      
-Keep in case we need to run a single process as root.
- 
- - (BOOL) runProcessAsAdministrator:(NSString*)scriptPath
- withArguments:(NSArray *)arguments
- output:(NSString **)output
- errorDescription:(NSString **)errorDescription;
- 
- */
+//Methods to Call External Programs
+- (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr;
+- (BOOL) runProcessAsAdministrator:(NSString*)scriptPath withArguments:(NSArray *)arguments
+                            output:(NSString **)output errorDescription:(NSString **)errorDescription;
 
 //Properties
 @property (assign) IBOutlet NSWindow *window;

@@ -34,7 +34,7 @@
         NSMutableURLRequest* vpnRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/api/GetVpnStatus"]
                                                     cachePolicy:NSURLRequestUseProtocolCachePolicy
                                                 timeoutInterval:10.0];
-        /*
+/*
         //Fetch the app cookies of the app. The shared cookie storage contains all cookies on the machine.
         NSHTTPCookieStorage* cookieStorage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
         NSArray* sortArray = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES]];
