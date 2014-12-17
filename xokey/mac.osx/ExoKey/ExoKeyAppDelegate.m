@@ -447,7 +447,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     NSString* result = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
     result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
     if ([result isNotEqualTo:deviceProperties[ROUTER]]) {
-        NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
+        //NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
         deviceProperties[ROUTER] = result;
     }
 }

@@ -3,6 +3,7 @@
     Abstract: The main object in the helper tool.
     Version: 1.0
     Note: Standard out and standard error are undefined in release mode. In debug mode, we define it as: /etc/ExoKey.log
+          The standard output and standard input keys must be removed in order for XPC services to work.
 */
 #import "NetworkConfigTool.h"
 #import "../ExoKeyAppDelegate.h"

@@ -9,9 +9,5 @@
 		<key>ExoKey.NetworkConfigTool</key>
 		<true/>
 	</dict>
-	<key>StandardOutPath</key>
-	<string></string>
-	<key>StandardErrorPath</key>
-	<string></string>
 </dict>
 </plist>
