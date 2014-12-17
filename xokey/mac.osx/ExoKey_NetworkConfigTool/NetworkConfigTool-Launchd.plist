@@ -10,8 +10,8 @@
 		<true/>
 	</dict>
 	<key>StandardOutPath</key>
-	<string>/Users/user/Desktop/ExoKey.log</string>
+	<string></string>
 	<key>StandardErrorPath</key>
-	<string>/Users/user/Desktop/ExoKey.log</string>
+	<string></string>
 </dict>
 </plist>
