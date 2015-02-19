@@ -46,7 +46,7 @@ namespace EK_App
         }   
       
 
-        public new void Show(string msg)
+        public void Show(string msg)
         {
             this.Topmost = true;
             Status_Message = msg;

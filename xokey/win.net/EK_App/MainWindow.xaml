@@ -11,6 +11,15 @@
         <KeyBinding Key="W" Modifiers="Control" Command="Close"/>
         -->
     </Window.InputBindings>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary 
+                  Source="TaskBarDictionary.xaml">
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <controls:NonReloadingTabControl x:Name="TabControl"
                                Margin="0,5,0,0"

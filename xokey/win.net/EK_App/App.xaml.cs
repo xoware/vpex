@@ -7,7 +7,7 @@ using System.Windows;
 using CefSharp.Example;
 using System.Runtime.InteropServices;
 using System.IO;
-
+using Hardcodet.Wpf.TaskbarNotification;
 
 namespace EK_App
 {
@@ -21,6 +21,7 @@ namespace EK_App
 
         string Cef_LogFile = null;
         public static string Web_Console_Log_File = null;
+        private TaskbarIcon tb;
 
         static void Show_Help(String Name)
         {
@@ -114,7 +115,23 @@ namespace EK_App
                 Console.WriteLine("Exception in main: " + ex.Message);
             }
         }
+        private void InitApplication()
+        {
+            //initialize NotifyIcon
+       //     tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+        }
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
 
+            //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
+            tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+        }
+        protected override void OnExit(ExitEventArgs e)
+        {
+            tb.Dispose(); //the icon would clean up automatically, but this is cleaner
+            base.OnExit(e);
+        }
         private App()
         {
             ProcessArgs();
@@ -124,9 +141,9 @@ namespace EK_App
             {
                 Console.WriteLine("Already Running");
                 return;
-            } 
+            }
 
-            
+            InitApplication();
             CefExample.Init(Cef_LogFile, App.Debug);
         }
     }

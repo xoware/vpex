@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:taskbar="http://www.hardcodet.net/taskbar"
+                    xmlns:viewModel="clr-namespace:EK_App.NotifyIconViewModels"
+                    xmlns:controls="clr-namespace:EK_App.Controls"
+                    >
+    <!-- Globally declared notify icon -->
+    <ContextMenu x:Shared="false" x:Key="SysTrayMenu">
+        <MenuItem Header="Show Window" Command="{Binding ShowWindowCommand}" />
+        <MenuItem Header="Hide Window" Command="{Binding HideWindowCommand}" />
+        <Separator />
+        <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
+    </ContextMenu>
+    
+    <taskbar:TaskbarIcon x:Key="ExoKeyNotifyIcon"
+              IconSource="vpex.ico"
+              ToolTipText="Double-click for window, right-click for menu"
+              DoubleClickCommand="{Binding ShowWindowCommand}"
+              ContextMenu="{StaticResource SysTrayMenu}"
+                         >
+        <!-- self-assign a data context (could also be done programmatically) -->
+        <taskbar:TaskbarIcon.DataContext>
+            <viewModel:NotifyIconViewModel />
+        </taskbar:TaskbarIcon.DataContext>
+    </taskbar:TaskbarIcon>
+
+</ResourceDictionary>

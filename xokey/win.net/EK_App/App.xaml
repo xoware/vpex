@@ -4,9 +4,13 @@
              xmlns:controls="clr-namespace:EK_App.Controls"
              xmlns:view="clr-namespace:EK_App.Views"
              xmlns:viewModel="clr-namespace:EK_App.ViewModels"
-             StartupUri="MainWindow.xaml">
+             StartupUri="MainWindow.xaml"
+             ShutdownMode="OnExplicitShutdown"
+             >
     <Application.Resources>
-        <Style TargetType="{x:Type controls:NonReloadingTabControl}">
+        <!-- merge NotifyIcon and related stuff into the application-->
+        <ResourceDictionary>
+            <Style TargetType="{x:Type controls:NonReloadingTabControl}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type controls:NonReloadingTabControl}">
@@ -83,6 +87,11 @@
         <DataTemplate DataType="{x:Type viewModel:BrowserTabViewModel}">
             <view:BrowserTabView />
         </DataTemplate>
-       
+  
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="TaskBarDictionary.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
