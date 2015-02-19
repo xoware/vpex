@@ -211,11 +211,11 @@ namespace EK_App.Mvvm
                     if (reply.Status == IPStatus.Success)
                     {
                         Has_Internet_Access = true;
-                        Console.WriteLine("Address: {0}", reply.Address.ToString());
-                        Console.WriteLine("RoundTrip time: {0}", reply.RoundtripTime);
-                        Console.WriteLine("Time to live: {0}", reply.Options.Ttl);
-                        Console.WriteLine("Don't fragment: {0}", reply.Options.DontFragment);
-                        Console.WriteLine("Buffer size: {0}", reply.Buffer.Length);
+                        Send_Log_Msg(String.Format("Address: {0}", reply.Address.ToString()));
+                        Send_Log_Msg(String.Format("RoundTrip time: {0}", reply.RoundtripTime));
+                        Send_Log_Msg(String.Format("Time to live: {0}", reply.Options.Ttl));
+                        Send_Log_Msg(String.Format("Don't fragment: {0}", reply.Options.DontFragment));
+                        Send_Log_Msg(String.Format("Buffer size: {0}", reply.Buffer.Length));
                         Ping_Error_Count = 0;
                         return;
 
@@ -231,7 +231,7 @@ namespace EK_App.Mvvm
 
 
                     Has_Internet_Access = false;
-                    Console.WriteLine("Ping Ex: {0}    Error_Count {1}", ex.Message, Ping_Error_Count);
+                    Send_Log_Msg(String.Format("Ping Ex: {0}    Error_Count {1}", ex.Message, Ping_Error_Count));
                     Ping_Error_Count++;
                     if (Ping_Error_Count > 40) 
                         InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
@@ -258,7 +258,7 @@ namespace EK_App.Mvvm
 
             foreach (var entity in collection)
             {
-                Console.WriteLine("entity=" + entity.ToString());
+                Send_Log_Msg("entity=" + entity.ToString());
             }
             try
             {
@@ -272,17 +272,17 @@ namespace EK_App.Mvvm
 
                 foreach (ManagementObject WmiObject in Searcher.Get())
                 {
-                    Console.WriteLine("{0,-35} {1,-40}", "ClassGuid", WmiObject["ClassGuid"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "DeviceClass", WmiObject["DeviceClass"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "DeviceID", WmiObject["DeviceID"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "DeviceName", WmiObject["DeviceName"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "Manufacturer", WmiObject["Manufacturer"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "Name", WmiObject["Name"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "Status", WmiObject["Status"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "DriverName", WmiObject["DriverName"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "DriverVersion", WmiObject["DriverVersion"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "FriendlyName", WmiObject["FriendlyName"]);// String
-                    Console.WriteLine("{0,-35} {1,-40}", "Started", WmiObject["Started"]);// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "ClassGuid", WmiObject["ClassGuid"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "DeviceClass", WmiObject["DeviceClass"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "DeviceID", WmiObject["DeviceID"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "DeviceName", WmiObject["DeviceName"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "Manufacturer", WmiObject["Manufacturer"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "Name", WmiObject["Name"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "Status", WmiObject["Status"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "DriverName", WmiObject["DriverName"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "DriverVersion", WmiObject["DriverVersion"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "FriendlyName", WmiObject["FriendlyName"]));// String
+                    Send_Log_Msg(String.Format("{0,-35} {1,-40}", "Started", WmiObject["Started"]));// String
                     if (WmiObject["DeviceName"] != null && WmiObject["DriverVersion"] != null
                        && WmiObject["DeviceName"].ToString().Length > 4 && WmiObject["DriverVersion"].ToString().Length > 3)
                        ExoKey_Driver_Found = true;
@@ -290,7 +290,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception e)
             {
-                Console.WriteLine(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
+                Send_Log_Msg(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
             }
         }
 
@@ -304,11 +304,11 @@ namespace EK_App.Mvvm
             foreach (var device in collection)
             {
 
-                //                Console.WriteLine(device.ToString());
+                //                Send_Log_Msg(device.ToString());
                 PropertyDataCollection properties = device.Properties;
                 foreach (PropertyData property in properties)
                 {
-                    Console.WriteLine("Name=" + property.Name + " Value = " +
+                    Send_Log_Msg("Name=" + property.Name + " Value = " +
                         (property.Value == null ? "null" : property.Value.ToString()));
 
                     if (property.Value != null)
@@ -327,14 +327,14 @@ namespace EK_App.Mvvm
                             PropertyDataCollection system_properties = device.SystemProperties;
                             foreach (PropertyData sys_prop in system_properties)
                             {
-                                Console.WriteLine("sys_prop=" + sys_prop.Name + " Value = " +
+                                Send_Log_Msg("sys_prop=" + sys_prop.Name + " Value = " +
                                  (property.Value == null ? "null" : sys_prop.Value.ToString()));
                             }
 
                             QualifierDataCollection qualifiers = device.Qualifiers;
                             foreach (QualifierData qdata in qualifiers)
                             {
-                                Console.WriteLine("qdata=" + qdata.Name + " Value = " +
+                                Send_Log_Msg("qdata=" + qdata.Name + " Value = " +
                                 (property.Value == null ? "null" : qdata.Value.ToString()));
                             }
                             Check_Dev_Desc(property.Value.ToString());
@@ -666,15 +666,15 @@ namespace EK_App.Mvvm
                 IPAddressCollection dnsServers = adapterProperties.DnsAddresses;
                 if (dnsServers.Count > 0)
                 {
-                    Console.WriteLine(adapter.Description);
+                    Send_Log_Msg(adapter.Description);
                     foreach (IPAddress dns in dnsServers)
                     {
-                        Console.WriteLine("  DNS Servers ............................. : {0}",
-                            dns.ToString());
+                        Send_Log_Msg(String.Format("  DNS Servers ............................. : {0}",
+                            dns.ToString()));
                         Send_Log_Msg(0, LogMsg.Priority.Debug, "  DNS Servers  : " + dns.ToString()
                             + " Adapter: " + adapter.Description);
                     }
-                    Console.WriteLine();
+
                 }
             }
         }
@@ -727,7 +727,7 @@ namespace EK_App.Mvvm
 
             if (Check_State_Timer_Running)
             {
-                Console.WriteLine("Check_State_Timer_Running");
+                Send_Log_Msg("Check_State_Timer_Running");
                 for (int i = 0; i < 10 && Check_State_Timer_Running; i++)
                 {
                     System.Threading.Thread.Sleep(500);
@@ -735,7 +735,7 @@ namespace EK_App.Mvvm
             }*/
 
             Log_Msg_Send_Event = null;
-            Console.WriteLine("XoKey stop done.");
+            Send_Log_Msg("XoKey stop done.");
         }
         public void Dispose()
         {
@@ -884,7 +884,7 @@ namespace EK_App.Mvvm
             }
 
 
-            //  Console.WriteLine("Received: {0}", bytes);
+            //  Send_Log_Msg("Received: {0}", bytes);
             if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP) && Has_Internet_Access && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected: " + New_IP.ToString());
@@ -1385,8 +1385,8 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception Get_VPN_Status: " + ex.Message);
-                Console.WriteLine("Exception Get_VPN_Status: " + ex.StackTrace.ToString());
+                Send_Log_Msg("Exception Get_VPN_Status: " + ex.Message);
+                Send_Log_Msg("Exception Get_VPN_Status: " + ex.StackTrace.ToString());
                 No_EK_Status_Error_Count++;
                 Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
                 if (No_EK_Status_Error_Count > 10)
@@ -1607,8 +1607,8 @@ namespace EK_App.Mvvm
             string NetSh_Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
             proc.StartInfo.FileName = NetSh_Path + "\\netsh ";
             proc.StartInfo.Arguments = Command;
-            Send_Log_Msg(proc.StartInfo.FileName + " " + Command);
-            System.Diagnostics.Debug.WriteLine(proc.StartInfo.FileName + " " + Command);
+            Send_Log_Msg("Run_NetSh_Cmd" + proc.StartInfo.FileName + " " + Command);
+            Send_Log_Msg("Run_NetSh_Cmd" + proc.StartInfo.FileName + " " + Command);
 
             // Set UseShellExecute to false for redirection.
             proc.StartInfo.UseShellExecute = false;
@@ -1672,8 +1672,7 @@ namespace EK_App.Mvvm
             string Route_Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
             proc.StartInfo.FileName = Route_Path + "\\route ";
             proc.StartInfo.Arguments = Command;
-            Send_Log_Msg(proc.StartInfo.FileName + " " + Command);
-            System.Diagnostics.Debug.WriteLine(proc.StartInfo.FileName + " " + Command);
+            Send_Log_Msg("Run_Route_Cmd: " +proc.StartInfo.FileName + " " + Command);
 
             // Set UseShellExecute to false for redirection.
             proc.StartInfo.UseShellExecute = false;
@@ -1742,7 +1741,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Remove_Routes EK ex " + ex.ToString());
+                Send_Log_Msg("Remove_Routes EK ex " + ex.ToString());
             }
             try
             {
@@ -1765,7 +1764,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Remove_Routes def ex " + ex.ToString());
+                Send_Log_Msg("Remove_Routes def ex " + ex.ToString());
             }
 
            
@@ -1877,14 +1876,14 @@ namespace EK_App.Mvvm
             foreach (ManagementObject m in queryCollection)
             {
                 // access properties of the WMI object
-                Console.WriteLine("Connection : {0}", m["Connection"]);
+                Send_Log_Msg(String.Format("Connection : {0}", m["Connection"]));
 
                 try
                 {
                     PropertyDataCollection properties = m.Properties;
                     foreach(PropertyData  prop in properties)
                     {
-                       Console.WriteLine("name = {0}   ,  value = {1}", prop.Name, prop.Value);
+                       Send_Log_Msg(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
                        if (prop.Name == "IsIcsPrivate" && ((Boolean) prop.Value ) == true)
                        {
                            prop.Value = false;
@@ -1895,7 +1894,7 @@ namespace EK_App.Mvvm
                     
                 } catch (Exception e)
                 {
-                    Console.WriteLine("ex " + e.Message);
+                    Send_Log_Msg("ex " + e.Message);
                     continue;
                 }
             }
@@ -1908,12 +1907,12 @@ namespace EK_App.Mvvm
             ICS_Configured = false;
             if (!currentShare.Exists)
             {
-                Console.WriteLine("Internet Connection Sharing is already disabled");
+                Send_Log_Msg("Internet Connection Sharing is already disabled");
                 Disable_ICS_WMI();
                 return;
             }
-            Console.WriteLine("Internet Connection Sharing will be disabled:");
-            Console.WriteLine(currentShare);
+            Send_Log_Msg("Internet Connection Sharing will be disabled:");
+            Send_Log_Msg(String.Format(currentShare.ToString()));
             IcsManager.ShareConnection(null, null);
         }
         void EnableICS(string shared, string home, bool force)
@@ -1938,7 +1937,7 @@ namespace EK_App.Mvvm
             if (currentShare.Exists)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "Internet Connection Sharing is already enabled:");
-                Console.WriteLine(currentShare);
+                Send_Log_Msg(currentShare.ToString());
                 if (!force)
                 {
                     Send_Log_Msg(0, LogMsg.Priority.Info, "Please disable it if you want to configure sharing for other connections");
@@ -1953,7 +1952,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception e)
             {
-                Console.WriteLine(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
+                Send_Log_Msg(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
                
                 Send_Log_Msg(0, LogMsg.Priority.Critical,
                     "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
