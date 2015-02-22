@@ -50,6 +50,19 @@
     return 1;
 }
 
+//  Generic method to load the EK login page in the Webview located in the app deleagate.
+- (void)loadLoginPage{
+    @synchronized(self){
+        ExoKeyAppDelegate* app = (ExoKeyAppDelegate*)[[NSApplication sharedApplication]delegate];
+        //Stop loading anything that's currently loading. Could have been the reason that the EK
+        //server was periodically freezing. Sleep a bit to let the webkit clear up the session before connecting to the server.
+        [[app.ek_WebView mainFrame]stopLoading];
+        //Sleep a bit to let it stoploading
+        sleep(0.5);
+        [[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
+    }
+}
+
 //
 //  NSURLConnectionDelegate Methods to handle HTTPS authentication of the certificate.
 //
@@ -59,26 +72,18 @@
     return YES;
 }
 
+//NSURLConnection doesn't fetch resources such ass CSS and JS files. After initial authorization of the ExoKey server,
+//cancel the current connection and then reconnect to the server using WebView which handles all the resource fetching.
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     if([challenge.protectionSpace.host isEqualToString:@"192.168.255.1"]){
         [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
         ExoKeyLog(@"Validated ExoKey credential.");
         
-        //NSURLConnection doesn't fetch resources such ass CSS and JS files. After initial authorization of the ExoKey server,
-        //cancel the current connection and then reconnect to the server using WebView which handles all the resource fetching.
-        [connection cancel];
-        ExoKeyAppDelegate* app = (ExoKeyAppDelegate*)[[NSApplication sharedApplication]delegate];
-        //Stop loading anything that's currently loading. Could have been the reason that the EK
-        //server was periodically freezing. Sleep a bit to let the webkit clear up the session before connecting to the server.
-        [[app.ek_WebView mainFrame]stopLoading];
-        //Slee
-        sleep(0.5);
-        [[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
-        
-        //Released the connection and data resources since they are no longer needed (WebView handles fetching the files)
-        conn = nil;
-        receivedData = nil;
+        /*
+            Cancel the NSURLConnection after the delegate has received a response. From there, we cancel the connection and load
+            the ExoKey login page via webview.
+         */
     }
 }
 
@@ -88,14 +93,16 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-    // This method is called when the server has determined that it
-    // has enough information to create the NSURLResponse object.
-    
-    // It can be called multiple times, for example in the case of a
-    // redirect, so each time we reset the data.
-    
-    // receivedData is an instance variable declared elsewhere.
+    //Cancel the connection since NSURLConnection doesn't handle CS or JS resources. Since the app has now authenticated with the self-signed
+    //ExoKey, connect to the webserver with Webkit.
+    [connection cancel];
     [receivedData setLength:0];
+    
+    //Released the connection and data resources since they are no longer needed.
+    //WebView handles fetching the files.
+    conn = nil;
+    receivedData = nil;
+    [self loadLoginPage];
 }
 
 - (void)connection:(NSURLConnection *)connection

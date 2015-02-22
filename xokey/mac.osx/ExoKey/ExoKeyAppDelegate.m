@@ -61,6 +61,7 @@
 ExoKeyAppDelegate* c_pointer;
 NSFileHandle* logFileHandle;
 
+//Detection of ExoKey is done via USB enumeration using IOKit
 /*
 struct XoHeartBeatData
 {
@@ -76,106 +77,9 @@ struct XoHeartBeatData
 };
 */
 
-//
-//  Finding the network interface from the IP address usig getifaddrs
-//http://stackoverflow.com/questions/427517/finding-an-interface-name-from-an-ip-address
-NSString* findNetworkInterface(struct in_addr* addr){
-    struct ifaddrs *addrs, *iap;
-    struct sockaddr_in *sa;
-    
-    getifaddrs(&addrs);
-    for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
-        if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
-            sa = (struct sockaddr_in *)(iap->ifa_addr);
-            if (sa->sin_addr.s_addr == addr->s_addr) {
-                return [NSString stringWithFormat:@"%s",iap->ifa_name];
-            }
-        }
-    }
-    return nil;
-}
-
-/**
- * @brief Get a local IP address that has a route to the internet.
- * do DNS resolution, and try and create a connection to see which source IP gets bound.
- * @param addr returned value
- * @return int  = 0 if OK, or error code
- */
-NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
-{
-	int sd = 0, ret = 0;
-	int i;
-	unsigned int slen;
-	struct sockaddr_in cliAddr, servAddr;
-	struct hostent *h = NULL;
-	const int SERVER_PORT = 80;
-	char *buf = NULL;
-	int buflen = 256;
-    
-    //  Determine if the computer can connect to the internet.
-	// some popular hosts on the Internet
-	char * hosts[] = {
-		"www.xoware.com",
-		"www.google.com",
-		"www.yahoo.com",
-		"www.facebook.com",
-		"www.amazon.com",
-		NULL, NULL,
-	};
-    
-	addr->s_addr = 0;
-    
-	buf = calloc(buflen, 1);
-    
-    //To ensure the domains can be reached (no network issues)
-	for (i = 0; !h && i < 5 && hosts[i]; i++) {
-            h = gethostbyname2(hosts[i], AF_INET);
-            if (h==NULL) {
-                //ERROR("lookup failed: %s\n", hosts[i]);
-                ExoKeyLog([NSString stringWithFormat:@"Failed to fetch info on host: %s",hosts[i]]);
-            }
-	}
-    //  Connection to the internet might not exist
-	if (!h) {
-		return nil;
-	}
-    
-    //  Find network interface that has internet (facing the internet)
-	servAddr.sin_family = AF_INET;
-	memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],h->h_length);
-	servAddr.sin_port = htons(SERVER_PORT);
-    
-	sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (sd == -1) {
-	//	ERROR("Creating socket\n");
-		goto out;
-	}
-    
-	ret = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
-	if (ret == -1) {
-		//ERROR("connect failed %d, %m \n", errno);
-		goto out;
-	}
-    
-	slen = sizeof(cliAddr);
-	getsockname(sd, (struct sockaddr *) &cliAddr, &slen);
-	//ExoKeyLog([NSString stringWithFormat:@"Local Address = %d : %s \n", ntohs(cliAddr.sin_port), inet_ntoa(cliAddr.sin_addr)]);
-    
-	*addr = cliAddr.sin_addr;
-
-out:
-	/* close socket and exit */
-	if (sd)
-		close(sd);
-    
-	if (buf)
-		free(buf);
-    
-	return findNetworkInterface(addr);
-}
-
-
-//TODO: Add the while(1) loop for listening for UDP packets on a spearate thread.
+/*
+//Socket method to detect ExoKey
+//Add the while(1) loop for listening for UDP packets on a spearate thread.
 //Listen to broadcast packets.
 void listenToExoKeyBroadcast(){
     int sd;
@@ -221,9 +125,12 @@ void listenToExoKeyBroadcast(){
     });
 #endif
 }
-
+ */
+#pragma mark C-level functions
+#define DEBUG_MODE 0            //Logging is completely turned off for release mode
 //Universal logger across all the different objects of the app (including the network tool)
 void ExoKeyLog(NSString* text){
+#if DEBUG_MODE
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_sync(queue, ^{
         NSLog(@"%@",text);
@@ -244,7 +151,105 @@ void ExoKeyLog(NSString* text){
         }
 
     });
+#endif
+}
 
+//
+//  Finding the network interface from the IP address usig getifaddrs
+//http://stackoverflow.com/questions/427517/finding-an-interface-name-from-an-ip-address
+NSString* findNetworkInterface(struct in_addr* addr){
+    struct ifaddrs *addrs, *iap;
+    struct sockaddr_in *sa;
+    
+    getifaddrs(&addrs);
+    for (iap = addrs; iap != NULL; iap = iap->ifa_next) {
+        if (iap->ifa_addr && (iap->ifa_flags & IFF_UP) && iap->ifa_addr->sa_family == AF_INET) {
+            sa = (struct sockaddr_in *)(iap->ifa_addr);
+            if (sa->sin_addr.s_addr == addr->s_addr) {
+                return [NSString stringWithFormat:@"%s",iap->ifa_name];
+            }
+        }
+    }
+    return nil;
+}
+
+/**
+ * @brief Get a local IP address that has a route to the internet.
+ * do DNS resolution, and try and create a connection to see which source IP gets bound.
+ * @param addr returned value
+ * @return int  = 0 if OK, or error code
+ */
+NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
+{
+    int sd = 0, ret = 0;
+    int i;
+    unsigned int slen;
+    struct sockaddr_in cliAddr, servAddr;
+    struct hostent *h = NULL;
+    const int SERVER_PORT = 80;
+    char *buf = NULL;
+    int buflen = 256;
+    
+    //  Determine if the computer can connect to the internet.
+    // some popular hosts on the Internet
+    char * hosts[] = {
+        "www.xoware.com",
+        "www.google.com",
+        "www.yahoo.com",
+        "www.facebook.com",
+        "www.amazon.com",
+        NULL, NULL,
+    };
+    
+    addr->s_addr = 0;
+    
+    buf = calloc(buflen, 1);
+    
+    //To ensure the domains can be reached (no network issues)
+    for (i = 0; !h && i < 5 && hosts[i]; i++) {
+        h = gethostbyname2(hosts[i], AF_INET);
+        if (h==NULL) {
+            //ERROR("lookup failed: %s\n", hosts[i]);
+            ExoKeyLog([NSString stringWithFormat:@"Failed to fetch info on host: %s",hosts[i]]);
+        }
+    }
+    //  Connection to the internet might not exist
+    if (!h) {
+        return nil;
+    }
+    
+    //  Find network interface that has internet (facing the internet)
+    servAddr.sin_family = AF_INET;
+    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],h->h_length);
+    servAddr.sin_port = htons(SERVER_PORT);
+    
+    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) {
+        //	ERROR("Creating socket\n");
+        goto out;
+    }
+    
+    ret = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
+    if (ret == -1) {
+        //ERROR("connect failed %d, %m \n", errno);
+        goto out;
+    }
+    
+    slen = sizeof(cliAddr);
+    getsockname(sd, (struct sockaddr *) &cliAddr, &slen);
+    //ExoKeyLog([NSString stringWithFormat:@"Local Address = %d : %s \n", ntohs(cliAddr.sin_port), inet_ntoa(cliAddr.sin_addr)]);
+    
+    *addr = cliAddr.sin_addr;
+    
+    out:
+    /* close socket and exit */
+    if (sd)
+        close(sd);
+    
+    if (buf)
+        free(buf);
+    
+    return findNetworkInterface(addr);
 }
 
 @implementation ExoKeyAppDelegate
@@ -332,7 +337,7 @@ void ExoKeyLog(NSString* text){
     [self authorize];
     
     //  Create the network tool daemon.
-    const unsigned int networkToolCreationRetries = 10;
+    const unsigned int networkToolCreationRetries = 3;
     for (int i = 0; i < networkToolCreationRetries; i++) {
         if([self initializeNetworkTool]){
             break;
@@ -344,7 +349,7 @@ void ExoKeyLog(NSString* text){
     [self getActiveInterface];
     
     //  Listen to broadcast packets from the EK
-    listenToExoKeyBroadcast();
+    //listenToExoKeyBroadcast();
     
     //  Initialize and enumerate the bus to find the ExoKey and setup callback functions for PnP
     exoKeyUSBObject = [[usbObject alloc]init];
@@ -354,10 +359,10 @@ void ExoKeyLog(NSString* text){
 //  XPC function allowed to be called from the network tool for logging.
 -(void)messageWrapper:(NSString*)text{
     ExoKeyLog(text);
-    
 }
 
 #pragma mark GUI Methods
+
 //Setup the GUI
 -(void)initializeGUI{
     self.ek_ConnectedDisplay.state = NSOffState;
@@ -387,19 +392,25 @@ void ExoKeyLog(NSString* text){
         
         //Sleep a bit after setting the IP
         ExoKeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
-        
-        //Device has appeared, close the waiting window
-        [self closeWaitWindow];
-        
+
         //Setup firewall/NAT rules only when EK is connected
         dispatch_sync(networkQueue,
             ^(void){
-                sleep(2.0);
+                sleep(3.0);
                 [self setupFirewall];
-                //[webViewDel connectToExoKey:@""];
         });
-        //Device has appeared, close the waiting window
+        
+        //Clear the webview
         [webViewDel connectToExoKey:@""];
+        
+        //Device has appeared, close the waiting window. Sleep a bit in order to let
+        //webkit load the page before the dialog is closed. Note, function calls to the
+        //Autolayout engine must occur on the main thread.
+        dispatch_async(dispatch_get_main_queue(),
+            ^(void){
+                NSTimer* timer = [NSTimer timerWithTimeInterval:2.0 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
+                [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+        });
     }
     if([notification.name isEqualToString:EXOKEY_UNPLUG]){
         ExoKeyLog(@"***ExoKey unplug event received.***");
@@ -436,7 +447,7 @@ void ExoKeyLog(NSString* text){
     NSString* result = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
     result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
     if ([result isNotEqualTo:deviceProperties[ROUTER]]) {
-        NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
+        //NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
         deviceProperties[ROUTER] = result;
     }
 }
@@ -538,16 +549,53 @@ void ExoKeyLog(NSString* text){
 }
 
 -(void)openWaitWindow{
-    [NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+    // This method has been depracated in OS X 10.10.1
+    //[NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+    [self.window beginSheet:self.waitWindow completionHandler:^(NSModalResponse response){
+                //Nothing really needs to be done in the wait window
+                }];
 }
 
--(void)closeWaitWindow{
-    [NSApp endSheet:self.waitWindow];
+-(void)closeWaitWindow:(NSTimer*)timer{
+    // This method has been depracated in OS X 10.10.1
+    //[NSApp endSheet:self.waitWindow];
+    [self.window endSheet:self.waitWindow];
 }
 
 - (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
         contextInfo:(void *)contextInfo{
     [sheet orderOut:self];
+}
+
+#pragma mark Sleep and Wake Notification Handling
+- (void) receiveSleepNote: (NSNotification*) note
+{
+    //Don't really need to do anything
+    ExoKeyLog([NSString stringWithFormat:@"receiveSleepNote: %@", [note name]]);
+}
+
+- (void) receiveWakeNote: (NSNotification*) note
+{
+    NSLog(@"receiveWakeNote: %@",[note name]);
+    ExoKeyLog([NSString stringWithFormat:@"receiveWakeNote: %@", [note name]]);
+    //After wake, reset the web view, present the wait window modal dialog box, and manually enumerate the USB ports for the ExoKey device
+    [webViewDel connectToExoKey:@""];
+    [self openWaitWindow];
+    [exoKeyUSBObject enumerateUSB];
+}
+
+- (void) fileNotifications
+{
+    //These notifications are filed on NSWorkspace's notification center, not the default
+    // notification center. You will not receive sleep/wake notifications if you file
+    //with the default notification center.
+    [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
+                                                           selector: @selector(receiveSleepNote:)
+                                                               name: NSWorkspaceWillSleepNotification object: NULL];
+    
+    [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
+                                                           selector: @selector(receiveWakeNote:)
+                                                               name: NSWorkspaceDidWakeNotification object: NULL];
 }
 
 #pragma mark GUI Actions
@@ -573,6 +621,15 @@ void ExoKeyLog(NSString* text){
                     [self setupFirewall];
             });
         }
+        
+        //First cancel whatever is loading on the website. The stoploading
+        //message doesn't seem to work too well so first load a blank page
+        //then send the stopLoading message
+        NSURL* url = [NSURL URLWithString:@"about:blank"];
+        NSURLRequest* req = [NSURLRequest requestWithURL:url];
+        [[self.ek_WebView mainFrame] loadRequest:req];
+        [[self.ek_WebView mainFrame] stopLoading];
+        sleep(0.5);
         [webViewDel connectToExoKey:@""];
     }else{
         [self openWaitWindow];
@@ -581,7 +638,7 @@ void ExoKeyLog(NSString* text){
 }
 
 - (IBAction)closeModalDialog:(id)sender {
-    [self closeWaitWindow];
+    [self closeWaitWindow:nil];
 }
 
 #pragma mark Authorization functions
@@ -618,12 +675,12 @@ void ExoKeyLog(NSString* text){
         CFErrorRef  cfError;
         
         //Remove the job if it exists.
-        SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError);
+        //@deprecated SMJobRemove has been deprecated and now causes com.apple.xpc.lanchd to crash
+        //SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError);
         
         /*
          
-        TODO:   Look into why SMJobSubmit is not working. It'll be much more convenient to just submit the job to launchd than have it
-                it installed on the computer.
+        SMJobSubmit doesn't seem to work too well. Use SMJobless and just remove the total everytime the app is run.
          
         //Create the dictionary describing the job
         NSBundle* myBundle = [NSBundle mainBundle];                                             //NetworkConfigTool is stored in the ExoKey app bundle.

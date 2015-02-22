@@ -45,7 +45,7 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
     UInt16                      product;
     UInt16                      release;
     char                        buf[256];
-
+    
     while ((usbDevice = IOIteratorNext(iterator)))
     {
         
@@ -88,21 +88,29 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
         }else{
             ExoKeyLog([NSString stringWithFormat:@"Found ExoKey device! (vendor = %d, product = %d)",vendor,product]);
             
-            //Get BSDDevice name
-            CFStringRef bsdName = ( CFStringRef ) IORegistryEntrySearchCFProperty ( usbDevice,
+            //Get BSDDevice name. The IORegistry device database needs time to update so loop until the BSDDevice name in the OS database is not null
+            //since we require the BSDDevice name to configure the device with the BSD networking tools.
+            CFStringRef bsdName = nil;
+            int retry = 0;
+            do{
+                sleep(0.5);
+                bsdName = ( CFStringRef ) IORegistryEntrySearchCFProperty ( usbDevice,
                                                                                    kIOServicePlane,
                                                                                    CFSTR ( kIOBSDNameKey ),
                                                                                    kCFAllocatorDefault,
                                                                                    kIORegistryIterateRecursively );
+                retry++;
+                
+            }while (bsdName == nil);
+             
             c_Reference.BSDDeviceName = (__bridge NSMutableString*)(bsdName);
             [[NSNotificationCenter defaultCenter]postNotificationName:EXOKEY_PLUGIN object:nil];
-
         }
         kr = IOObjectRelease(usbDevice);
         (*dev)->Release(dev);
-        //return;
     
-  /*
+        //No need to configure the device or open pipes to send data.
+/*
         //Open the device to change its state
         kr = (*dev)->USBDeviceClose(dev);
         if(kr != kIOReturnSuccess){
@@ -149,12 +157,11 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
         kr = (*dev)->Release(dev);
 #endif
 */
-        
     }
 
 }
 
-        
+
 void RawDeviceRemoved(void *refCon, io_iterator_t iterator){
     kern_return_t   kr;
     io_service_t    object;
@@ -236,7 +243,7 @@ IOReturn FindInterfaces(IOUSBDeviceInterface **device)
     
     //Get an iterator for the interfaces on the device
     kr = (*device)->CreateInterfaceIterator(device,&request, &iterator);
-    while (usbInterface = IOIteratorNext(iterator))
+    while ((usbInterface = IOIteratorNext(iterator)))
     {
         //Create an intermediate plug-in
         kr = IOCreatePlugInInterfaceForService(usbInterface,
