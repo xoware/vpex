@@ -168,7 +168,6 @@
                         </VisualBrush>
                     </Rectangle.Fill>
                 </Rectangle>
-
                 <cefSharp:ChromiumWebBrowser x:Name="browser"
                                   Opacity="{Binding ElementName=opacitySlider, Path=Value}"
                                   Address="{Binding Address, Mode=TwoWay}"

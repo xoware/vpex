@@ -5,13 +5,14 @@
         Title="EK Host Application"
         Closing="MainWindow_Closing"
         Icon="vpex.ico"
-        WindowState="Normal">
+        ShowInTaskbar="True" WindowState="Normal" Visibility="Visible">
     <Window.InputBindings> <!--
         <KeyBinding Key="T" Modifiers="Control" Command="New"/>
         <KeyBinding Key="W" Modifiers="Control" Command="Close"/>
         -->
     </Window.InputBindings>
     <Window.Resources>
+        <!--
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary 
@@ -19,6 +20,7 @@
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
+        -->
     </Window.Resources>
     <Grid>
         <controls:NonReloadingTabControl x:Name="TabControl"

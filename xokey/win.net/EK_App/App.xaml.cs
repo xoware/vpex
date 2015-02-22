@@ -6,7 +6,10 @@ using System;
 using System.Windows;
 using CefSharp.Example;
 using System.Runtime.InteropServices;
+using System.ServiceModel.Dispatcher; // ExceptionHandler
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
 using Hardcodet.Wpf.TaskbarNotification;
 
 namespace EK_App
@@ -22,6 +25,7 @@ namespace EK_App
         string Cef_LogFile = null;
         public static string Web_Console_Log_File = null;
         private TaskbarIcon tb;
+        bool EK_Is_Up = false;
 
         static void Show_Help(String Name)
         {
@@ -45,6 +49,10 @@ namespace EK_App
                     {
                         sw.WriteLine(DateTime.Now.ToString("s") + " : " + Message);
                     }
+                }
+                else
+                {
+                    Console.WriteLine(Message);
                 }
             }
             catch
@@ -115,11 +123,7 @@ namespace EK_App
                 Console.WriteLine("Exception in main: " + ex.Message);
             }
         }
-        private void InitApplication()
-        {
-            //initialize NotifyIcon
-       //     tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
-        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -129,22 +133,114 @@ namespace EK_App
         }
         protected override void OnExit(ExitEventArgs e)
         {
+
+            if (Globals.ek != null)
+            {
+                Globals.ek.Stop();
+           //     ek.Dispose();
+            }
+
             tb.Dispose(); //the icon would clean up automatically, but this is cleaner
             base.OnExit(e);
         }
+        void App_Startup(object sender, StartupEventArgs e)
+        {
+            App.Log("app startup");
+            if (System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(
+               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
+            {
+                App.Log("Already Running");
+                Application.Current.Shutdown(0);
+                return;
+            }
+
+
+            NetworkChange.NetworkAddressChanged += new
+              NetworkAddressChangedEventHandler(AddressChangedCallback);
+            Check_Interfaces();
+        }
+
+        void Check_Interfaces()
+        {
+
+            NetworkInterface EK_Interface = null;
+
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface n in adapters)
+            {
+                //         System.Console.WriteLine(n.Name + " : " + n.Description + " is " + n.OperationalStatus);
+
+                if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware"))
+                {
+                    EK_Interface = n;
+
+                    if (n.OperationalStatus == OperationalStatus.Up)
+                    {
+                        if (EK_Is_Up == false)
+                        {
+                            Raise_Window();
+                        }
+
+                        EK_Is_Up = true;
+                    }
+                }
+                else if (n.OperationalStatus == OperationalStatus.Down
+                 && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
+                {
+                    App.Log("ExoKey Down");
+                }
+
+            }
+            if (EK_Interface == null)
+            {
+                EK_Is_Up = false;
+            }
+        }
+
+        void AddressChangedCallback(object sender, System.EventArgs e)
+        {
+            Check_Interfaces();
+        }
+        void Raise_Window()
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
+            {
+                App.Log("App: RaisingWindow");
+                if (Application.Current.MainWindow == null)
+                {
+                    if (Globals.ek == null)
+                    {
+                        Application.Current.MainWindow = new MainWindow();
+                        Application.Current.MainWindow.Show();
+                        Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                    }
+
+                     return;
+                }
+               
+                Application.Current.MainWindow.Show();
+                if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
+                    Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
+                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+            }));
+        }
         private App()
         {
+
+            ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
+
             ProcessArgs();
             if (System.Diagnostics.Process.GetProcessesByName(
                 System.IO.Path.GetFileNameWithoutExtension(
                 System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
             {
-                Console.WriteLine("Already Running");
+                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
+                Application.Current.Shutdown(0);
                 return;
             }
 
-            InitApplication();
             CefExample.Init(Cef_LogFile, App.Debug);
+
         }
     }
 }

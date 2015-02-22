@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.ComponentModel; // CancelEventArgs 
 //using System.Windows.Controls;
+using System.Net;
+using System.Net.NetworkInformation;
 using CefSharp.Example;
 using EK_App.ViewModels;
 using EK_App.Mvvm;
@@ -19,7 +21,8 @@ namespace EK_App
 
         public ObservableCollection<BrowserTabViewModel> BrowserTabs { get; set; }
 
-        ExoKey ek = null;
+        bool EK_Is_Up = false;
+       
         public MainWindow()
         {
             InitializeComponent();
@@ -32,9 +35,54 @@ namespace EK_App
 
             Loaded += MainWindowLoaded;
 
-            
+          //  Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
+
+          //  NetworkChange.NetworkAddressChanged += new
+        //      NetworkAddressChangedEventHandler(AddressChangedCallback);
         }
 
+        void Check_Interfaces()
+        {
+           
+            NetworkInterface EK_Interface = null;
+           
+            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface n in adapters)
+            {
+       //         System.Console.WriteLine(n.Name + " : " + n.Description + " is " + n.OperationalStatus);
+
+                if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware"))
+                {
+                    EK_Interface = n;
+
+                    if (n.OperationalStatus == OperationalStatus.Up)
+                    {
+                        if (EK_Is_Up == false)
+                        {
+                            Raise_Window();
+                        }
+
+                        EK_Is_Up = true;
+                    }
+                }
+                else if (n.OperationalStatus == OperationalStatus.Down
+                 && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
+                {
+                    App.Log("ExoKey Down");
+                }
+               
+            }
+            if (EK_Interface == null)
+            {
+                EK_Is_Up = false;
+            }
+        }
+        /*
+        void AddressChangedCallback(object sender, System.EventArgs e)
+        {
+            Check_Interfaces();
+        }
+        */
         private void CloseTab(object sender, ExecutedRoutedEventArgs e)
         {
             if (BrowserTabs.Count > 0)
@@ -70,10 +118,34 @@ namespace EK_App
         private void MainWindowLoaded(object sender, RoutedEventArgs e)
         {
             CreateNewTab(CefExample.DefaultUrl, App.Debug, App.Debug);
-            ek = new ExoKey(null, BrowserTabs[0]);
-         //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
-        }
 
+            if (Globals.ek == null)
+                Globals.ek = new ExoKey(null, BrowserTabs[0]);
+
+            Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
+         //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
+            Check_Interfaces();
+        }
+      
+        void Raise_Window()
+        {
+           
+            System.Windows.Application.Current.Dispatcher.Invoke( new System.Action(() =>
+            {
+                App.Log("MainWindow: RaisingWindow");
+                if (Application.Current.MainWindow == null)
+
+                {
+
+                    if (Globals.ek == null)
+                        Application.Current.MainWindow = new MainWindow();
+                    return;
+                }
+                Application.Current.MainWindow.Show();
+                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+            }));
+        }
+            
         private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false, bool showConsoleMessage = false)
         {
             BrowserTabViewModel bt = new BrowserTabViewModel(url) { 
@@ -84,14 +156,31 @@ namespace EK_App
         }
 
         private void OnClosing(System.ComponentModel.CancelEventArgs e) {
-            System.Console.WriteLine("Closing");
+            App.Log("OnClosing");
         }
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
-            System.Console.WriteLine("MainWindow_Closing");
+            App.Log("MainWindow_Closing");         
+            
+            //Hide Window
+            Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
+            {
+                Hide();
+                return null;
+            }, null);
+            //Do not close application
+            e.Cancel = true;
+
+
+            /*
+
             if (ek != null)
+            {
                 ek.Stop();
+                ek.Dispose();
+            }
+             * */
         }
 
     }

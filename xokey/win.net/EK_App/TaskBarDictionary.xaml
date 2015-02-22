@@ -3,11 +3,27 @@
                     xmlns:taskbar="http://www.hardcodet.net/taskbar"
                     xmlns:viewModel="clr-namespace:EK_App.NotifyIconViewModels"
                     xmlns:controls="clr-namespace:EK_App.Controls"
+                    xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
                     >
     <!-- Globally declared notify icon -->
     <ContextMenu x:Shared="false" x:Key="SysTrayMenu">
         <MenuItem Header="Show Window" Command="{Binding ShowWindowCommand}" />
-        <MenuItem Header="Hide Window" Command="{Binding HideWindowCommand}" />
+        <MenuItem Header="Hide Window" Command="{Binding HideWindowCommand}" />        
+        <Separator />
+  
+       <MenuItem Header="Run at Startup"   IsCheckable="True" 
+                 IsChecked="{Binding Path=StartupIsChecked, Mode=TwoWay, diag:PresentationTraceSources.TraceLevel=High}"/>
+
+<!--
+        <MenuItem Header="Run at Startup"   IsCheckable="True" >
+            <MenuItem.ItemContainerStyle>
+                <Style TargetType="MenuItem">
+                    <Setter Property="IsCheckable" Value="True"/>
+                    <Setter Property="IsChecked" Value="{Binding Path=StartupIsChecked, Mode=TwoWay, diag:PresentationTraceSources.TraceLevel=High}"/>
+                </Style>
+            </MenuItem.ItemContainerStyle>
+        </MenuItem>
+        -->
         <Separator />
         <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
     </ContextMenu>

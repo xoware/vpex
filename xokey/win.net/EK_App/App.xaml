@@ -6,6 +6,7 @@
              xmlns:viewModel="clr-namespace:EK_App.ViewModels"
              StartupUri="MainWindow.xaml"
              ShutdownMode="OnExplicitShutdown"
+             Startup="App_Startup"
              >
     <Application.Resources>
         <!-- merge NotifyIcon and related stuff into the application-->

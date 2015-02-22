@@ -27,7 +27,7 @@ namespace EK_App.NotifyIconViewModels
             enable_proc.StartInfo.RedirectStandardOutput = true;
             enable_proc.StartInfo.FileName = "schtasks";
             enable_proc.StartInfo.Arguments = "/create /sc onlogon /F /tn ExoKey /rl highest /tr \"\\\"" +
-                System.Reflection.Assembly.GetExecutingAssembly().Location  + "\\\"\" ";
+                System.Reflection.Assembly.GetExecutingAssembly().Location  + "\\\" --log c:\\exokey.log \" ";
 
             enable_proc.Start();
             // Do not wait for the child process to exit befor

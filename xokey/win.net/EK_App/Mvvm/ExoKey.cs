@@ -746,7 +746,7 @@ namespace EK_App.Mvvm
             {
                 Remove_Routes();
             }
-            System.Diagnostics.Debug.WriteLine("XoKey dispose done.");
+            App.Log("XoKey dispose done.");
         }
         private McastHeartBeatData ByteArr2McastHeartBeatData(byte[] bytes)
         {
@@ -817,7 +817,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Ex Syslog Recv:" + ex.ToString());
+                App.Log("Ex Syslog Recv:" + ex.ToString());
             }
 
         queue_next:
