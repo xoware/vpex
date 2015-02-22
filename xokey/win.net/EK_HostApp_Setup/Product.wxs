@@ -40,13 +40,17 @@
                       Type="raw" />
     </Property>
      <InstallExecuteSequence>
-      <Custom Action='AddStartupTask' After='InstallFiles'>
-        NOT Installed
-      </Custom>
+      <Custom Action='AddStartupTask'    After='InstallFinalize'>NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+  <!--       <Custom Action="DeleteStartupTask" Before='InstallFinalize'>
+          Installed AND NOT UPGRADINGPRODUCTCODE</Custom> -->
     </InstallExecuteSequence>
-    <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /tr  &quot;\&quot;[INSTALLFOLDER]EK_App.exe&quot;\&quot;  /RU &quot;NT Authority\System&quot;' Return='check' /> 
- 
- <!-- <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /TR &quot;[SystemFolder]calc.exe&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />
+   <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B EK_App.exe&quot;' Return='asyncNoWait' /> 
+ <!--   <CustomAction Id='DeleteStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /delete /F /TN ExoKey ;' Return='ignore' />
+
+ <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER'   ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B EK_App.exe&quot;' Return='asyncNoWait' /> 
+
+ <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /tr  &quot;\&quot;[INSTALLFOLDER]EK_App.exe&quot;\&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />  
+ <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /TR &quot;[SystemFolder]calc.exe&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />
 -->
 	</Product>
 
