@@ -27,6 +27,7 @@ namespace EK_App
         {
             InitializeComponent();
             DataContext = this;
+     
 
             BrowserTabs = new ObservableCollection<BrowserTabViewModel>();
 
@@ -39,8 +40,22 @@ namespace EK_App
 
           //  NetworkChange.NetworkAddressChanged += new
         //      NetworkAddressChangedEventHandler(AddressChangedCallback);
-        }
 
+
+            if (System.Diagnostics.Process.GetProcessesByName(
+               System.IO.Path.GetFileNameWithoutExtension(
+               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
+            {
+                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
+                Application.Current.Shutdown(0);
+                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
+                return;
+
+            } 
+
+
+        }
+        /*
         void Check_Interfaces()
         {
            
@@ -77,6 +92,7 @@ namespace EK_App
                 EK_Is_Up = false;
             }
         }
+         * */
         /*
         void AddressChangedCallback(object sender, System.EventArgs e)
         {
@@ -124,9 +140,9 @@ namespace EK_App
 
             Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
          //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
-            Check_Interfaces();
+        //    Check_Interfaces();
         }
-      
+      /*
         void Raise_Window()
         {
            
@@ -145,7 +161,7 @@ namespace EK_App
                 Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
             }));
         }
-            
+            */
         private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false, bool showConsoleMessage = false)
         {
             BrowserTabViewModel bt = new BrowserTabViewModel(url) { 

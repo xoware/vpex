@@ -5,7 +5,7 @@
         Title="EK Host Application"
         Closing="MainWindow_Closing"
         Icon="vpex.ico"
-        ShowInTaskbar="True" WindowState="Normal" Visibility="Visible">
+        ShowInTaskbar="True" WindowState="Normal" Visibility="Hidden">
     <Window.InputBindings> <!--
         <KeyBinding Key="T" Modifiers="Control" Command="New"/>
         <KeyBinding Key="W" Modifiers="Control" Command="Close"/>

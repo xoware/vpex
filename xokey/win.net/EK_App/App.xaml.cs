@@ -24,7 +24,7 @@ namespace EK_App
 
         string Cef_LogFile = null;
         public static string Web_Console_Log_File = null;
-        private TaskbarIcon tb;
+        private TaskbarIcon tb = null;
         bool EK_Is_Up = false;
 
         static void Show_Help(String Name)
@@ -139,20 +139,14 @@ namespace EK_App
                 Globals.ek.Stop();
            //     ek.Dispose();
             }
-
-            tb.Dispose(); //the icon would clean up automatically, but this is cleaner
+            if (tb != null)  
+               tb.Dispose(); //the icon would clean up automatically, but this is cleaner
             base.OnExit(e);
         }
         void App_Startup(object sender, StartupEventArgs e)
         {
             App.Log("app startup");
-            if (System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(
-               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
-            {
-                App.Log("Already Running");
-                Application.Current.Shutdown(0);
-                return;
-            }
+       
 
 
             NetworkChange.NetworkAddressChanged += new
@@ -230,14 +224,17 @@ namespace EK_App
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
             ProcessArgs();
+            /*
             if (System.Diagnostics.Process.GetProcessesByName(
                 System.IO.Path.GetFileNameWithoutExtension(
                 System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
             {
                 App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
                 Application.Current.Shutdown(0);
+                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
                 return;
-            }
+
+            } */
 
             CefExample.Init(Cef_LogFile, App.Debug);
 

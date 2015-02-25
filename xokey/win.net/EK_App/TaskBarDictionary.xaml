@@ -14,16 +14,6 @@
        <MenuItem Header="Run at Startup"   IsCheckable="True" 
                  IsChecked="{Binding Path=StartupIsChecked, Mode=TwoWay, diag:PresentationTraceSources.TraceLevel=High}"/>
 
-<!--
-        <MenuItem Header="Run at Startup"   IsCheckable="True" >
-            <MenuItem.ItemContainerStyle>
-                <Style TargetType="MenuItem">
-                    <Setter Property="IsCheckable" Value="True"/>
-                    <Setter Property="IsChecked" Value="{Binding Path=StartupIsChecked, Mode=TwoWay, diag:PresentationTraceSources.TraceLevel=High}"/>
-                </Style>
-            </MenuItem.ItemContainerStyle>
-        </MenuItem>
-        -->
         <Separator />
         <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
     </ContextMenu>
@@ -33,7 +23,7 @@
               ToolTipText="Double-click for window, right-click for menu"
               DoubleClickCommand="{Binding ShowWindowCommand}"
               ContextMenu="{StaticResource SysTrayMenu}"
-                         >
+              Visibility="Visible"           >
         <!-- self-assign a data context (could also be done programmatically) -->
         <taskbar:TaskbarIcon.DataContext>
             <viewModel:NotifyIconViewModel />

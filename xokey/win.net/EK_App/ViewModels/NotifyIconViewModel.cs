@@ -86,6 +86,15 @@ namespace EK_App.NotifyIconViewModels
             DeleteStartupWorker.RunWorkerAsync();
         }
 
+        private bool CanShowWindow()
+        {
+            if (Application.Current == null || Application.Current.MainWindow == null)
+                return false;
+
+
+            return Application.Current.MainWindow.Visibility != Visibility.Visible;
+        }
+
         /// <summary>
         /// Shows a window, if none is already open.
         /// </summary>
@@ -95,7 +104,7 @@ namespace EK_App.NotifyIconViewModels
             {
                 return new DelegateCommand
                 {
-                    CanExecuteFunc = () => Application.Current.MainWindow.Visibility != Visibility.Visible,
+                    CanExecuteFunc = () => CanShowWindow(),
                     CommandAction = () =>
                     {
                         Application.Current.MainWindow.Visibility = Visibility.Visible;
@@ -114,6 +123,14 @@ namespace EK_App.NotifyIconViewModels
                  * */
             }
         }
+        private bool CanHideWindow()
+        {
+            if (Application.Current == null || Application.Current.MainWindow == null)
+                return false;
+
+            return Application.Current.MainWindow.Visibility == Visibility.Visible;
+        }
+
 
         /// <summary>
         /// Hides the main window. This command is only enabled if a window is open.
@@ -124,8 +141,8 @@ namespace EK_App.NotifyIconViewModels
             {
                 return new DelegateCommand
                 {
-                    CommandAction = () => Application.Current.MainWindow.Visibility = Visibility.Hidden,
-                    CanExecuteFunc = () => Application.Current.MainWindow.Visibility == Visibility.Visible
+                    CommandAction = () =>  Application.Current.MainWindow.Visibility = Visibility.Hidden,
+                    CanExecuteFunc = () => CanHideWindow()
                 };
                 /*
                 return new DelegateCommand

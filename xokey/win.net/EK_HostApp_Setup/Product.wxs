@@ -43,7 +43,9 @@
       <Custom Action='AddStartupTask'    After='InstallFinalize'>NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
   <!--       <Custom Action="DeleteStartupTask" Before='InstallFinalize'>
           Installed AND NOT UPGRADINGPRODUCTCODE</Custom> -->
-    </InstallExecuteSequence>
+
+       <ScheduleReboot After="InstallFinalize"/>
+     </InstallExecuteSequence>
    <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B EK_App.exe&quot;' Return='asyncNoWait' /> 
  <!--   <CustomAction Id='DeleteStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /delete /F /TN ExoKey ;' Return='ignore' />
 
