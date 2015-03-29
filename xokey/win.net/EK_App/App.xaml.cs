@@ -130,6 +130,13 @@ namespace EK_App
 
             //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
             tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+
+            if (tb == null)
+                return;
+
+            tb.Visibility = Visibility.Visible;
+
+
         }
         protected override void OnExit(ExitEventArgs e)
         {
@@ -211,7 +218,7 @@ namespace EK_App
 
                      return;
                 }
-               
+   
                 Application.Current.MainWindow.Show();
                 if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
                     Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
