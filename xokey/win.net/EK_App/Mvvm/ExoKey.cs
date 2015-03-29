@@ -167,8 +167,7 @@ namespace EK_App.Mvvm
             Send_Log_Msg("XoKey Startup");
             MCast_Listening = new List<IPAddress>();
 
-            NetworkChange.NetworkAddressChanged += new
-              NetworkAddressChangedEventHandler(AddressChangedCallback);
+            
 
             State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Main);
             State_Machine_Thread.Start();
@@ -424,7 +423,13 @@ namespace EK_App.Mvvm
 
         private void State_Machine_Thread_Main()
         {
+
             Open_Firewall();
+
+            NetworkChange.NetworkAddressChanged += new
+              NetworkAddressChangedEventHandler(AddressChangedCallback);
+
+           
 
             while (Keep_Running && Browser == null)
             {
