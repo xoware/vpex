@@ -28,77 +28,13 @@ namespace EK_App
             InitializeComponent();
             DataContext = this;
      
-
             BrowserTabs = new ObservableCollection<BrowserTabViewModel>();
 
- //           CommandBindings.Add(new CommandBinding(ApplicationCommands.New, OpenNewTab));
-  //          CommandBindings.Add(new CommandBinding(ApplicationCommands.Close, CloseTab));
 
             Loaded += MainWindowLoaded;
 
-          //  Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
-
-          //  NetworkChange.NetworkAddressChanged += new
-        //      NetworkAddressChangedEventHandler(AddressChangedCallback);
-
-
-            if (System.Diagnostics.Process.GetProcessesByName(
-               System.IO.Path.GetFileNameWithoutExtension(
-               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
-            {
-                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
-                Application.Current.Shutdown(0);
-                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
-                return;
-
-            } 
-
-
         }
-        /*
-        void Check_Interfaces()
-        {
-           
-            NetworkInterface EK_Interface = null;
-           
-            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
-            foreach (NetworkInterface n in adapters)
-            {
-       //         System.Console.WriteLine(n.Name + " : " + n.Description + " is " + n.OperationalStatus);
-
-                if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware"))
-                {
-                    EK_Interface = n;
-
-                    if (n.OperationalStatus == OperationalStatus.Up)
-                    {
-                        if (EK_Is_Up == false)
-                        {
-                            Raise_Window();
-                        }
-
-                        EK_Is_Up = true;
-                    }
-                }
-                else if (n.OperationalStatus == OperationalStatus.Down
-                 && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
-                {
-                    App.Log("ExoKey Down");
-                }
-               
-            }
-            if (EK_Interface == null)
-            {
-                EK_Is_Up = false;
-            }
-        }
-         * */
-        /*
-        void AddressChangedCallback(object sender, System.EventArgs e)
-        {
-            Check_Interfaces();
-        }
-        */
+     
         private void CloseTab(object sender, ExecutedRoutedEventArgs e)
         {
             if (BrowserTabs.Count > 0)

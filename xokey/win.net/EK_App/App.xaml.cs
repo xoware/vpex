@@ -26,6 +26,7 @@ namespace EK_App
         public static string Web_Console_Log_File = null;
         private TaskbarIcon tb = null;
         bool EK_Is_Up = false;
+        bool Keep_Running = true;
 
         static void Show_Help(String Name)
         {
@@ -126,16 +127,30 @@ namespace EK_App
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
 
-            //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
-            tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+            try
+            {
+                base.OnStartup(e);
+  
 
-            if (tb == null)
-                return;
+                if (!Keep_Running)
+                    return;
+                
 
-            tb.Visibility = Visibility.Visible;
+                //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
+                tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
 
+                if (tb == null)
+                    return;
+
+                tb.Visibility = Visibility.Visible;
+                 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in OnStartup: " + ex.Message);
+                Console.WriteLine("Exception in OnStartup: " + ex.StackTrace.ToString());
+            }
 
         }
         protected override void OnExit(ExitEventArgs e)
@@ -152,10 +167,28 @@ namespace EK_App
         }
         void App_Startup(object sender, StartupEventArgs e)
         {
-            App.Log("app startup");
-       
+            App.Log("app startup: " + System.IO.Path.GetFileNameWithoutExtension(
+                System.Reflection.Assembly.GetEntryAssembly().Location));
 
+            Console.WriteLine("App: " +System.IO.Path.GetFileNameWithoutExtension(
+                 System.Reflection.Assembly.GetEntryAssembly().Location));
+            Console.WriteLine("App2: " + 
+                 System.Reflection.Assembly.GetEntryAssembly().Location);
 
+            if (System.Diagnostics.Process.GetProcessesByName(
+               System.IO.Path.GetFileNameWithoutExtension(
+               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1) 
+            {
+                Keep_Running = false;
+                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
+                Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+                { Application.Current.Shutdown(0); }));
+                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
+                return;
+
+            }
+
+            this.StartupUri = new System.Uri("MainWindow.xaml", System.UriKind.Relative);
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
             Check_Interfaces();
@@ -202,28 +235,36 @@ namespace EK_App
         {
             Check_Interfaces();
         }
-        void Raise_Window()
+        static void Raise_Window()
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
+            try
             {
-                App.Log("App: RaisingWindow");
-                if (Application.Current.MainWindow == null)
+                System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
                 {
-                    if (Globals.ek == null)
+                    App.Log("App: RaisingWindow");
+                    if (Application.Current.MainWindow == null)
                     {
-                        Application.Current.MainWindow = new MainWindow();
-                        Application.Current.MainWindow.Show();
-                        Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                        if (Globals.ek == null)
+                        {
+                            Application.Current.MainWindow = new MainWindow();
+                            Application.Current.MainWindow.Show();
+                            Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                        }
+
+                        return;
                     }
 
-                     return;
-                }
-   
-                Application.Current.MainWindow.Show();
-                if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
-                    Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
-                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
-            }));
+                    Application.Current.MainWindow.Show();
+                    if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
+                        Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
+                    Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in Raise_Window: " + ex.Message);
+                Console.WriteLine("Exception in Raise_Window: " + ex.StackTrace.ToString());
+            }
         }
         private App()
         {
@@ -231,20 +272,10 @@ namespace EK_App
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
             ProcessArgs();
-            /*
-            if (System.Diagnostics.Process.GetProcessesByName(
-                System.IO.Path.GetFileNameWithoutExtension(
-                System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
-            {
-                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
-                Application.Current.Shutdown(0);
-                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
-                return;
-
-            } */
+        
 
             CefExample.Init(Cef_LogFile, App.Debug);
-
+      
         }
     }
 }
