@@ -20,6 +20,7 @@
     NSXPCListener* helperListener;
     NSXPCConnection* conn;
     AuthorizationRef authRef;
+    NSMutableArray* previousDNSServers;
 }
 
 - (id)init
@@ -29,6 +30,9 @@
         // Set up our XPC listener to handle requests on our Mach service.
         helperListener = [[NSXPCListener alloc] initWithMachServiceName:kNetworkConfigToolMachServiceName];
         helperListener.delegate = self;
+        
+        //To store DNS Servers prior to setting the EK as the nameserver
+        previousDNSServers = [NSMutableArray array];
     }
     return self;
 }
@@ -103,6 +107,9 @@
 }
 */
 -(void)routeToExoNet:(NSString*)exoNetIP gateway:(NSString*)gatewayIP exokeyEndpoint:(NSString*)ekEndpoint{
+    //Get current list of DNS Servers
+    [self getCurrentDNSServers];
+    
     //Add default -> EK 1
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"-nv",@"add",@"-rtt",@"0",@"-net",@"0.0.0.0",@"192.168.255.1",@"-netmask",@"128.0.0.0"]];
     //Add defualt -> EK 2
@@ -113,22 +120,13 @@
     //Delete default -> link layer route
     //route delete -ifscope en3 0.0.0.0/0
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",@"-ifscope",ekEndpoint,@"0.0.0.0/0"]];
+    
+    sleep(3.0);
+    //Change DNS server for Wi-Fi to EK
+    [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"192.168.255.1"]];
 }
+
 //Remove entry in the routing table
-/*
--(void)removeDestination:(NSString*)destinationIP gateway:(NSString*)gatewayIP subnet:(NSString*)subnetMask{
-    NSTask* task = [[NSTask alloc]init];
-    NSPipe* pipe = [NSPipe pipe];
-    NSString* output;
-    //[self ExoKeyLog:[NSString stringWithFormat:@"Routing destination %@ to gateway %@",destinationIP,gatewayIP]];
-    [task setLaunchPath:@"/sbin/route"];
-    [task setStandardOutput:pipe];
-    [task setArguments:@[@"delete",destinationIP,gatewayIP,@"-netmask",subnetMask]];
-    [task launch];
-    output = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSUTF8StringEncoding];
-    [self ExoKeyLog:output];
-}
- */
 -(void)removeDestination:(NSString*)exoNetIP router:(NSString*)routerIP{
     //Remove default -> EK 1
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",@"0.0.0.0/1",@"192.168.255.1"]];
@@ -136,6 +134,10 @@
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",@"128.0.0.0/1",@"192.168.255.1"]];
     //Remove ExoNet -> Router
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",exoNetIP,routerIP]];
+    
+    //Reset DNS to default DNS provided by the DHCP server
+    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
+    [self resetDNSServers];
 }
 
 //Flushing the current routing table requires root access.
@@ -167,8 +169,9 @@
     [enablePF launch];
     NSString* output = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile]encoding:NSUTF8StringEncoding];
     [self ExoKeyLog:output];
-*/
-    //2) Write the config file rules to enable traffic through the EK and NAT rules for the EK
+     */
+    
+    //1)    Write the config file rules to enable traffic through the EK and NAT rules for the EK
     [self ExoKeyLog:[NSString stringWithFormat:@"Writing PF config file for ExoKey at path %@",PF_CONF_PATH]];
     if([self writePFConfigFile:ExoKeyEndpoint internetEndpoint:inetEndpoint]){
         [self ExoKeyLog:[NSString stringWithFormat:@"Successfully wrote PF config file for ExoKey at path %@",PF_CONF_PATH]];
@@ -178,18 +181,18 @@
     }
 
     
-    //3)    Enable packet forwarding (NAT) for IPv4
+    //2)    Enable packet forwarding (NAT) for IPv4
     [self ExoKeyLog:@"Enable IPv4 packet forwarding (net.inet.ip.forwarding=1)"];
     [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"net.inet.ip.forwarding=1"]];
     
-    //4)    Enable packet forwarding (NAT) for IPv6
+    //3)    Enable packet forwarding (NAT) for IPv6
     [self ExoKeyLog:@"Enable IPv6 packet forwarding (net.inet6.ip6.forwarding=1)"];
     [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/sysctl" arguments:@[@"-w",@"net.inet6.ip6.forwarding=1"]];
     
-    //5)    Enable PF
+    //4)    Enable PF
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-e"]];
     
-    //6)    Load the PF configuration file
+    //5)    Load the PF configuration file
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-f",PF_CONF_PATH]];
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-sr"]];
 
@@ -197,7 +200,6 @@
     //Allow all incoming traffic on the ExoKey endpoint using IPFW
     [NSTask launchedTaskWithLaunchPath:@"/sbin/ipfw" arguments:@[@"add",@"allow",@"all",@"from",
                                                                  @"any",@"to",@"any",@"via",ExoKeyEndpoint]];
-    
     
     //Enable IPFW using sysctl
     NSTask* task = [[NSTask alloc]init];
@@ -271,5 +273,44 @@
     //To send XPC messages
     conn.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(serverProtocol)];
     [[conn remoteObjectProxy]messageWrapper:text];
+}
+
+#pragma mark    DNS Methods
+//Get current list of DNS servers to restore after conection to the ExoNet is terminated
+-(void)getCurrentDNSServers{
+    //To get DNS servers: scutil --dns | grep "nameserver" | awk '{print $3}' | sort | uniq
+    NSTask* routerTask = [[NSTask alloc]init];
+    NSPipe* pipe = [[NSPipe alloc]init];
+    NSString* arg = @"scutil --dns | grep \"nameserver\" | awk '{print $3}' | sort | uniq";
+    [routerTask setLaunchPath:@"/bin/sh"];
+    [routerTask setArguments:@[@"-c",arg]];
+    [routerTask setStandardOutput:pipe];
+    [routerTask launch];
+    NSString* result = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+    NSArray *arr = [result componentsSeparatedByString:@"\n"];
+    previousDNSServers = [NSMutableArray arrayWithArray:arr];
+    //[self ExoKeyLog:[NSString stringWithFormat:@"%@",previousDNSServers]];
+}
+
+//Reset DNS Servers to the original nameservers prior to connecting to the ExoKey
+-(void)resetDNSServers{
+    //Set DNS server to the one DHCP assigns
+    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
+    //To get DNS servers: scutil --dns | grep "nameserver" | awk '{print $3}' | sort | uniq
+    //NSMutableString* arg = [NSMutableString stringWithString:@"-setdnsservers Wi-Fi "];
+    //NSMutableArray* arg = [NSMutableArray init];
+    //[arg addObject:@"-setdnsservers"];
+    //[arg addObject:@"Wi-Fi"];
+    //for(NSString* dnsServer in previousDNSServers){
+    //    if([dnsServer isNotEqualTo:@""]){
+    //        [arg addObject:dnsServer];
+    //    }
+    //}
+    //[self ExoKeyLog:[NSString stringWithFormat:@"%@",arg]];
+    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:arg];
+   
+    [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
+
+    
 }
 @end
