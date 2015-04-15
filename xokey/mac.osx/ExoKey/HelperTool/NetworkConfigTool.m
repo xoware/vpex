@@ -223,7 +223,7 @@
                                                     //"scrub-anchor \"com.apple*\"\n"
                                                     //"nat-anchor \"com.apple/*\"\n"
                                                     //"rdr-anchor \"com.apple/*\"\n"
-                                                    "nat on %@ from %@:network to any -> (%@)\n",      //New NAT rules for ExoKey
+                                                    "nat on %@ from %@:network to any -> (%@) static-port\n" ,      //New NAT rules for ExoKey
                                                     //"dummynet-anchor \"com.apple/*\"\n"
                                                     //"anchor \"com.apple/*\"\n"
                                                     //"load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
