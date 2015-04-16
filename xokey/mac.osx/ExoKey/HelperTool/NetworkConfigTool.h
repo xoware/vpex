@@ -93,5 +93,7 @@
 - (void)run;
 - (void)ExoKeyLog:(NSString*)text;
 - (BOOL)writePFConfigFile:(NSString*)ExoKeyEndpoint internetEndpoint:(NSString*)inetEndpoint;
+- (void)getCurrentDNSServers;
+- (void)resetDNSServers;
 
 @end
