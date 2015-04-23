@@ -6,6 +6,7 @@
              xmlns:viewModel="clr-namespace:EK_App.ViewModels"         
              ShutdownMode="OnExplicitShutdown"
              Startup="App_Startup"
+             Exit="Application_Exit"
              >
     <!-- StartupUri="MainWindow.xaml"  -->
     <Application.Resources>

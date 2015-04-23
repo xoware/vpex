@@ -73,31 +73,18 @@ namespace EK_App
 
             if (Globals.ek == null)
                 Globals.ek = new ExoKey(null, BrowserTabs[0]);
+            else
+            {
+                // reasign browser to EK thread and restart detection
+                Globals.ek.Set_Browser(BrowserTabs[0]);
+                Globals.ek.Force_Restart_Detction = true;
+            }
 
             Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
          //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
         //    Check_Interfaces();
         }
-      /*
-        void Raise_Window()
-        {
-           
-            System.Windows.Application.Current.Dispatcher.Invoke( new System.Action(() =>
-            {
-                App.Log("MainWindow: RaisingWindow");
-                if (Application.Current.MainWindow == null)
-
-                {
-
-                    if (Globals.ek == null)
-                        Application.Current.MainWindow = new MainWindow();
-                    return;
-                }
-                Application.Current.MainWindow.Show();
-                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
-            }));
-        }
-            */
+  
         private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false, bool showConsoleMessage = false)
         {
             BrowserTabViewModel bt = new BrowserTabViewModel(url) { 
@@ -111,9 +98,12 @@ namespace EK_App
             App.Log("OnClosing");
         }
 
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        // This is called when closing or hiding the main UI
+        private void MainWindow_Closing(object sender, CancelEventArgs e)  
         {
-            App.Log("MainWindow_Closing");         
+            App.Log("MainWindow_Closing");
+            Globals.ek.Force_Restart_Detction = true;
+            Globals.ek.Browser = null;  // detach browser from running EK thread
             
             //Hide Window
             Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
@@ -122,8 +112,6 @@ namespace EK_App
                 return null;
             }, null);
             //Do not close application
-            e.Cancel = true;
-
 
             /*
 

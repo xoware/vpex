@@ -7,7 +7,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Diagnostics;
 
-namespace IpcAnonPipe
+namespace Xoware.IpcAnonPipe
 {
 
     public class PipeClient
@@ -32,7 +32,7 @@ namespace IpcAnonPipe
                 }
 
                 Console.WriteLine("Connecting to server...\n");
-                pipeClient.Connect(321);
+                pipeClient.Connect(123);
 
                 Console.WriteLine("[CLIENT] Connected: {0} ",
                    pipeClient.IsConnected.ToString());
@@ -48,7 +48,7 @@ namespace IpcAnonPipe
                     {
                         sw.AutoFlush = true;
                         // Send a 'sync message' and wait for client to receive it.
-                        sw.WriteLine("SYNC");
+                        sw.WriteLine(Mesg);
                         pipeClient.WaitForPipeDrain();
                         // Send the console input to the client process.
                         Console.Write("[CLIENT] Enter text: ");

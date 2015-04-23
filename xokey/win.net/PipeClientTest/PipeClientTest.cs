@@ -12,7 +12,7 @@ namespace PipeClientTest
         {
             try
             {
-                IpcAnonPipe.PipeClient.Send_Msg("TEST");
+                Xoware.IpcAnonPipe.PipeClient.Send_Msg("TEST");
             }
             catch (Exception e)
             {

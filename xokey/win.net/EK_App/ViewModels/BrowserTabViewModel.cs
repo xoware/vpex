@@ -137,25 +137,31 @@ namespace EK_App.ViewModels
         {
             try
             {
+                if (Application.Current == null || Application.Current.MainWindow == null)
+                    return;
+
+          //      if (Application.Current.MainWindow.Visibility == Visibility.Visible)
                 webBrowser.ExecuteScriptAsync(s);
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (App.Debug)
+                    MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                else
+                    App.Log("Error while executing Javascript: " + e.Message);
             }
         }
         public void InvokeExecuteJavaScript(string s)
         {
             try
             {
-                /*
-                Application.Current.Dispatcher(
-                    System.Windows.Threading.DispatcherPriority.Background,
-                    new Str_Msg_Handler(ExecuteJavaScript), s); */
 
-                ExecuteJavaScript(s);
-//                Str_Msg_Handler callback = new Str_Msg_Handler(ExecuteJavaScript);
-  //              this.Invoke(callback, new object[] { s });
+                Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+                { ExecuteJavaScript(s); }));
+
+  //              ExecuteJavaScript(s);
+         //       Str_Msg_Handler callback = new Str_Msg_Handler(ExecuteJavaScript);
+             //   this.Invoke(callback, new object[] { s });
 
             }
             catch (Exception e)
@@ -209,7 +215,10 @@ namespace EK_App.ViewModels
             if (ShowConsoleMessage)
                 OutputMessage = e.Message;
             Console.WriteLine(e.Message);
-            Console_Message_Event(e.Message);
+
+            if (Console_Message_Event != null && Globals.ek.Browser != null)
+                Console_Message_Event(e.Message);
+
             if (App.Web_Console_Log_File != null)
             {
                 try

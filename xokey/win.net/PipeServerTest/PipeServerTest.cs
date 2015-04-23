@@ -12,7 +12,7 @@ namespace PipeServerTest
         {
             try
             {
-                IpcAnonPipe.PipeServer.ExecServer();
+                Xoware.IpcAnonPipe.PipeServer.ExecServer();
             }
             catch (Exception e)
             {

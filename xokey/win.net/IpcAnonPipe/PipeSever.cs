@@ -7,13 +7,14 @@ using System.IO;
 using System.IO.Pipes;
 using System.Diagnostics;
 
-namespace IpcAnonPipe
+namespace Xoware.IpcAnonPipe
 {
     public class PipeServer
     {
 
-        public static void ExecServer()
+        public static string ExecServer()
         {
+            String Data_Read = "";
             Console.WriteLine("[SERVER] starting");
 
             using (NamedPipeServerStream pipeServer =
@@ -51,12 +52,14 @@ namespace IpcAnonPipe
                     // Read the server data and echo to the console. 
                     while ((temp = sr.ReadLine()) != null)
                     {
+                        Data_Read += temp;
                         Console.WriteLine("[CLIENT] Echo: " + temp);
                     }
                 }
 
             }
             Console.WriteLine("[SERVER] Client quit. Server terminating.");
+            return Data_Read;
         }
     }
 }

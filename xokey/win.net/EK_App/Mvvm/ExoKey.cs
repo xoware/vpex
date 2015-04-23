@@ -130,9 +130,9 @@ namespace EK_App.Mvvm
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
         Boolean Firewall_Opened = false;
-        private volatile Boolean Disposing = false;
         //  UdpClient Mcast_UDP_Client = null;
-        private BackgroundWorker startup_bw = new BackgroundWorker();
+      //  private BackgroundWorker startup_bw = new BackgroundWorker();
+        private volatile Boolean Disposing = false; 
 
         private Xoware.RoutingLib.RoutingTableRow default_route = null;
         private List<IPAddress> MCast_Listening;
@@ -152,6 +152,7 @@ namespace EK_App.Mvvm
         DateTime Last_Vpn_Status = DateTime.Now;
         System.Threading.Thread State_Machine_Thread = null;
         public EK_App.ViewModels.BrowserTabViewModel Browser = null;
+        public bool Force_Restart_Detction = false;
 
         public ExoKey(Log_Msg_Handler Log_Event_Handler = null, EK_App.ViewModels.BrowserTabViewModel wb = null)
         {
@@ -161,7 +162,9 @@ namespace EK_App.Mvvm
             if (wb != null)
             {
                 Browser = wb;
-           
+                Browser.Url_Changed_Event += Url_Changed;
+                Browser.Load_Error_Event += Load_Error;
+                Browser.Console_Message_Event += Process_Browswer_Console_Msg;
             }
 
             Send_Log_Msg("XoKey Startup");
@@ -170,6 +173,7 @@ namespace EK_App.Mvvm
             
 
             State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Main);
+            State_Machine_Thread.Name = "EK_StateMachine";
             State_Machine_Thread.Start();
 
 
@@ -421,6 +425,13 @@ namespace EK_App.Mvvm
                 Browser.OutputMessage = s;
         }
 
+        public void Set_Browser(EK_App.ViewModels.BrowserTabViewModel b)
+        {
+            Browser = b;
+            Browser.Url_Changed_Event += Url_Changed;
+            Browser.Load_Error_Event += Load_Error;
+            Browser.Console_Message_Event += Process_Browswer_Console_Msg;
+        }
         private void State_Machine_Thread_Main()
         {
 
@@ -445,13 +456,14 @@ namespace EK_App.Mvvm
             if (!Keep_Running)
                  return;
 
-            Browser.Url_Changed_Event += Url_Changed;
-            Browser.Load_Error_Event += Load_Error;
-            Browser.Console_Message_Event += Process_Browswer_Console_Msg;
             SetStatusMsg("Starting...");
 
             while(Keep_Running)
             {
+
+                if (Force_Restart_Detction)
+                    Restart_Detection();
+
                 if (!USB_Dev_ID_Found || !ExoKey_Driver_Found)
                 {
 //                    InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-primary');"
@@ -1157,6 +1169,7 @@ namespace EK_App.Mvvm
         }
         void Restart_Detection()
         {
+            Force_Restart_Detction = false;
             Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
 
             Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
@@ -1781,13 +1794,19 @@ namespace EK_App.Mvvm
                 {
                     //           var notify = new NotificationWindow();
                     //            notify.Show("Disconnected");
+                    try
+                    {
+                        var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+                         "ExoKey",
+                         "Disconnected",
+                         null,
+                         Mantin.Controls.Wpf.Notification.NotificationType.Information);
+                        toast.Show();
+                    }
+                    catch
+                    {
 
-                    var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-                     "ExoKey",
-                     "Disconnected",
-                     null,
-                     Mantin.Controls.Wpf.Notification.NotificationType.Information);
-                     toast.Show();
+                    }
                 }));
             }
 

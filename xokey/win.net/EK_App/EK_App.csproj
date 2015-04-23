@@ -235,6 +235,10 @@
       <Project>{23ee5140-2c2c-4b53-a954-10b08dca6bd6}</Project>
       <Name>EK.BrowserSubprocess</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IpcAnonPipe\IpcAnonPipe.csproj">
+      <Project>{e5f84885-7adb-4642-bbee-1f031bb6844b}</Project>
+      <Name>IpcAnonPipe</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Routing\Routing.csproj">
       <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
       <Name>Routing</Name>

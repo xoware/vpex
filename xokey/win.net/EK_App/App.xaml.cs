@@ -11,6 +11,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using Hardcodet.Wpf.TaskbarNotification;
+using System.ComponentModel; // background worker
 
 namespace EK_App
 {
@@ -26,7 +27,9 @@ namespace EK_App
         public static string Web_Console_Log_File = null;
         private TaskbarIcon tb = null;
         bool EK_Is_Up = false;
-        bool Keep_Running = true;
+        public static bool Keep_Running = true;
+        private BackgroundWorker pipe_serverserv_bw = new BackgroundWorker();
+      
 
         static void Show_Help(String Name)
         {
@@ -165,10 +168,47 @@ namespace EK_App
                tb.Dispose(); //the icon would clean up automatically, but this is cleaner
             base.OnExit(e);
         }
+
+        private void PipeServerWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            String Data_Read = Xoware.IpcAnonPipe.PipeServer.ExecServer();
+
+            if (Data_Read.Contains("EXIT"))
+                Keep_Running = false;
+        }
+
+        private void PipeServerWorker_Completed(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (!Keep_Running)
+                return;
+
+            Raise_Window();
+
+            pipe_serverserv_bw.RunWorkerAsync(); // restart
+        }
+
         void App_Startup(object sender, StartupEventArgs e)
         {
             App.Log("app startup: " + System.IO.Path.GetFileNameWithoutExtension(
                 System.Reflection.Assembly.GetEntryAssembly().Location));
+
+          
+            try
+            {
+                Xoware.IpcAnonPipe.PipeClient.Send_Msg("RAISE");
+                App.Log("Already Running.  Raise message sent");
+                Application.Current.Shutdown(0);
+                return;
+            }
+            catch (Exception ex)
+            { 
+                // this is supposed to occur when not already running
+                Console.WriteLine("Exception:\n    {0}", ex.Message);
+            }
+
+            pipe_serverserv_bw.DoWork += PipeServerWorker_DoWork;
+            pipe_serverserv_bw.RunWorkerCompleted += PipeServerWorker_Completed;
+            pipe_serverserv_bw.RunWorkerAsync();
 
             Console.WriteLine("App: " +System.IO.Path.GetFileNameWithoutExtension(
                  System.Reflection.Assembly.GetEntryAssembly().Location));
@@ -235,7 +275,7 @@ namespace EK_App
         {
             Check_Interfaces();
         }
-        static void Raise_Window()
+        public static void Raise_Window()
         {
             try
             {
@@ -244,7 +284,7 @@ namespace EK_App
                     App.Log("App: RaisingWindow");
                     if (Application.Current.MainWindow == null)
                     {
-                        if (Globals.ek == null)
+                    //    if (Globals.ek == null)
                         {
                             Application.Current.MainWindow = new MainWindow();
                             Application.Current.MainWindow.Show();
@@ -272,10 +312,15 @@ namespace EK_App
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
             ProcessArgs();
-        
 
+          
             CefExample.Init(Cef_LogFile, App.Debug);
       
+        }
+
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+
         }
     }
 }
