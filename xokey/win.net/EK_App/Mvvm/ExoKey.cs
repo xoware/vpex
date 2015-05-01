@@ -12,6 +12,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Management;
 using System.Windows;
+using Xoware.NetUtil;
 
 namespace EK_App.Mvvm
 {
@@ -432,6 +433,17 @@ namespace EK_App.Mvvm
             Browser.Load_Error_Event += Load_Error;
             Browser.Console_Message_Event += Process_Browswer_Console_Msg;
         }
+        private void Check_DNS_Servers()
+        {
+            Xoware.NetUtil.DNS_Config dns_cfg = Xoware.NetUtil.DNS.Get_DNS_Config("");
+
+            if (EK_State == ExoKeyState.ExoKeyState_Connected) {
+
+
+            }
+
+        }
+
         private void State_Machine_Thread_Main()
         {
 
@@ -661,9 +673,26 @@ namespace EK_App.Mvvm
             if (New_State != EK_State)
             {
                 if (EK_State_Change != null)
-                    EK_State_Change(EK_State, New_State);
+                    EK_State_Change(EK_State, New_State);  // Send event to anyone subscribed to it
 
                 EK_State = New_State;
+
+
+                if (EK_State == ExoKeyState.ExoKeyState_Connected)
+                {
+                    if (Internet_Interface != null && Internet_Interface.Name.Length > 1)
+                    {
+                        Xoware.NetUtil.DNS_Config cfg = Xoware.NetUtil.DNS.Get_DNS_Config(Internet_Interface.Name);
+                        if (!cfg.Static)
+                        {
+                            // If not static use EK
+                            Xoware.NetUtil.DNS.Set_Static_Name_Servers(Internet_Interface.Name, "192.168.137.2");
+                        }
+                    }
+                } else 
+                {
+                    Xoware.NetUtil.DNS.Remove_ExoKey_DNS();
+                }
             }
         }
         /*
@@ -1194,10 +1223,12 @@ namespace EK_App.Mvvm
             bool Interenet_Interface_Found = false;
 
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+            
             foreach (NetworkInterface n in adapters)
             {
                 Send_Log_Msg(1, LogMsg.Priority.Debug, n.Name + " : " + n.Description + " is " + n.OperationalStatus);
 
+         
                 if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware")){
                     EK_Interface = n;
                     
