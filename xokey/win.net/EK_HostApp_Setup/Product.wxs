@@ -147,6 +147,9 @@
       <Component Id="msvcr120" Guid="*">
         <File Source="$(var.EK_App.TargetDir)\msvcr120.dll" />
       </Component>
+      <Component Id="NetUtil" Guid="*">      
+         <File Source="$(var.EK_App.TargetDir)/NetUtil.dll" />
+      </Component>
       <Component Id="RoutingDll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/Routing.dll" />
       </Component>

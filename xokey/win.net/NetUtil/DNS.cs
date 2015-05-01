@@ -22,6 +22,7 @@ namespace Xoware.NetUtil
 
     public class DNS
     {
+        // nic string can be a name or  interface index
         public static DNS_Config Get_DNS_Config(string nic)
         {
             DNS_Config cfg = new DNS_Config();
@@ -97,7 +98,7 @@ namespace Xoware.NetUtil
                 using (var networkConfigs = networkConfigMng.GetInstances())
                 {
                     //                   foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Caption"].Equals(nic)))
-                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Description"].ToString().Contains(nic)))
+                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["InterfaceIndex"].ToString().Contains(nic)))
                     //                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] )) 
                     {
                         Console.WriteLine("Desc: " + managementObject["Description"]);
@@ -142,6 +143,32 @@ namespace Xoware.NetUtil
 
             }
             return Sucess;
+        }
+
+        public static void Set_Static_Name_Servers(UInt32 ifIndex, String dnsServers)
+        {
+            using (var networkConfigMng = new System.Management.ManagementClass("Win32_NetworkAdapterConfiguration"))
+            {
+                using (var networkConfigs = networkConfigMng.GetInstances())
+                {
+                    //                   foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Caption"].Equals(nic)))
+                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && (UInt32)objMO["InterfaceIndex"] == ifIndex))
+                    //                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] )) 
+                    {
+                        Console.WriteLine("Desc: " + managementObject["Description"]);
+
+
+                        if (dnsServers.Length > 4)
+                        {
+                            using (var newDNS = managementObject.GetMethodParameters("SetDNSServerSearchOrder"))
+                            {
+                                newDNS["DNSServerSearchOrder"] = dnsServers.Split(',');
+                                managementObject.InvokeMethod("SetDNSServerSearchOrder", newDNS, null);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public static void Set_Static_Name_Servers(string nic, string dnsServers)

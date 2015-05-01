@@ -239,6 +239,10 @@
       <Project>{e5f84885-7adb-4642-bbee-1f031bb6844b}</Project>
       <Name>IpcAnonPipe</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NetUtil\NetUtil.csproj">
+      <Project>{021290be-c1fd-430d-99cf-c80066fafdb9}</Project>
+      <Name>NetUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Routing\Routing.csproj">
       <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
       <Name>Routing</Name>

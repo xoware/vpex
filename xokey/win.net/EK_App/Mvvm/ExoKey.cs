@@ -680,13 +680,19 @@ namespace EK_App.Mvvm
 
                 if (EK_State == ExoKeyState.ExoKeyState_Connected)
                 {
-                    if (Internet_Interface != null && Internet_Interface.Name.Length > 1)
+                    if (Internet_Interface != null)
                     {
-                        Xoware.NetUtil.DNS_Config cfg = Xoware.NetUtil.DNS.Get_DNS_Config(Internet_Interface.Name);
-                        if (!cfg.Static)
+                        IPInterfaceProperties adapterProperties = Internet_Interface.GetIPProperties();     
+                        IPv4InterfaceProperties ipv4props = adapterProperties.GetIPv4Properties();
+
+                        if (ipv4props != null)
                         {
-                            // If not static use EK
-                            Xoware.NetUtil.DNS.Set_Static_Name_Servers(Internet_Interface.Name, "192.168.137.2");
+                            Xoware.NetUtil.DNS_Config cfg = Xoware.NetUtil.DNS.Get_DNS_Config(ipv4props.Index.ToString());
+                            if (!cfg.Static)
+                            {
+                                // If not static use EK
+                                Xoware.NetUtil.DNS.Set_Static_Name_Servers((UInt32) ipv4props.Index, "192.168.137.2");
+                            }
                         }
                     }
                 } else 
