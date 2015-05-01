@@ -9,3 +9,17 @@ typescript
 *.res
 *.DS_Store
 *DownloadCache
+/xokey/win.net/NetUtil/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+/xokey/win.net/NetUtil/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+/xokey/win.net/NetUtil/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+/xokey/win.net/NetUtil/Properties/AssemblyInfo.cs
+/xokey/win.net/DNS_Test/Properties/AssemblyInfo.cs
+/xokey/win.net/DNS_Test/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+/xokey/win.net/DNS_Test/obj/Debug/DNS_Test.csproj.FileListAbsolute.txt
+/xokey/win.net/DNS_Test/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+/xokey/win.net/DNS_Test/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+/xokey/win.net/DNS_Test/bin/Debug/DNS_Test.exe.config
+/xokey/win.net/DNS_Test/bin/Debug/DNS_Test.pdb
+/xokey/win.net/DNS_Test/bin/Debug/DNS_Test.vshost.exe
+/xokey/win.net/DNS_Test/bin/Debug/DNS_Test.vshost.exe.config
+/xokey/win.net/DNS_Test/bin/Debug/DNS_Test.vshost.exe.manifest
