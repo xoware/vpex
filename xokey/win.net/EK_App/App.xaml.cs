@@ -227,6 +227,7 @@ namespace EK_App
                 return;
 
             }
+            Xoware.NetUtil.DNS.Remove_ExoKey_DNS(); // Now disconneced at startup
 
             this.StartupUri = new System.Uri("MainWindow.xaml", System.UriKind.Relative);
             NetworkChange.NetworkAddressChanged += new
