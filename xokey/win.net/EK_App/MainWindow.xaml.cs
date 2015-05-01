@@ -102,9 +102,12 @@ namespace EK_App
         private void MainWindow_Closing(object sender, CancelEventArgs e)  
         {
             App.Log("MainWindow_Closing");
-            Globals.ek.Force_Restart_Detction = true;
-            Globals.ek.Browser = null;  // detach browser from running EK thread
-            
+            if (Globals.ek != null)
+            {
+                Globals.ek.Force_Restart_Detction = true;
+                Globals.ek.Browser = null;  // detach browser from running EK thread
+            }
+            Xoware.NetUtil.DNS.Remove_ExoKey_DNS(); // Now disconneced
             //Hide Window
             Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
             {
