@@ -147,7 +147,7 @@ void ExoKeyLog(NSString* text){
         [fileString appendString:text];
         [fileString appendString:@"\n"];
         if (logFileHandle) {
-            [logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
+            //[logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
         }
 
     });
@@ -527,6 +527,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
                 if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
                     [self routeToExoNet:deviceProperties[EXONET_IP]];
                     routedToExoNet = true;
+                    //Minimize the ExoKey Window when the connected to a VPN gateway
+                    [self.window miniaturize:self];
                     return;
                 }
                 //Sleep a bit before retrying.
@@ -544,7 +546,10 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         }
         
         //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
+        //if ((VPN_Status == VPN_CONNECTED) & routedToExoNet)
+        
         //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
+        //if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet)
     }
 }
 

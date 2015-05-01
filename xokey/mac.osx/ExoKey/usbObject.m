@@ -394,7 +394,7 @@ IOReturn FindInterfaces(IOUSBDeviceInterface **device)
        for (i = 0; i < numBytesRead; i++)
        gBuffer[i] = ~gBuffer[i];
        
-       ExoKeyLog([NSString stringWithFormat:@"Read \"%s\" (%ld bytes) from bulk endpoint\n", gBuffer, numBytesRead]);
+       ExoKeyLog([NSString stringWithFormat:@"Read \"%s\" (%u bytes) from bulk endpoint\n", gBuffer, (unsigned int)numBytesRead]);
         
 #else   
         //Demonstrate asynchronous I/O
@@ -446,8 +446,8 @@ void WriteCompletion(void *refCon, IOReturn result, void *arg0)
         (void) (*interface)->Release(interface);
         return;
     }
-    ExoKeyLog([NSString stringWithFormat:@"Wrote \"%s\" (%ld bytes) to bulk endpoint\n", kTestMessage,
-           numBytesWritten]);
+    ExoKeyLog([NSString stringWithFormat:@"Wrote \"%s\" (%u bytes) to bulk endpoint\n", kTestMessage,
+           (unsigned int)numBytesWritten]);
     
     numBytesRead = sizeof(gBuffer) - 1; //leave one byte at the end for
     //NULL termination
