@@ -24,7 +24,7 @@ namespace EK_App
         public static bool Debug = false;
 
         string Cef_LogFile = null;
-        public static string Web_Console_Log_File = null;
+        public static string Web_Console_Log_File = Environment.SpecialFolder.LocalApplicationData + "/log.txt";
         private TaskbarIcon tb = null;
         bool EK_Is_Up = false;
         public static bool Keep_Running = true;
@@ -112,8 +112,11 @@ namespace EK_App
                         }
                     } // For
 
+                    
+
                     if (Web_Console_Log_File != null)
                     {
+                        System.IO.Directory.CreateDirectory(Environment.SpecialFolder.LocalApplicationData.ToString());
                         // Create a file to write to. 
                         using (StreamWriter sw = File.CreateText(Web_Console_Log_File))
                         {
@@ -146,15 +149,25 @@ namespace EK_App
                 if (tb == null)
                     return;
 
-                tb.Visibility = Visibility.Visible;
-                 
+      
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Exception in OnStartup: " + ex.Message);
                 Console.WriteLine("Exception in OnStartup: " + ex.StackTrace.ToString());
             }
+/*
+            AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
+            Application.Current.DispatcherUnhandledException += NBug.Handler.DispatcherUnhandledException;
+            NBug.Settings.StoragePath = NBug.Enums.StoragePath.IsolatedStorage;
+            NBug.Settings.UIMode = NBug.Enums.UIMode.Full;
+            NBug.Settings.AddDestinationFromConnectionString("Type=Mail;From=karl@xoware.com;To=karl@xoware.com;SmtpServer=mx1.emailsrvr.com;");
+            */
 
+            tb.Visibility = Visibility.Visible;
+            throw new Exception("Test");
+            // Uncomment the following after testing to see that NBug is working as configured
+            //  NBug.Settings.ReleaseMode = true;   
         }
         protected override void OnExit(ExitEventArgs e)
         {
@@ -192,7 +205,8 @@ namespace EK_App
             App.Log("app startup: " + System.IO.Path.GetFileNameWithoutExtension(
                 System.Reflection.Assembly.GetEntryAssembly().Location));
 
-          
+            
+ 
             try
             {
                 Xoware.IpcAnonPipe.PipeClient.Send_Msg("RAISE");
@@ -309,14 +323,13 @@ namespace EK_App
         }
         private App()
         {
-
+            AppDomain.CurrentDomain.UnhandledException += EKExceptionHandler.UnhandledException;
+            Application.Current.DispatcherUnhandledException += EKExceptionHandler.App_DispatcherUnhandledException;
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
             ProcessArgs();
-
           
-            CefExample.Init(Cef_LogFile, App.Debug);
-      
+            CefExample.Init(Cef_LogFile, App.Debug);    
         }
 
         private void Application_Exit(object sender, ExitEventArgs e)
