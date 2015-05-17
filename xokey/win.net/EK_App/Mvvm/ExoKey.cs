@@ -534,17 +534,24 @@ namespace EK_App.Mvvm
 
                 if (!Has_Internet_Access)
                 {
+                    
                     if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
                     {
                         if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
-                              InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-success');"
-                                 + "$('#status_net_available').text('OK');");
+                        {
+                            InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-success');"
+                               + "$('#status_net_available').text('OK');");
+                            Remove_Routes();
+                        }
                     }
                     else
                     {
                         if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
-                           InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-danger');"
-                             + "$('#status_net_available').text('Failed');");
+                        {
+                            InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-danger');"
+                              + "$('#status_net_available').text('Failed');");
+                            Remove_Routes();
+                        }
                     }
 
                  //   Check_Internet_Access();
@@ -1659,6 +1666,7 @@ namespace EK_App.Mvvm
         {
             System.Diagnostics.Process proc;
             proc = new System.Diagnostics.Process();
+            
             string NetSh_Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
             proc.StartInfo.FileName = NetSh_Path + "\\netsh ";
             proc.StartInfo.Arguments = Command;
@@ -1683,6 +1691,7 @@ namespace EK_App.Mvvm
 
             // Start the process.
             proc.Start();
+
 
 
             // Start the asynchronous read of the sort output stream.
@@ -1863,8 +1872,8 @@ namespace EK_App.Mvvm
                 XoKey_IP = IPAddress.Parse("192.168.137.2");
 
             Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " MASK 255.255.255.255 "
-                + default_route.GetForardNextHopIPStr() + " METRIC 2" );
-            Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
+                + default_route.GetForardNextHopIPStr() + " METRIC 55" );
+            Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
             Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
             Traffic_Routed_To_XoKey = true;
 

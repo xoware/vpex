@@ -59,9 +59,17 @@ namespace EK_App
                     Console.WriteLine(Message);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine("Could not log to " + App.Web_Console_Log_File);
+                Console.WriteLine("Could not log to " + App.Web_Console_Log_File 
+                    + "  " + ex.Message);
+
+                try {
+                 System.IO.Directory.CreateDirectory(Path.GetDirectoryName(App.Web_Console_Log_File));
+                } catch {
+
+                }
+
             }
         }
 
@@ -99,7 +107,7 @@ namespace EK_App
                             case "--log":
                                 if ((i < n_args) && args[i + 1] != null)
                                 {
-                                    Web_Console_Log_File = args[i + 1];
+                                    App.Web_Console_Log_File = args[i + 1];
                                     i++;
                                 }
                                 else
@@ -114,17 +122,18 @@ namespace EK_App
 
                     
 
-                    if (Web_Console_Log_File != null)
-                    {
-                        System.IO.Directory.CreateDirectory(Environment.SpecialFolder.LocalApplicationData.ToString());
-                        // Create a file to write to. 
-                        using (StreamWriter sw = File.CreateText(Web_Console_Log_File))
-                        {
-                            sw.WriteLine(DateTime.Now.ToString("s") + " : Startup");
-                        }	
-                    }
+                    
 
                 } // if
+                if (App.Web_Console_Log_File != null)
+                {
+                    System.IO.Directory.CreateDirectory(Environment.SpecialFolder.LocalApplicationData.ToString());
+                    // Create a file to write to. 
+                    using (StreamWriter sw = File.CreateText(Web_Console_Log_File))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : Startup");
+                    }
+                }
             } catch (Exception ex)
             {
                 Console.WriteLine("Exception in main: " + ex.Message);
@@ -156,18 +165,8 @@ namespace EK_App
                 Console.WriteLine("Exception in OnStartup: " + ex.Message);
                 Console.WriteLine("Exception in OnStartup: " + ex.StackTrace.ToString());
             }
-/*
-            AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
-            Application.Current.DispatcherUnhandledException += NBug.Handler.DispatcherUnhandledException;
-            NBug.Settings.StoragePath = NBug.Enums.StoragePath.IsolatedStorage;
-            NBug.Settings.UIMode = NBug.Enums.UIMode.Full;
-            NBug.Settings.AddDestinationFromConnectionString("Type=Mail;From=karl@xoware.com;To=karl@xoware.com;SmtpServer=mx1.emailsrvr.com;");
-            */
 
             tb.Visibility = Visibility.Visible;
-            throw new Exception("Test");
-            // Uncomment the following after testing to see that NBug is working as configured
-            //  NBug.Settings.ReleaseMode = true;   
         }
         protected override void OnExit(ExitEventArgs e)
         {

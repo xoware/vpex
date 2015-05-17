@@ -6,12 +6,16 @@
         Closing="MainWindow_Closing"
         Icon="vpex.ico"
         ShowInTaskbar="True" WindowState="Normal" Visibility="Hidden">
+
+ 
+    
     <Window.InputBindings> <!--
         <KeyBinding Key="T" Modifiers="Control" Command="New"/>
         <KeyBinding Key="W" Modifiers="Control" Command="Close"/>
         -->
     </Window.InputBindings>
     <Window.Resources>
+        
         <!--
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -23,6 +27,7 @@
         -->
     </Window.Resources>
     <Grid>
+        
         <controls:NonReloadingTabControl x:Name="TabControl"
                                Margin="0,5,0,0"
                                ItemsSource="{Binding BrowserTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"

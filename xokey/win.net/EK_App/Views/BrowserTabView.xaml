@@ -200,8 +200,11 @@
                             <MenuItem Header="Zoom Reset"
                                       Command="{Binding WebBrowser.ZoomResetCommand}" />
                             <Separator />
+                            <!--
                             <MenuItem Header="View Source"
-                                      Command="{Binding WebBrowser.ViewSourceCommand}" />
+                                      Command="{Binding WebBrowser.ViewSourceCommand}" />-->
+                            <MenuItem Header="Save Log"
+                                      Command="{Binding SaveLogCommand}" />
                         </ContextMenu>
                     </FrameworkElement.ContextMenu>
                 </cefSharp:ChromiumWebBrowser>
