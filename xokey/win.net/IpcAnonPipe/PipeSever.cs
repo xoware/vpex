@@ -47,7 +47,7 @@ namespace Xoware.IpcAnonPipe
                         Console.WriteLine("[CLIENT] Wait for sync...");
                         temp = sr.ReadLine();
                     }
-                    while (!temp.StartsWith("SYNC"));
+                    while (temp != null && !temp.StartsWith("SYNC"));
 
                     // Read the server data and echo to the console. 
                     while ((temp = sr.ReadLine()) != null)
