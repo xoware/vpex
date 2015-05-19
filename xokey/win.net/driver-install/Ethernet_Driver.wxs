@@ -78,6 +78,13 @@
         <Condition>VersionNT64</Condition>
       </Component>
 
+      <!-- registry entry to state that the item has been installed-->
+      <Component Id="cmp_WriteToRegistry" Guid="9F29FCE3-27EB-4568-BE53-51468225AB54">
+        <RegistryKey Root="HKLM"  Key="Software\xoware"
+              Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="integer" Name="ExoKey_USB_Ethernet_Driver" Value="1" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
     </ComponentGroup>
 	</Fragment>
 
