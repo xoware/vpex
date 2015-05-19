@@ -183,10 +183,16 @@ namespace EK_App
 
         private void PipeServerWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            String Data_Read = Xoware.IpcAnonPipe.PipeServer.ExecServer();
+            try
+            {
+                String Data_Read = Xoware.IpcAnonPipe.PipeServer.ExecServer();
 
-            if (Data_Read.Contains("EXIT"))
-                Keep_Running = false;
+                if (Data_Read.Contains("EXIT"))
+                    Keep_Running = false;
+            } catch
+            {
+
+            }
         }
 
         private void PipeServerWorker_Completed(object sender, RunWorkerCompletedEventArgs e)

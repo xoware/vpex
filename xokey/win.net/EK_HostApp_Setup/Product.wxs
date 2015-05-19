@@ -175,6 +175,21 @@
       <Component Id="LogoTransComponent" Guid="*">
         <File Source="$(var.EK_App.TargetDir)\Resources\logo_transparent.png" />
       </Component>
+
+      <Component Id="WriteToRegistryGroup" Guid="{F7A8864B-4595-4029-B4CF-46DDB77D44BE}">
+        <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
+        <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\GroupPolicy"
+            Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
+      <Component Id="WriteToRegistryLocal" Guid="{B5543560-5327-496D-8283-08993D0DF2BC}">
+        <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
+        <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\Local"
+              Action="createAndRemoveOnUninstall">
+        <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
     </ComponentGroup>
   </Fragment>
   <Fragment>

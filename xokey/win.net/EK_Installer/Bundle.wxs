@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <Bundle Name="x.o.ware ExoKey" Version="$(var.BuildVersion)"  Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
@@ -9,8 +11,13 @@
     </BootstrapperApplicationRef>
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\Exokey"/>
 
-    
 
+    <WixVariable Id="ChkUSBDriver" Value="![CDATA[ChkUSBDriver]]" />
+    <!--
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4FullVersion" />
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4x64FullVersion" Win64="yes" />
+     Determine what items are installed in the event of an upgrade-->
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="ExoKey_USB_Ethernet_Driver" Variable="ExoKey_USB_Ethernet_Driver" Result="exists" />
 		<Chain>
 			<!-- TODO: Define the list of chained packages. -->
 			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
@@ -18,7 +25,7 @@
       
       
       <PackageGroupRef Id="NetFx451Redist" />
-       <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"  Vital="yes">
+      <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
       <MsiPackage  Id="EK_App"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
