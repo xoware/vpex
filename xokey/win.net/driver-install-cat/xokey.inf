@@ -10,17 +10,18 @@
 Signature           = "$Windows NT$"
 Class               = Net
 ClassGUID           = {4d36e972-e325-11ce-bfc1-08002be10318}
-Provider            = %Xoware%
-DriverVer           = 06/21/2012,6.0.6000.16384
-CatalogFile.ntx86   = ExoKeyX86.cat
-CatalogFile.ntamd64 = ExoKeyX64.cat
+Provider            = x.o.ware
+DriverVer           = 06/21/2014,6.0.6000.16384
+CatalogFile.ntx86   = XOkeyX86.cat
+CatalogFile.ntamd64 = XOkeyX64.cat
+
 
 [Manufacturer]
-%Xoware%             = XoWareDevices,NTx86,NTamd64,NTia64
+x.o.ware             = XoWareDevices,NTx86,NTamd64,NTia64
 
 ; Decoration for x86 architecture
 [XoWareDevices.NTx86]
-%XoDevice%       = RNDIS.NT.5.1, USB\VID_29b7&PID_0101, USB\VID_1d6b&PID_0104&MI_00
+%Xoware%       = RNDIS.NT.5.1, USB\VID_29b7&PID_0101, USB\VID_1d6b&PID_0104&MI_00
 
 ; Decoration for x64 architecture
 [XoWareDevices.NTamd64]
@@ -63,6 +64,6 @@ HKR, NDI\params\VistaProperty, optional,   0, "1"
 ; We do not support XP SP1-, 2003 SP1-, ME, 9x.
 
 [Strings]
-Xoware                 = "Xoware Inc."
-XoDevice           = "XoWare ExoKey USB Ethernet/RNDIS Gadget"
+Xoware                 = "x.o.ware, Inc."
+XoDevice           = "x.o.ware XOkey USB Ethernet/RNDIS Gadget"
 Vista_Property        = "Optional Vista Property"

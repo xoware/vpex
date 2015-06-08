@@ -6,7 +6,7 @@
     <ProductVersion>3.8</ProductVersion>
     <ProjectGuid>ab691316-6596-4b28-a649-cc0299e92622</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>ExoKey Installer</OutputName>
+    <OutputName>XOkey Installer</OutputName>
     <OutputType>Bundle</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -58,23 +58,19 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.rtf" />
-    <Content Include="xo.png" />
+    <Content Include="xo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
     <PreBuildEvent />
   </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ib "!(TargetPath)" -o "$(TargetDir)\engine.exe"
-signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\engine.exe"
-"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ab "$(TargetDir)\engine.exe" "!(TargetPath)" -o "$(TargetDir)\Exokey_Installer.exe"
-signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\Exokey_Installer.exe"</PostBuildEvent>
-  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.	-->
   <Target Name="BeforeBuild">
-    <GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\EK_App.exe">
+    <GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\XOkey_App.exe">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <PropertyGroup>
@@ -82,11 +78,17 @@ signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestam
     </PropertyGroup>
   </Target>
   <Target Name="AfterBuild">
-    <GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\EK_App.exe">
+    <GetAssemblyIdentity AssemblyFiles="..\EK_App\bin\x86\$(Configuration)\XOkey_App.exe">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <!--
 		<Copy SourceFiles=".\bin\$(Configuration)\$(OutputName).exe" DestinationFiles=".\bin\$(Configuration)\$(OutputName)_%(AssemblyVersion.Version).exe" />
 		<Delete Files=".\bin\$(Configuration)\$(OutputName).exe" /> -->
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ib "!(TargetPath)" -o "$(TargetDir)\engine.exe"
+signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\engine.exe"
+"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ab "$(TargetDir)\engine.exe" "!(TargetPath)" -o "$(TargetDir)\XOkey_Installer.exe"
+signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\XOkey_Installer.exe"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

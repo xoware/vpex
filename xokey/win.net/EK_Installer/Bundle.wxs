@@ -2,14 +2,14 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Bundle Name="x.o.ware ExoKey" Version="$(var.BuildVersion)"  Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
+  <Bundle Name="x.o.ware XOkey" Version="$(var.BuildVersion)"  Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
      LicenseFile="License.rtf"
      LogoFile="xo.png" ShowVersion="yes"
             />
     </BootstrapperApplicationRef>
-    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\Exokey"/>
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]XoWare\XOkey"/>
 
 
     <WixVariable Id="ChkUSBDriver" Value="![CDATA[ChkUSBDriver]]" />
@@ -17,7 +17,7 @@
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4FullVersion" />
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4x64FullVersion" Win64="yes" />
      Determine what items are installed in the event of an upgrade-->
-    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="ExoKey_USB_Ethernet_Driver" Variable="ExoKey_USB_Ethernet_Driver" Result="exists" />
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="XOkey_USB_Ethernet_Driver" Variable="XOkey_USB_Ethernet_Driver" Result="exists" />
 		<Chain>
 			<!-- TODO: Define the list of chained packages. -->
 			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->

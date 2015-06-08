@@ -17,25 +17,25 @@ using Xoware.NetUtil;
 namespace EK_App.Mvvm
 {
 
-    public enum ExoKeyState : int
+    public enum XOkeyState : int
     {
-        ExoKeyState_Init = 0,
-        ExoKeyState_Disconnected,
-        ExoKeyState_USBDeviceDetected,
-        ExoKeyState_Connected,
-        ExoKeyState_Unplugged,
+        XOkeyState_Init = 0,
+        XOkeyState_Disconnected,
+        XOkeyState_USBDeviceDetected,
+        XOkeyState_Connected,
+        XOkeyState_Unplugged,
     }
 
-    public enum ExoKeyLoginState : int
+    public enum XOkeyLoginState : int
     {
-        ExoKeyLoginState_Init = 0,
-        ExoKeyLoginState_LoadingUi,
-        ExoKeyLoginState_Loggedout,
-        ExoKeyLoginState_Loggedin,
+        XOkeyLoginState_Init = 0,
+        XOkeyLoginState_LoadingUi,
+        XOkeyLoginState_Loggedout,
+        XOkeyLoginState_Loggedin,
     }
 
     public delegate void EK_IP_Address_Detected_Handler(IPAddress ip);
-    public delegate void EK_State_Change_Handler(ExoKeyState Old_State, ExoKeyState New_State);
+    public delegate void EK_State_Change_Handler(XOkeyState Old_State, XOkeyState New_State);
 
     public class UdpState
     {
@@ -125,8 +125,8 @@ namespace EK_App.Mvvm
         private string Session_Cookie = "";
         private volatile IPAddress XoKey_IP = null; //IPAddress.Parse("192.168.255.1");
         private volatile IPAddress Client_USB_IP = null;
-        private volatile ExoKeyState EK_State = ExoKeyState.ExoKeyState_Disconnected;
-        ExoKeyLoginState Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
+        private volatile XOkeyState EK_State = XOkeyState.XOkeyState_Disconnected;
+        XOkeyLoginState Login_State = XOkeyLoginState.XOkeyLoginState_Init;
   //      System.Timers.Timer Check_State_Timer;
         IPEndPoint Server_IPEndPoint = null;
         Boolean Traffic_Routed_To_XoKey = false;
@@ -357,19 +357,19 @@ namespace EK_App.Mvvm
         {
             if (url.Contains("/ek/login"))
             {
-                Login_State = ExoKeyLoginState.ExoKeyLoginState_Loggedout;
+                Login_State = XOkeyLoginState.XOkeyLoginState_Loggedout;
                 SetStatusMsg("Please login.");
             }
             else if (url.Contains("/ek/vpex"))
             {
-                Login_State = ExoKeyLoginState.ExoKeyLoginState_Loggedin;
+                Login_State = XOkeyLoginState.XOkeyLoginState_Loggedin;
                 SetStatusMsg(" ");
             }
             else if (url.Contains("custom://cefsharp"))
             {
-                Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
+                Login_State = XOkeyLoginState.XOkeyLoginState_Init;
             }
-            else if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && ICS_Configured)
+            else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Debug, "Retry load UI");
                 InvokeExecuteJavaScript("setInterval(function(){ "
@@ -381,17 +381,17 @@ namespace EK_App.Mvvm
             try
             {
                 // if state change to connected
-                if (msg.Contains("VPNStatus=Connected=") && EK_State != ExoKeyState.ExoKeyState_Connected)
+                if (msg.Contains("VPNStatus=Connected=") && EK_State != XOkeyState.XOkeyState_Connected)
                 {
                     String IP_Addr_Str = msg.Substring(msg.LastIndexOf("=") + 1);
                     //             IPHostEntry hostEntry = Dns.GetHostEntry(IP_Addr_Str); // fixme check if host address
 
                     IPEndPoint Server = new IPEndPoint(IPAddress.Parse(IP_Addr_Str), 0);
                     Set_Sever_IPEndpoint(Server);
-                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                    Set_EK_State(XOkeyState.XOkeyState_Connected);
                     SetStatusMsg("Connected to ExoNet at " + IP_Addr_Str);
 
-                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                    Set_EK_State(XOkeyState.XOkeyState_Connected);
                 }
 
                 if (msg.Contains("VPNStatus=Stopped"))
@@ -399,7 +399,7 @@ namespace EK_App.Mvvm
                     if (Traffic_Routed_To_XoKey)
                         Remove_Routes();
 
-                    Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+                    Set_EK_State(XOkeyState.XOkeyState_Disconnected);
                     SetStatusMsg("Not connected to ExoNet");
                 }
                 Last_Vpn_Status = DateTime.Now;
@@ -437,7 +437,7 @@ namespace EK_App.Mvvm
         {
             Xoware.NetUtil.DNS_Config dns_cfg = Xoware.NetUtil.DNS.Get_DNS_Config("");
 
-            if (EK_State == ExoKeyState.ExoKeyState_Connected) {
+            if (EK_State == XOkeyState.XOkeyState_Connected) {
 
 
             }
@@ -490,9 +490,9 @@ namespace EK_App.Mvvm
 
                     InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('"
                        + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
-                       + "ExoKey USB Device not found.  "
-                       + " Please try to reinsert the ExoKey or plugging in a different USB port. "
-                       + " After you plug the ExoKey in it should show up here in 10 to 15 seconds. "
+                       + "XOkey USB Device not found.  "
+                       + " Please try to reinsert the XOkey or plugging in a different USB port. "
+                       + " After you plug the XOkey in it should show up here in 10 to 15 seconds. "
                        + "If the problem persists after retrying, try a different USB cable."
                        + "</div>');");
                 }
@@ -502,15 +502,15 @@ namespace EK_App.Mvvm
                         + "$('#status_driver').text('Not Found');");
                     InvokeExecuteJavaScript("$('#status_driver_msg').html('"
                        + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
-                       + "ExoKey network driver not found.  "
+                       + "XOkey network driver not found.  "
                        + " Please try rebooting your PC, or reinstalling the driver or plugging in a different USB port. "
-                       + " If the problem persists after retrying, look for the ExoKey Device in the device manager as a Network Adapter."
+                       + " If the problem persists after retrying, look for the XOkey Device in the device manager as a Network Adapter."
                        + "</div>');");
                 }
 
 
 
-                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && USB_Dev_ID_Found)
+                if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && USB_Dev_ID_Found)
                 {
                     InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-success');"
                         + "$('#status_usb_hw_detected').text('OK');");
@@ -518,7 +518,7 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('');");
                 }
 
-                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init && ExoKey_Driver_Found)
+                if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ExoKey_Driver_Found)
                 {
                     InvokeExecuteJavaScript("$('#status_driver').attr('class', 'label label-success');"
                         + "$('#status_driver').text('OK');");
@@ -537,7 +537,7 @@ namespace EK_App.Mvvm
                     
                     if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
                     {
-                        if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                        if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                         {
                             InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-success');"
                                + "$('#status_net_available').text('OK');");
@@ -546,7 +546,7 @@ namespace EK_App.Mvvm
                     }
                     else
                     {
-                        if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                        if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                         {
                             InvokeExecuteJavaScript("$('#status_net_available').attr('class', 'label label-danger');"
                               + "$('#status_net_available').text('Failed');");
@@ -568,7 +568,7 @@ namespace EK_App.Mvvm
                     }
                 }
 
-                if (!Has_Internet_Access && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                if (!Has_Internet_Access && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
 
                     InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-danger');"
@@ -578,13 +578,13 @@ namespace EK_App.Mvvm
 
                 if (!Dependency_Services_Running )
                 {
-                    if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                    if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                         InvokeExecuteJavaScript("$('#status_windows_service_deps').attr('class', 'label label-primary');"
                         + "$('#status_windows_service_deps').text('Checking');");
                     Check_ICS_Dependencies();
                 }
 
-                if (Dependency_Services_Running && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                if (Dependency_Services_Running && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
                     InvokeExecuteJavaScript("$('#status_windows_service_deps').attr('class', 'label label-success');"
                     + "$('#status_windows_service_deps').text('OK');");
@@ -596,7 +596,7 @@ namespace EK_App.Mvvm
                 if (!Network_Interfaces_OK)
                     Configure_Internet_Interfaces();
 
-                if (Network_Interfaces_OK && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                if (Network_Interfaces_OK && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
                  
                     InvokeExecuteJavaScript("$('#status_network_interfasces').attr('class', 'label label-success');"
@@ -615,9 +615,9 @@ namespace EK_App.Mvvm
                     {
                         Check_Intf_Status();
 
-                        if (Login_State != ExoKeyLoginState.ExoKeyLoginState_LoadingUi)
+                        if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                         {
-                            Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
+                            Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
                             InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-success');"
                               + "$('#status_windows_ics').text('OK');");
                             InvokeExecuteJavaScript("setInterval(function(){ "
@@ -639,7 +639,7 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-warning');"
                     + "$('#status_windows_ics').text('Waiting for Internet Access');");
                 } 
-                else if (ICS_Configured && Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                else if (ICS_Configured && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
                     if (Client_USB_IP != null)
                     {
@@ -652,30 +652,30 @@ namespace EK_App.Mvvm
                             // Ingnore error OK. 
                         }
                     }
-                    if (Login_State != ExoKeyLoginState.ExoKeyLoginState_LoadingUi)
+                    if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                     {
-                        Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
+                        Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
                         InvokeExecuteJavaScript("setInterval(function() { "
                                + " document.location.href='https://192.168.137.2/'; }, 2500);");
                     }
                 }
-                else if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Init)
+                else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-danger');"
                     + "$('#status_windows_ics').text('Failed');");
                 }
 
-                if (Login_State == ExoKeyLoginState.ExoKeyLoginState_Loggedin)
+                if (Login_State == XOkeyLoginState.XOkeyLoginState_Loggedin)
                     Get_VPN_Status();
 
             next_loop:
                 System.Threading.Thread.Sleep(900);
 
 //                if (Browser != null)
-//                    InvokeExecuteJavaScript("console.log('starting ExoKey')");
+//                    InvokeExecuteJavaScript("console.log('starting XOkey')");
             }
         }
-        private void Set_EK_State(ExoKeyState New_State)
+        private void Set_EK_State(XOkeyState New_State)
         {
             if (New_State != EK_State)
             {
@@ -685,7 +685,7 @@ namespace EK_App.Mvvm
                 EK_State = New_State;
 
 
-                if (EK_State == ExoKeyState.ExoKeyState_Connected)
+                if (EK_State == XOkeyState.XOkeyState_Connected)
                 {
                     if (Internet_Interface != null)
                     {
@@ -946,13 +946,13 @@ namespace EK_App.Mvvm
             //  Send_Log_Msg("Received: {0}", bytes);
             if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP) && Has_Internet_Access && ICS_Configured)
             {
-                Send_Log_Msg(0, LogMsg.Priority.Info, "New ExoKey IP Detected: " + New_IP.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Info, "New XOkey IP Detected: " + New_IP.ToString());
                 XoKey_IP = New_IP;
 
                 if (Browser != null && New_IP.ToString() != "192.168.255.1")
                 {
 
-                    Login_State = ExoKeyLoginState.ExoKeyLoginState_LoadingUi;
+                    Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
                     InvokeExecuteJavaScript("setInterval(function(){ "
                      + " document.location.href='https://" + New_IP.ToString() + "/'; }, 2000);");
                 }
@@ -1212,9 +1212,9 @@ namespace EK_App.Mvvm
         void Restart_Detection()
         {
             Force_Restart_Detction = false;
-            Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+            Set_EK_State(XOkeyState.XOkeyState_Disconnected);
 
-            Login_State = ExoKeyLoginState.ExoKeyLoginState_Init;
+            Login_State = XOkeyLoginState.XOkeyLoginState_Init;
             Stop_VPN();
             Remove_Routes();
             DisableICS();
@@ -1252,10 +1252,10 @@ namespace EK_App.Mvvm
                         // Needed for possible restart or plug, unplug, replug
                         StartMultiCastReciever();
                     }
-                }  else if (n.OperationalStatus == OperationalStatus.Down && EK_State == ExoKeyState.ExoKeyState_Connected
+                }  else if (n.OperationalStatus == OperationalStatus.Down && EK_State == XOkeyState.XOkeyState_Connected
                     && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
-                    Send_Log_Msg(1, LogMsg.Priority.Error, "ExoKey Down");
+                    Send_Log_Msg(1, LogMsg.Priority.Error, "XOkey Down");
                 }
                 if (Internet_Interface != null && Internet_Interface.Id == n.Id)
                 {
@@ -1277,16 +1277,16 @@ namespace EK_App.Mvvm
             if (Exokey_Interface != null && EK_Interface == null)
             {
                 Exokey_Interface = null;
-                Send_Log_Msg(1, LogMsg.Priority.Debug, "ExoKey Interface down");
+                Send_Log_Msg(1, LogMsg.Priority.Debug, "XOkey Interface down");
                 Restart_Detection();
-                Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
+                Set_EK_State(XOkeyState.XOkeyState_Unplugged);
             }
 
             if (!EK_Is_Up || EK_Interface == null)
             {
                 EK_Intf_Down_Count++;
                 if (EK_Intf_Down_Count > 25)
-                    Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
+                    Set_EK_State(XOkeyState.XOkeyState_Unplugged);
             }
         }
         void AddressChangedCallback(object sender, EventArgs e)
@@ -1327,7 +1327,7 @@ namespace EK_App.Mvvm
         }
         private void Send_Log_Msg(int code, LogMsg.Priority priority, string Log_Msg)
         {
-            Console.WriteLine("ExoKey: " + Log_Msg);
+            Console.WriteLine("XOkey: " + Log_Msg);
             App.Log("EK APP:" + Log_Msg);
         }
 
@@ -1360,7 +1360,7 @@ namespace EK_App.Mvvm
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("stop ex " + ex.ToString());
-                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from XOkey " + XoKey_IP.ToString());
                 return;
             }
             //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
@@ -1387,7 +1387,7 @@ namespace EK_App.Mvvm
         private void Get_VPN_Status()
         {
 
-            if (Browser == null || Login_State != ExoKeyLoginState.ExoKeyLoginState_Loggedin)
+            if (Browser == null || Login_State != XOkeyLoginState.XOkeyLoginState_Loggedin)
                 return;
 
             int diff = DateTime.Compare(DateTime.Now , Last_Vpn_Status);
@@ -1450,9 +1450,9 @@ namespace EK_App.Mvvm
                 Send_Log_Msg("Exception Get_VPN_Status: " + ex.Message);
                 Send_Log_Msg("Exception Get_VPN_Status: " + ex.StackTrace.ToString());
                 No_EK_Status_Error_Count++;
-                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from Exokey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from XOkey " + XoKey_IP.ToString() + " Err count=" + No_EK_Status_Error_Count);
                 if (No_EK_Status_Error_Count > 10)
-                    Set_EK_State(ExoKeyState.ExoKeyState_Unplugged);
+                    Set_EK_State(XOkeyState.XOkeyState_Unplugged);
                 return;
             }
             //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
@@ -1503,13 +1503,13 @@ namespace EK_App.Mvvm
                     }
                     IPEndPoint Server = new IPEndPoint(addresslist[0], 0);
                     Set_Sever_IPEndpoint(Server);
-                    Set_EK_State(ExoKeyState.ExoKeyState_Connected);
+                    Set_EK_State(XOkeyState.XOkeyState_Connected);
 
                 }
                 else
                 {
                     Remove_Routes();
-                    Set_EK_State(ExoKeyState.ExoKeyState_Disconnected);
+                    Set_EK_State(XOkeyState.XOkeyState_Disconnected);
                     No_EK_Status_Error_Count = 0; //OK
                 }
 
@@ -1704,11 +1704,11 @@ namespace EK_App.Mvvm
                 return;
 
             Run_NetSh_Cmd("advfirewall firewall delete rule Name=\"EK_App\" dir=in");
-            //   Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"ExoKey Port 1500 inbound\"  dir=in action=allow protocol=UDP localport=1500");
-            //     Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"ExoKey Port 1500 outbound\"  dir=out action=allow protocol=UDP localport=1500");
+            //   Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"XOkey Port 1500 inbound\"  dir=in action=allow protocol=UDP localport=1500");
+            //     Run_NetSh_Cmd("netsh advfirewall firewall delete rule name=\"XOkey Port 1500 outbound\"  dir=out action=allow protocol=UDP localport=1500");
 
-            //      Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"ExoKey Port 1500 inbound\" dir=in action=allow protocol=UDP localport=1500");
-            //     Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"ExoKey Port 1500 outbound\" dir=out action=allow protocol=UDP localport=1500");
+            //      Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"XOkey Port 1500 inbound\" dir=in action=allow protocol=UDP localport=1500");
+            //     Run_NetSh_Cmd("netsh advfirewall firewall add rule name=\"XOkey Port 1500 outbound\" dir=out action=allow protocol=UDP localport=1500");
             Run_NetSh_Cmd("advfirewall firewall add rule name=\"EK_App\" dir=in action=allow program=\""
                     + System.Reflection.Assembly.GetExecutingAssembly().Location + "\" enable=yes");
 
@@ -1813,7 +1813,7 @@ namespace EK_App.Mvvm
                 {
                     //System.Windows.Application.Current.MainWindow,
                   MessageBox.Show(
-                      "Your network traffic is no longer encrypted by the ExoKey",
+                      "Your network traffic is no longer encrypted by the XOkey",
                        "Disconnected from ExoNet", MessageBoxButton.OK, MessageBoxImage.Warning,
                        MessageBoxResult.OK,  MessageBoxOptions.ServiceNotification );
 
@@ -1843,7 +1843,7 @@ namespace EK_App.Mvvm
                     try
                     {
                         var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-                         "ExoKey",
+                         "XOkey",
                          "Disconnected",
                          null,
                          Mantin.Controls.Wpf.Notification.NotificationType.Information);
@@ -1883,7 +1883,7 @@ namespace EK_App.Mvvm
            () =>
            {
                var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-  "ExoKey",
+  "XOkey",
   "Connected to: " + Server_IPEndPoint.Address.ToString(),
   null,
   Mantin.Controls.Wpf.Notification.NotificationType.Information);
@@ -1999,7 +1999,7 @@ namespace EK_App.Mvvm
             var homeConnection = IcsManager.FindConnectionByIdOrName(home);
             if (homeConnection == null)
             {
-                Send_Log_Msg(0, LogMsg.Priority.Error, "Connection (ExoKey) not found: {0}" + home);
+                Send_Log_Msg(0, LogMsg.Priority.Error, "Connection (XOkey) not found: {0}" + home);
                 return;
             }
 
@@ -2025,8 +2025,8 @@ namespace EK_App.Mvvm
                 Send_Log_Msg(String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
                
                 Send_Log_Msg(0, LogMsg.Priority.Critical,
-                    "Internet Connection Sharing to ExoKey Failed. Please restart the app or your computer.  "
-                    + " If the problem persists contact support. Internet: " + shared + " ExoKey:" + home);
+                    "Internet Connection Sharing to XOkey Failed. Please restart the app or your computer.  "
+                    + " If the problem persists contact support. Internet: " + shared + " XOkey:" + home);
                 Send_Log_Msg(0, LogMsg.Priority.Critical, String.Format("Exception {0} Trace {1}", e.Message, e.StackTrace));
                 try
                 {
@@ -2156,7 +2156,7 @@ namespace EK_App.Mvvm
                     if (nic.Description.Contains("XoWare") || nic.Description.Contains("x.o.ware"))
                     {
                         Exokey_Interface = nic;
-                        Send_Log_Msg(0, LogMsg.Priority.Debug, "Exokey interface: " + nic.Description + " " + nic.Id);
+                        Send_Log_Msg(0, LogMsg.Priority.Debug, "XOkey interface: " + nic.Description + " " + nic.Id);
                     }
                     foreach (UnicastIPAddressInformation uni in uniCast)
                     {
@@ -2176,22 +2176,22 @@ namespace EK_App.Mvvm
 
                 if (Exokey_Interface == null)
                 {
-                    Send_Log_Msg(0, LogMsg.Priority.Critical, "ExoKey interface not found.  "
+                    Send_Log_Msg(0, LogMsg.Priority.Critical, "XOkey interface not found.  "
                         + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
-                        + " If the problem persists after retrying, look for the ExoKey Device in the device manager.");
+                        + " If the problem persists after retrying, look for the XOkey Device in the device manager.");
 
                     InvokeExecuteJavaScript("$('#status_network_interfacees_msg').html('"
                         + "<div class=\\'alert alert-danger\\' role=\\'alert\\'>"
-                        + "ExoKey interface not found.  "
+                        + "XOkey interface not found.  "
                         + " If this is the 1st time, please wait and ensure Windows has completed the driver install. Try rebooting your PC. "
-                        + " If the problem persists after retrying, look for the ExoKey Device in the device manager as a Network Adapter."
+                        + " If the problem persists after retrying, look for the XOkey Device in the device manager as a Network Adapter."
                         + "</div>');");
 
                 /*    InvokeExecuteJavaScript(@"$('#status_network_interfacees_msg').html('
 <div class=""alert alert-danger"" role=""alert"">
- Exokey interface not found.  
+ XOkey interface not found.  
  If this is the 1st time, please wait and ensure Windows has completed the driver install. 
- If the problem persists after retrying, look for the ExoKey Device in the device manager.
+ If the problem persists after retrying, look for the XOkey Device in the device manager.
 </div>
 ');");*/
                     return;
@@ -2247,7 +2247,7 @@ Invalid Configuration.
             }
             try
             {
-               // setIP("ExoKey", "192.168.255.2", "255.255.255.252");
+               // setIP("XOkey", "192.168.255.2", "255.255.255.252");
             }
             catch {
 

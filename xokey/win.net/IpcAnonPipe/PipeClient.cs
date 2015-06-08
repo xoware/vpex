@@ -12,7 +12,7 @@ namespace Xoware.IpcAnonPipe
 
     public class PipeClient
     {
-        public static readonly string PIPE_HANDLE = "ExoKey";
+        public static readonly string PIPE_HANDLE = "XOkey";
 
 
         public static void Send_Msg(string Mesg)

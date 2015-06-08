@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EK_App</RootNamespace>
-    <AssemblyName>EK_App</AssemblyName>
+    <AssemblyName>XOkey_App</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -345,7 +345,7 @@
     <Error Condition="!Exists('..\packages\cef.redist.3.1650.1562-pre3\build\cef.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.3.1650.1562-pre3\build\cef.redist.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"
+    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"
 copy /Y  "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\*.dll"   "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
