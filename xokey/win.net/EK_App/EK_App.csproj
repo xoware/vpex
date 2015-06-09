@@ -166,7 +166,7 @@
     <Compile Include="Mvvm\McastHeartBeatData.cs" />
     <Compile Include="Mvvm\DelegateCommand.cs" />
     <Compile Include="Mvvm\DelegateCommandT.cs" />
-    <Compile Include="Mvvm\ExoKey.cs" />
+    <Compile Include="Mvvm\XOkey.cs" />
     <Compile Include="Mvvm\LogMsg.cs" />
     <Compile Include="Mvvm\NetShare.cs" />
     <Compile Include="Mvvm\ViewModelBase.cs" />

@@ -153,7 +153,7 @@ namespace EK_App
                 
 
                 //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
-                tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+                tb = (TaskbarIcon)FindResource("XOkeyNotifyIcon");
 
                 if (tb == null)
                     return;
@@ -242,11 +242,11 @@ namespace EK_App
                 App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
                 Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
                 { Application.Current.Shutdown(0); }));
-                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
+                System.Windows.MessageBox.Show("The XOkey App is already running please check the system tray");
                 return;
 
             }
-            Xoware.NetUtil.DNS.Remove_ExoKey_DNS(); // Now disconneced at startup
+            Xoware.NetUtil.DNS.Remove_XOkey_DNS(); // Now disconneced at startup
 
             this.StartupUri = new System.Uri("MainWindow.xaml", System.UriKind.Relative);
             NetworkChange.NetworkAddressChanged += new
@@ -281,7 +281,7 @@ namespace EK_App
                 else if (n.OperationalStatus == OperationalStatus.Down
                  && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
-                    App.Log("ExoKey Down");
+                    App.Log("XOkey Down");
                 }
 
             }

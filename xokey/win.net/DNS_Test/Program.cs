@@ -22,8 +22,8 @@ namespace DNS_Test
                 return;
             }
 
-            if (args[0].ToUpper().Contains("RMEXOKEY"))
-                Xoware.NetUtil.DNS.Remove_ExoKey_DNS();
+            if (args[0].ToUpper().Contains("RMXOkey"))
+                Xoware.NetUtil.DNS.Remove_XOkey_DNS();
 
 
             Xoware.NetUtil.DNS_Config dns_cfg = Xoware.NetUtil.DNS.Get_DNS_Config(args[0]);

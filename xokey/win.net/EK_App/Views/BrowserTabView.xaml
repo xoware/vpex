@@ -159,7 +159,7 @@
                             <VisualBrush.Visual>
                                 <StackPanel>
                                     <TextBlock Margin="6,12"
-                                               FontWeight="Bold">x.o.ware ExoKey!</TextBlock>
+                                               FontWeight="Bold">x.o.ware XOkey!</TextBlock>
                                 </StackPanel>
                             </VisualBrush.Visual>
                             <VisualBrush.Transform>

@@ -72,7 +72,7 @@ namespace EK_App
             CreateNewTab(CefExample.DefaultUrl, App.Debug, App.Debug);
 
             if (Globals.ek == null)
-                Globals.ek = new ExoKey(null, BrowserTabs[0]);
+                Globals.ek = new XOkey(null, BrowserTabs[0]);
             else
             {
                 // reasign browser to EK thread and restart detection
@@ -107,7 +107,7 @@ namespace EK_App
                 Globals.ek.Force_Restart_Detction = true;
                 Globals.ek.Browser = null;  // detach browser from running EK thread
             }
-            Xoware.NetUtil.DNS.Remove_ExoKey_DNS(); // Now disconneced
+            Xoware.NetUtil.DNS.Remove_XOkey_DNS(); // Now disconneced
             //Hide Window
             Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
             {

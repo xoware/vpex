@@ -323,7 +323,7 @@ namespace EK_App.ViewModels
             try
             {
                 Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-                dlg.FileName = "ExoKey_App_Log"; // Default file name
+                dlg.FileName = "XOkey_App_Log"; // Default file name
                 dlg.DefaultExt = ".txt"; // Default file extension
                 dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
 

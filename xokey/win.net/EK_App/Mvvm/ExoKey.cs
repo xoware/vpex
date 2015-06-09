@@ -111,12 +111,12 @@ namespace EK_App.Mvvm
     }
 
 
-    public class ExoKey : IDisposable
+    public class XOkey : IDisposable
     {
         const int MCast_Port = 1500;
         const int SysLog_MCast_Port = 514;
-        IPAddress ExoKey_Multicast_Address = IPAddress.Parse("239.255.255.255");
-        IPAddress ExoKey_SysLogMcast_Address = IPAddress.Parse("239.255.255.254");
+        IPAddress XOkey_Multicast_Address = IPAddress.Parse("239.255.255.255");
+        IPAddress XOkey_SysLogMcast_Address = IPAddress.Parse("239.255.255.254");
         private String Last_SysLog_Msg = "";  // to avoid repeats
         public event Log_Msg_Handler Log_Msg_Send_Event = null;
         public event EK_IP_Address_Detected_Handler EK_IP_Address_Detected = null;
@@ -141,12 +141,12 @@ namespace EK_App.Mvvm
         public int EK_Intf_Down_Count = 0;
         private int Ping_Error_Count = 0;
  //       bool Check_State_Timer_Running = false;
-        NetworkInterface Exokey_Interface = null;
+        NetworkInterface XOkey_Interface = null;
         NetworkInterface Internet_Interface = null;
         bool Keep_Running = true;
         bool Dependency_Services_Running = false;
         bool USB_Dev_ID_Found = false;
-        bool ExoKey_Driver_Found = false;
+        bool XOkey_Driver_Found = false;
         bool ICS_Configured = false;
         bool Network_Interfaces_OK = false;
         bool Has_Internet_Access = false;
@@ -155,7 +155,7 @@ namespace EK_App.Mvvm
         public EK_App.ViewModels.BrowserTabViewModel Browser = null;
         public bool Force_Restart_Detction = false;
 
-        public ExoKey(Log_Msg_Handler Log_Event_Handler = null, EK_App.ViewModels.BrowserTabViewModel wb = null)
+        public XOkey(Log_Msg_Handler Log_Event_Handler = null, EK_App.ViewModels.BrowserTabViewModel wb = null)
         {
             if (Log_Event_Handler != null)
                 Log_Msg_Send_Event += Log_Event_Handler;
@@ -289,7 +289,7 @@ namespace EK_App.Mvvm
                     Send_Log_Msg(String.Format("{0,-35} {1,-40}", "Started", WmiObject["Started"]));// String
                     if (WmiObject["DeviceName"] != null && WmiObject["DriverVersion"] != null
                        && WmiObject["DeviceName"].ToString().Length > 4 && WmiObject["DriverVersion"].ToString().Length > 3)
-                       ExoKey_Driver_Found = true;
+                       XOkey_Driver_Found = true;
                 }
             }
             catch (Exception e)
@@ -476,7 +476,7 @@ namespace EK_App.Mvvm
                 if (Force_Restart_Detction)
                     Restart_Detection();
 
-                if (!USB_Dev_ID_Found || !ExoKey_Driver_Found)
+                if (!USB_Dev_ID_Found || !XOkey_Driver_Found)
                 {
 //                    InvokeExecuteJavaScript("$('#status_usb_hw_detected').attr('class', 'label label-primary');"
 //                        + "$('#status_usb_hw_detected').text('Checking');");
@@ -497,7 +497,7 @@ namespace EK_App.Mvvm
                        + "</div>');");
                 }
 
-                if (!ExoKey_Driver_Found) {
+                if (!XOkey_Driver_Found) {
                     InvokeExecuteJavaScript("$('#status_driver').attr('class', 'label label-warning');"
                         + "$('#status_driver').text('Not Found');");
                     InvokeExecuteJavaScript("$('#status_driver_msg').html('"
@@ -518,14 +518,14 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('');");
                 }
 
-                if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ExoKey_Driver_Found)
+                if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && XOkey_Driver_Found)
                 {
                     InvokeExecuteJavaScript("$('#status_driver').attr('class', 'label label-success');"
                         + "$('#status_driver').text('OK');");
                     InvokeExecuteJavaScript("$('#status_driver_msg').html('');");
                 }
 
-                if (!USB_Dev_ID_Found || !ExoKey_Driver_Found)
+                if (!USB_Dev_ID_Found || !XOkey_Driver_Found)
                 {
                     goto next_loop;
                 }
@@ -564,7 +564,7 @@ namespace EK_App.Mvvm
                           + "$('#status_internet_connectity').text('OK');");
 
                         // set EK NS
-                        SetNameservers("ExoKey", "8.8.8.8,8.8.4.4");
+                        SetNameservers("XOkey", "8.8.8.8,8.8.4.4");
                     }
                 }
 
@@ -704,7 +704,7 @@ namespace EK_App.Mvvm
                     }
                 } else 
                 {
-                    Xoware.NetUtil.DNS.Remove_ExoKey_DNS();
+                    Xoware.NetUtil.DNS.Remove_XOkey_DNS();
                 }
             }
         }
@@ -749,7 +749,7 @@ namespace EK_App.Mvvm
                 Check_State_Timer.Start();
                 StartMultiCastReciever();
                 DisplayDnsAddresses();
-                SetNameservers("ExoKey", "8.8.8.8,8.8.4.4");
+                SetNameservers("XOkey", "8.8.8.8,8.8.4.4");
             }
             catch (Exception ex)
             {
@@ -1082,10 +1082,10 @@ namespace EK_App.Mvvm
             McastHeartBeatData announce_data = new McastHeartBeatData();
             UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
 
-            IPEndPoint Remote_EP = new IPEndPoint(ExoKey_Multicast_Address, MCast_Port);
+            IPEndPoint Remote_EP = new IPEndPoint(XOkey_Multicast_Address, MCast_Port);
             Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
-            Mcast_UDP_Client.JoinMulticastGroup(ExoKey_Multicast_Address, Local_IP);
+            Mcast_UDP_Client.JoinMulticastGroup(XOkey_Multicast_Address, Local_IP);
             Mcast_UDP_Client.Ttl = 1;
 
 
@@ -1116,10 +1116,10 @@ namespace EK_App.Mvvm
                 Send_MCast_Announce_Msg(Local_IP);
                 UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
 
-                IPEndPoint Remote_EP = new IPEndPoint(ExoKey_Multicast_Address, MCast_Port);
+                IPEndPoint Remote_EP = new IPEndPoint(XOkey_Multicast_Address, MCast_Port);
                 Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, MCast_Port));
-                Mcast_UDP_Client.JoinMulticastGroup(ExoKey_Multicast_Address, Local_IP);
+                Mcast_UDP_Client.JoinMulticastGroup(XOkey_Multicast_Address, Local_IP);
                 Mcast_UDP_Client.Ttl = 1;
 
 
@@ -1148,10 +1148,10 @@ namespace EK_App.Mvvm
                 Send_MCast_Announce_Msg(Local_IP);
                 UdpClient Mcast_UDP_Client = new UdpClient(AddressFamily.InterNetwork);
 
-                IPEndPoint Remote_EP = new IPEndPoint(ExoKey_SysLogMcast_Address, SysLog_MCast_Port);
+                IPEndPoint Remote_EP = new IPEndPoint(XOkey_SysLogMcast_Address, SysLog_MCast_Port);
                 Mcast_UDP_Client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Mcast_UDP_Client.Client.Bind(new IPEndPoint(Local_IP, SysLog_MCast_Port));
-                Mcast_UDP_Client.JoinMulticastGroup(ExoKey_SysLogMcast_Address, Local_IP);
+                Mcast_UDP_Client.JoinMulticastGroup(XOkey_SysLogMcast_Address, Local_IP);
 
 
                 UdpState state = new UdpState();
@@ -1224,7 +1224,7 @@ namespace EK_App.Mvvm
             Internet_Interface = null;
             Server_IPEndPoint = null;
             USB_Dev_ID_Found = false;
-            ExoKey_Driver_Found = false;
+            XOkey_Driver_Found = false;
             InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
 
         }
@@ -1274,9 +1274,9 @@ namespace EK_App.Mvvm
                 Restart_Detection();
 
             // EK must have been removed
-            if (Exokey_Interface != null && EK_Interface == null)
+            if (XOkey_Interface != null && EK_Interface == null)
             {
-                Exokey_Interface = null;
+                XOkey_Interface = null;
                 Send_Log_Msg(1, LogMsg.Priority.Debug, "XOkey Interface down");
                 Restart_Detection();
                 Set_EK_State(XOkeyState.XOkeyState_Unplugged);
@@ -1419,7 +1419,7 @@ namespace EK_App.Mvvm
   if (jqxhr && jqxhr.status)
     console.log('status code' +  jqxhr.status);
   else
-    console.log('ExoKeyStatus=NotReachable');
+    console.log('XOkeyStatus=NotReachable');
 
   
 });");
@@ -2126,7 +2126,7 @@ namespace EK_App.Mvvm
                 Interface_List = new List<NetworkInterface>();
 
 
-                Exokey_Interface = null; // init
+                XOkey_Interface = null; // init
                 Internet_Interface = null;
                 int i = 0;
                 NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
@@ -2155,7 +2155,7 @@ namespace EK_App.Mvvm
                     Send_Log_Msg(0, LogMsg.Priority.Debug, "interface: " + nic.Name + "  Desc: " + nic.Description + " Status:" + nic.OperationalStatus.ToString());
                     if (nic.Description.Contains("XoWare") || nic.Description.Contains("x.o.ware"))
                     {
-                        Exokey_Interface = nic;
+                        XOkey_Interface = nic;
                         Send_Log_Msg(0, LogMsg.Priority.Debug, "XOkey interface: " + nic.Description + " " + nic.Id);
                     }
                     foreach (UnicastIPAddressInformation uni in uniCast)
@@ -2174,7 +2174,7 @@ namespace EK_App.Mvvm
                 Send_Log_Msg(0, LogMsg.Priority.Debug, "Checking services");
 
 
-                if (Exokey_Interface == null)
+                if (XOkey_Interface == null)
                 {
                     Send_Log_Msg(0, LogMsg.Priority.Critical, "XOkey interface not found.  "
                         + " If this is the 1st time, please wait and ensure Windows has completed the driver install. "
@@ -2205,9 +2205,9 @@ namespace EK_App.Mvvm
 + "</div>');");
                     return;
                 }
-                else if (Internet_Interface.Equals(Exokey_Interface))
+                else if (Internet_Interface.Equals(XOkey_Interface))
                 {
-                    Send_Log_Msg(0, LogMsg.Priority.Critical, "Exokey Is internet interface.  Invalid configuration.");
+                    Send_Log_Msg(0, LogMsg.Priority.Critical, "XOkey Is internet interface.  Invalid configuration.");
                     Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 192.168.255.1");
                     Run_Route_Cmd("DELETE 128.0.0.0 MASK 128.0.0.0 192.168.255.1");
                     Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 192.168.137.2");
@@ -2256,11 +2256,11 @@ Invalid Configuration.
 
             try
             {
-                EnableICS(Internet_Interface.Id, Exokey_Interface.Id, true);
+                EnableICS(Internet_Interface.Id, XOkey_Interface.Id, true);
 
                 
                 // Internet_Interface
-                //  IcsManager.ShareConnection(Internet_Interface as NETCONLib.INetConnection, Exokey_Interface as NETCONLib.INetConnection);
+                //  IcsManager.ShareConnection(Internet_Interface as NETCONLib.INetConnection, XOkey_Interface as NETCONLib.INetConnection);
             }
             catch (Exception ex)
             {

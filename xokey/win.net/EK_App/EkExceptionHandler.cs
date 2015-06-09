@@ -63,7 +63,7 @@ namespace EK_App
                 if (result == MessageBoxResult.OK)
                     Send_Exception((Exception)e.ExceptionObject);
 
-                Xoware.NetUtil.DNS.Remove_ExoKey_DNS(); 
+                Xoware.NetUtil.DNS.Remove_XOkey_DNS(); 
             }
             catch (Exception send_ex)
             {
@@ -127,7 +127,7 @@ namespace EK_App
                 if (result == MessageBoxResult.OK)
                     Send_Exception((Exception)e.Exception);
 
-                Xoware.NetUtil.DNS.Remove_ExoKey_DNS();
+                Xoware.NetUtil.DNS.Remove_XOkey_DNS();
             }
             catch (Exception send_ex)
             {

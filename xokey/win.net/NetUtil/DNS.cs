@@ -58,7 +58,7 @@ namespace Xoware.NetUtil
             return cfg;
         }
 
-        public static void Remove_ExoKey_DNS()
+        public static void Remove_XOkey_DNS()
         {
 
             using (var networkConfigMng = new System.Management.ManagementClass("Win32_NetworkAdapterConfiguration"))

@@ -7,6 +7,6 @@ namespace EK_App
 {
     public static class Globals
     {
-        public static EK_App.Mvvm.ExoKey ek = null;
+        public static EK_App.Mvvm.XOkey ek = null;
     }
 }
