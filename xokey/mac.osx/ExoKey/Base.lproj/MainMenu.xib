@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7531" systemVersion="14D131" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="6254"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7531"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="7531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -26,11 +26,11 @@
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
             <items>
-                <menuItem title="ExoKey" id="1Xt-HY-uBw">
+                <menuItem title="XOkey" id="1Xt-HY-uBw">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="ExoKey" systemMenu="apple" id="uQy-DD-JDr">
+                    <menu key="submenu" title="XOkey" systemMenu="apple" id="uQy-DD-JDr">
                         <items>
-                            <menuItem title="About ExoKey" id="5kV-Vb-QxS">
+                            <menuItem title="About XOkey" id="5kV-Vb-QxS">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-1" id="Exp-CZ-Vem"/>
@@ -44,7 +44,7 @@
                                 <menu key="submenu" title="Services" systemMenu="services" id="hz9-B4-Xy5"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="4je-JR-u6R"/>
-                            <menuItem title="Hide ExoKey" keyEquivalent="h" id="Olw-nP-bQN">
+                            <menuItem title="Hide XOkey" keyEquivalent="h" id="Olw-nP-bQN">
                                 <connections>
                                     <action selector="hide:" target="-1" id="PnN-Uc-m68"/>
                                 </connections>
@@ -62,7 +62,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
-                            <menuItem title="Quit ExoKey" keyEquivalent="q" id="4sb-4s-VLi">
+                            <menuItem title="Quit XOkey" keyEquivalent="q" id="4sb-4s-VLi">
                                 <connections>
                                     <action selector="terminate:" target="-1" id="Te7-pn-YzF"/>
                                 </connections>
@@ -99,7 +99,7 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                         <items>
-                            <menuItem title="ExoKey Help" keyEquivalent="?" id="FKE-Sm-Kum">
+                            <menuItem title="XOkey Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                 <connections>
                                     <action selector="showHelp:" target="-1" id="y7X-2Q-9no"/>
                                     <outlet property="view" destination="wqT-Fl-vpC" id="XqW-A7-yiu"/>
@@ -110,7 +110,7 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="ExoKey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
+        <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="868" height="627"/>
@@ -137,7 +137,7 @@
                     </webView>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="lml-7s-bFq">
                         <rect key="frame" x="361" y="598" width="148" height="18"/>
-                        <buttonCell key="cell" type="radio" title="ExoKey Plugged In" bezelStyle="regularSquare" imagePosition="left" alignment="center" enabled="NO" inset="2" id="0tT-wF-9t4">
+                        <buttonCell key="cell" type="radio" title="XOkey Plugged In" bezelStyle="regularSquare" imagePosition="left" alignment="center" enabled="NO" inset="2" id="0tT-wF-9t4">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -159,7 +159,7 @@
                 </constraints>
             </view>
         </window>
-        <window title="ExoKey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="ShR-Po-JT5" customClass="NSPanel">
+        <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="ShR-Po-JT5" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="139" y="81" width="555" height="287"/>
@@ -170,7 +170,7 @@
                 <subviews>
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dGf-At-6QJ">
                         <rect key="frame" x="101" y="64" width="352" height="68"/>
-                        <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="ExoKey not detected. If the device is plugged in, please wait while the application searches for and configures the device." id="sLX-4t-0jk">
+                        <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="XOkey not detected. If the device is plugged in, please wait while the application searches for and configures the device." id="sLX-4t-0jk">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -244,6 +244,6 @@
         </window>
     </objects>
     <resources>
-        <image name="xo_ware_top_banner" width="516" height="107.51999664306641"/>
+        <image name="xo_ware_top_banner" width="419" height="86.400001525878906"/>
     </resources>
 </document>

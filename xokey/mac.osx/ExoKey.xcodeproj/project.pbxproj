@@ -64,7 +64,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CE2EBF53191BE7E3007FACFB /* ExoKey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExoKey.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE2EBF53191BE7E3007FACFB /* XOkey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XOkey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE2EBF56191BE7E3007FACFB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		CE2EBF59191BE7E3007FACFB /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		CE2EBF5A191BE7E3007FACFB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -142,7 +142,7 @@
 		CE2EBF54191BE7E3007FACFB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CE2EBF53191BE7E3007FACFB /* ExoKey.app */,
+				CE2EBF53191BE7E3007FACFB /* XOkey.app */,
 				CEAFB9DC192E6FD6001EAE12 /* ExoKey.NetworkConfigTool */,
 			);
 			name = Products;
@@ -258,9 +258,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CE2EBF52191BE7E3007FACFB /* ExoKey */ = {
+		CE2EBF52191BE7E3007FACFB /* XOkey */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CE2EBF84191BE7E3007FACFB /* Build configuration list for PBXNativeTarget "ExoKey" */;
+			buildConfigurationList = CE2EBF84191BE7E3007FACFB /* Build configuration list for PBXNativeTarget "XOkey" */;
 			buildPhases = (
 				CE2EBF4F191BE7E3007FACFB /* Sources */,
 				CE2EBF50191BE7E3007FACFB /* Frameworks */,
@@ -272,9 +272,9 @@
 			dependencies = (
 				CEAFB9ED192E8D76001EAE12 /* PBXTargetDependency */,
 			);
-			name = ExoKey;
+			name = XOkey;
 			productName = ExoKey;
-			productReference = CE2EBF53191BE7E3007FACFB /* ExoKey.app */;
+			productReference = CE2EBF53191BE7E3007FACFB /* XOkey.app */;
 			productType = "com.apple.product-type.application";
 		};
 		CEAFB9DB192E6FD6001EAE12 /* ExoKey_NetworkConfigTool */ = {
@@ -318,7 +318,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CE2EBF52191BE7E3007FACFB /* ExoKey */,
+				CE2EBF52191BE7E3007FACFB /* XOkey */,
 				CEAFB9DB192E6FD6001EAE12 /* ExoKey_NetworkConfigTool */,
 			);
 		};
@@ -428,7 +428,7 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "ExoKey on Mac";
+				CODE_SIGN_IDENTITY = "x.o.ware, Inc";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -467,7 +467,7 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "ExoKey on Mac";
+				CODE_SIGN_IDENTITY = "x.o.ware, Inc";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -513,7 +513,7 @@
 		CEAFB9E5192E6FD6001EAE12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "ExoKey on Mac";
+				CODE_SIGN_IDENTITY = "x.o.ware, Inc";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ExoKey_NetworkConfigTool/ExoKey_NetworkConfigTool-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -537,7 +537,7 @@
 		CEAFB9E6192E6FD6001EAE12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "ExoKey on Mac";
+				CODE_SIGN_IDENTITY = "x.o.ware, Inc";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ExoKey_NetworkConfigTool/ExoKey_NetworkConfigTool-Prefix.pch";
 				OTHER_LDFLAGS = (
@@ -564,16 +564,16 @@
 				CE2EBF83191BE7E3007FACFB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		CE2EBF84191BE7E3007FACFB /* Build configuration list for PBXNativeTarget "ExoKey" */ = {
+		CE2EBF84191BE7E3007FACFB /* Build configuration list for PBXNativeTarget "XOkey" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CE2EBF85191BE7E3007FACFB /* Debug */,
 				CE2EBF86191BE7E3007FACFB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		CEAFB9E7192E6FD6001EAE12 /* Build configuration list for PBXNativeTarget "ExoKey_NetworkConfigTool" */ = {
 			isa = XCConfigurationList;
@@ -582,7 +582,7 @@
 				CEAFB9E6192E6FD6001EAE12 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
