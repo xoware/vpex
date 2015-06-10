@@ -92,6 +92,7 @@ namespace EK_App.ViewModels
         public ICommand HomeCommand { get; set; }
         public ICommand ExecuteJavaScriptCommand { get; set; }
         public ICommand EvaluateJavaScriptCommand { get; set; }
+        public ICommand SaveLogCommand { get; set; }
         int Retries = 0;
         private string Old_Url = "";
 
@@ -109,6 +110,7 @@ namespace EK_App.ViewModels
             AddressEditable = Address;
 
             GoCommand = new DelegateCommand(Go, () => !String.IsNullOrWhiteSpace(Address));
+            SaveLogCommand = new DelegateCommand(SaveLog, () => true);
             HomeCommand = new DelegateCommand(() => AddressEditable = Address = CefExample.DefaultUrl);
             ExecuteJavaScriptCommand = new DelegateCommand<string>(ExecuteJavaScript, s => !String.IsNullOrWhiteSpace(s));
             EvaluateJavaScriptCommand = new DelegateCommand<string>(EvaluateJavaScript, s => !String.IsNullOrWhiteSpace(s));
@@ -137,25 +139,31 @@ namespace EK_App.ViewModels
         {
             try
             {
+                if (Application.Current == null || Application.Current.MainWindow == null)
+                    return;
+
+          //      if (Application.Current.MainWindow.Visibility == Visibility.Visible)
                 webBrowser.ExecuteScriptAsync(s);
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (App.Debug)
+                    MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                else
+                    App.Log("Error while executing Javascript: " + e.Message);
             }
         }
         public void InvokeExecuteJavaScript(string s)
         {
             try
             {
-                /*
-                Application.Current.Dispatcher(
-                    System.Windows.Threading.DispatcherPriority.Background,
-                    new Str_Msg_Handler(ExecuteJavaScript), s); */
 
-                ExecuteJavaScript(s);
-//                Str_Msg_Handler callback = new Str_Msg_Handler(ExecuteJavaScript);
-  //              this.Invoke(callback, new object[] { s });
+                Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+                { ExecuteJavaScript(s); }));
+
+  //              ExecuteJavaScript(s);
+         //       Str_Msg_Handler callback = new Str_Msg_Handler(ExecuteJavaScript);
+             //   this.Invoke(callback, new object[] { s });
 
             }
             catch (Exception e)
@@ -209,7 +217,10 @@ namespace EK_App.ViewModels
             if (ShowConsoleMessage)
                 OutputMessage = e.Message;
             Console.WriteLine(e.Message);
-            Console_Message_Event(e.Message);
+
+            if (Console_Message_Event != null && Globals.ek.Browser != null)
+                Console_Message_Event(e.Message);
+
             if (App.Web_Console_Log_File != null)
             {
                 try
@@ -253,6 +264,96 @@ namespace EK_App.ViewModels
             }
             Retries++;
             ExecuteJavaScript("document.location.href='" + args.FailedUrl + "'");
+
+        }
+
+        private String Get_Route_Debug()
+        {
+            System.Text.StringBuilder std_out = new System.Text.StringBuilder();
+            // Start the child process.
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            // Redirect the output stream of the child process.
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "route.exe";
+            p.StartInfo.Arguments = "PRINT";
+
+            p.Start();
+            while (!p.HasExited)
+            {
+                std_out.Append(p.StandardOutput.ReadToEnd());
+            }
+
+      
+            p.WaitForExit();
+
+            p.Close();
+
+            return std_out.ToString();    
+        }
+
+        private String Get_If_Debug()
+        {
+            System.Text.StringBuilder std_out = new System.Text.StringBuilder();
+            // Start the child process.
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            // Redirect the output stream of the child process.
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "ipconfig.exe";
+            p.StartInfo.Arguments = "/all";
+
+            p.Start();
+            while (!p.HasExited)
+            {
+                std_out.Append(p.StandardOutput.ReadToEnd());
+            }
+
+
+            p.WaitForExit();
+
+            p.Close();
+
+            return std_out.ToString();
+        }
+
+        private void SaveLog()
+        {
+            Console.WriteLine("Saving Log");
+            try
+            {
+                Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+                dlg.FileName = "XOkey_App_Log"; // Default file name
+                dlg.DefaultExt = ".txt"; // Default file extension
+                dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
+
+                // Show save file dialog box
+                Nullable<bool> result = dlg.ShowDialog();
+
+                // Process save file dialog box results
+                if (result == true)
+                {
+                    // Save document
+                    System.IO.File.Copy(App.Web_Console_Log_File, dlg.FileName, true);
+                    string Route_Str = Get_Route_Debug();
+                    string Interface_Str = Get_If_Debug();
+                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(dlg.FileName))
+                    {
+                        sw.WriteLine("");
+                        sw.WriteLine("");
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : Routes");
+                        sw.WriteLine(Route_Str);
+                        sw.WriteLine("");
+                        sw.WriteLine("");
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : Interfaces");
+                        sw.WriteLine(Interface_Str);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                App.Log("Error saving log: " + ex.Message);
+            }
 
         }
 

@@ -25,14 +25,14 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PreBuildEvent>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x86
-"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x64
-signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode "$(ProjectDir)\x64\exokeyx64.cat"
-signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(ProjectDir)\x86\exokeyx86.cat"</PreBuildEvent>
+    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
+"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\driver-install.msi"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
-"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\driver-install.msi"</PostBuildEvent>
+    <PreBuildEvent>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x86
+"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x64
+signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode "$(ProjectDir)\x64\xokeyx64.cat"
+signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(ProjectDir)\x86\xokeyx86.cat"</PreBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

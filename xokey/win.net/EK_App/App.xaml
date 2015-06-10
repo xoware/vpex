@@ -3,11 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:EK_App.Controls"
              xmlns:view="clr-namespace:EK_App.Views"
-             xmlns:viewModel="clr-namespace:EK_App.ViewModels"
-             StartupUri="MainWindow.xaml"
+             xmlns:viewModel="clr-namespace:EK_App.ViewModels"         
              ShutdownMode="OnExplicitShutdown"
              Startup="App_Startup"
+             Exit="Application_Exit"
              >
+    <!-- StartupUri="MainWindow.xaml"  -->
     <Application.Resources>
         <!-- merge NotifyIcon and related stuff into the application-->
         <ResourceDictionary>

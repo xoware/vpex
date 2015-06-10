@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="ExoKey_Host_Application" Language="1033" Version="!(bind.FileVersion.$(var.EK_App.TargetFileName))" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
+	<Product Id="*" Name="XOkey_Host_Application" Language="1033" Version="!(bind.FileVersion.$(var.EK_App.TargetFileName))" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"  InstallPrivileges="elevated" />
 
 
@@ -24,7 +24,7 @@
 -->
 
 
-    <Feature Id="ProductFeature" Title="ExoKey Host Application Setup" Level="1">
+    <Feature Id="ProductFeature" Title="XOkey Host Application Setup" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="localesComponent" />
       <ComponentGroupRef Id="ResourceComponent" />  
@@ -46,13 +46,13 @@
 
        <ScheduleReboot After="InstallFinalize"/>
      </InstallExecuteSequence>
-   <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B EK_App.exe&quot;' Return='asyncNoWait' /> 
- <!--   <CustomAction Id='DeleteStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /delete /F /TN ExoKey ;' Return='ignore' />
+   <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
+ <!--   <CustomAction Id='DeleteStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /delete /F /TN XOkey ;' Return='ignore' />
 
- <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER'   ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B EK_App.exe&quot;' Return='asyncNoWait' /> 
+ <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER'   ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
 
- <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /tr  &quot;\&quot;[INSTALLFOLDER]EK_App.exe&quot;\&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />  
- <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn ExoKey /rl highest /TR &quot;[SystemFolder]calc.exe&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />
+ <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn XOkey /rl highest /tr  &quot;\&quot;[INSTALLFOLDER]XOkey_App.exe&quot;\&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />  
+ <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn XOkey /rl highest /TR &quot;[SystemFolder]calc.exe&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />
 -->
 	</Product>
 
@@ -70,10 +70,10 @@
       <Directory Id="DesktopFolder" Name="Desktop" />
 
       <Directory Id="ProgramMenuFolder" Name="Programs">
-        <Directory Id="ApplicationProgramsFolder" Name="ExoKey">
+        <Directory Id="ApplicationProgramsFolder" Name="XOkey">
           <Component Id="ProgramMenuDir" Guid="{3D998B2D-77FC-4483-8223-30F89E7D7A51}">
             <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
-            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\ExoKey"
+            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\XOkey"
                            Type="integer" Value="1" Name="installed" KeyPath="yes" />
           </Component>
         </Directory>
@@ -88,15 +88,15 @@
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-      <Component Id="EK_App.exe" Guid="{B6AD8A3B-ADAE-4C93-8DF2-12B489E22D8A}">
+      <Component Id="XOkey_App.exe" Guid="{B6AD8A3B-ADAE-4C93-8DF2-12B489E22D8A}">
         <File Source="$(var.EK_App.TargetPath)"  />
         <Shortcut Id="desktopShortcut" Advertise="yes" Directory="DesktopFolder"
-                    Name="ExoKey" WorkingDirectory="INSTALLFOLDER"
+                    Name="XOkey" WorkingDirectory="INSTALLFOLDER"
                     Icon="icon1.exe" IconIndex="0">
           <Icon Id="icon1.exe" SourceFile="$(var.EK_App.TargetPath)" />
         </Shortcut>
         <Shortcut Id="startMenuShotcut" Directory="ApplicationProgramsFolder"
-                  Name="Exokey" WorkingDirectory="INSTALLFOLDER"
+                  Name="XOkey" WorkingDirectory="INSTALLFOLDER"
                   Icon="icon2.exe" IconIndex="0" Advertise="yes">
             <Icon Id="icon2.exe" SourceFile="$(var.EK_App.TargetPath)" />
         </Shortcut>
@@ -128,6 +128,9 @@
       <Component Id="icudt" Guid="*">
           <File Source="$(var.EK_App.TargetDir)\icudt.dll" />
       </Component>
+      <Component Id="IpcAnonPipeDll" Guid="*">      
+         <File Source="$(var.EK_App.TargetDir)/IpcAnonPipe.dll" />
+      </Component>
       <Component Id="libcef" Guid="*">
           <File Source="$(var.EK_App.TargetDir)\libcef.dll" />
       </Component>
@@ -144,6 +147,9 @@
       <Component Id="msvcr120" Guid="*">
         <File Source="$(var.EK_App.TargetDir)\msvcr120.dll" />
       </Component>
+      <Component Id="NetUtil" Guid="*">      
+         <File Source="$(var.EK_App.TargetDir)/NetUtil.dll" />
+      </Component>
       <Component Id="RoutingDll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/Routing.dll" />
       </Component>
@@ -159,7 +165,7 @@
       </Component>
 
       <Component Id="config" Guid="*">
-          <File Source="$(var.EK_App.TargetDir)\EK_App.exe.config" />
+          <File Source="$(var.EK_App.TargetDir)\XOkey_App.exe.config" />
       </Component>
       -->
 		</ComponentGroup>
@@ -168,6 +174,21 @@
     <ComponentGroup Id="ResourceComponent" Directory="ResourcesFolder">
       <Component Id="LogoTransComponent" Guid="*">
         <File Source="$(var.EK_App.TargetDir)\Resources\logo_transparent.png" />
+      </Component>
+
+      <Component Id="WriteToRegistryGroup" Guid="{F7A8864B-4595-4029-B4CF-46DDB77D44BE}">
+        <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
+        <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\GroupPolicy"
+            Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
+      <Component Id="WriteToRegistryLocal" Guid="{B5543560-5327-496D-8283-08993D0DF2BC}">
+        <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
+        <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\Local"
+              Action="createAndRemoveOnUninstall">
+        <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
+        </RegistryKey>
       </Component>
     </ComponentGroup>
   </Fragment>
@@ -182,9 +203,9 @@
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="{053CE9D9-E983-4B76-A963-3BB1B6FD70A1}">
         <Shortcut Id="ApplicationStartMenuShortcut"
-                  Name="ExoKey Host Application"
-                  Description="x.o.ware ExoKey Host Application"
-                  Target="EK_App.exe"
+                  Name="XOkey Host Application"
+                  Description="x.o.ware XOkey Host Application"
+                  Target="XOkey_App.exe"
                   WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
         <RegistryValue Root="HKCU" Key="Software\Xoware\EK_App" Name="installed" Type="integer" Value="1" KeyPath="yes"/>

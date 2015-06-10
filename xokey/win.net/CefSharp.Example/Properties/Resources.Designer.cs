@@ -324,7 +324,7 @@ namespace CefSharp.Example.Properties {
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
         ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
         ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;title&gt; Starting &amp;middot; ExoKey &lt;/title&gt;
+        ///    &lt;title&gt; Starting &amp;middot; XOkey &lt;/title&gt;
         ///    &lt;!-- Bootstrap core CSS --&gt;
         ///    &lt;link href=&quot;bootstrap/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
         ///    &lt;!-- Page-specific extras --&gt;
@@ -400,7 +400,7 @@ namespace CefSharp.Example.Properties {
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
         ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
         ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;title&gt; Starting &amp;middot; ExoKey &lt;/title&gt;
+        ///    &lt;title&gt; Starting &amp;middot; XOkey &lt;/title&gt;
         ///    &lt;!-- Bootstrap core CSS --&gt;
         ///    &lt;link href=&quot;bootstrap/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
         ///    &lt;!-- Page-specific extras --&gt;

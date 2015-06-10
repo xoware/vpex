@@ -11,6 +11,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using Hardcodet.Wpf.TaskbarNotification;
+using System.ComponentModel; // background worker
 
 namespace EK_App
 {
@@ -23,9 +24,12 @@ namespace EK_App
         public static bool Debug = false;
 
         string Cef_LogFile = null;
-        public static string Web_Console_Log_File = null;
+        public static string Web_Console_Log_File = Environment.SpecialFolder.LocalApplicationData + "/log.txt";
         private TaskbarIcon tb = null;
         bool EK_Is_Up = false;
+        public static bool Keep_Running = true;
+        private BackgroundWorker pipe_serverserv_bw = new BackgroundWorker();
+      
 
         static void Show_Help(String Name)
         {
@@ -55,9 +59,17 @@ namespace EK_App
                     Console.WriteLine(Message);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine("Could not log to " + App.Web_Console_Log_File);
+                Console.WriteLine("Could not log to " + App.Web_Console_Log_File 
+                    + "  " + ex.Message);
+
+                try {
+                 System.IO.Directory.CreateDirectory(Path.GetDirectoryName(App.Web_Console_Log_File));
+                } catch {
+
+                }
+
             }
         }
 
@@ -95,7 +107,7 @@ namespace EK_App
                             case "--log":
                                 if ((i < n_args) && args[i + 1] != null)
                                 {
-                                    Web_Console_Log_File = args[i + 1];
+                                    App.Web_Console_Log_File = args[i + 1];
                                     i++;
                                 }
                                 else
@@ -108,16 +120,20 @@ namespace EK_App
                         }
                     } // For
 
-                    if (Web_Console_Log_File != null)
-                    {
-                        // Create a file to write to. 
-                        using (StreamWriter sw = File.CreateText(Web_Console_Log_File))
-                        {
-                            sw.WriteLine(DateTime.Now.ToString("s") + " : Startup");
-                        }	
-                    }
+                    
+
+                    
 
                 } // if
+                if (App.Web_Console_Log_File != null)
+                {
+                    System.IO.Directory.CreateDirectory(Environment.SpecialFolder.LocalApplicationData.ToString());
+                    // Create a file to write to. 
+                    using (StreamWriter sw = File.CreateText(Web_Console_Log_File))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("s") + " : Startup");
+                    }
+                }
             } catch (Exception ex)
             {
                 Console.WriteLine("Exception in main: " + ex.Message);
@@ -126,17 +142,31 @@ namespace EK_App
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
 
-            //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
-            tb = (TaskbarIcon)FindResource("ExoKeyNotifyIcon");
+            try
+            {
+                base.OnStartup(e);
+  
 
-            if (tb == null)
-                return;
+                if (!Keep_Running)
+                    return;
+                
+
+                //create the notifyicon (it's a resource declared in NotifyIconResources.xaml
+                tb = (TaskbarIcon)FindResource("XOkeyNotifyIcon");
+
+                if (tb == null)
+                    return;
+
+      
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in OnStartup: " + ex.Message);
+                Console.WriteLine("Exception in OnStartup: " + ex.StackTrace.ToString());
+            }
 
             tb.Visibility = Visibility.Visible;
-
-
         }
         protected override void OnExit(ExitEventArgs e)
         {
@@ -150,12 +180,75 @@ namespace EK_App
                tb.Dispose(); //the icon would clean up automatically, but this is cleaner
             base.OnExit(e);
         }
+
+        private void PipeServerWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                String Data_Read = Xoware.IpcAnonPipe.PipeServer.ExecServer();
+
+                if (Data_Read.Contains("EXIT"))
+                    Keep_Running = false;
+            } catch
+            {
+
+            }
+        }
+
+        private void PipeServerWorker_Completed(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (!Keep_Running)
+                return;
+
+            Raise_Window();
+
+            pipe_serverserv_bw.RunWorkerAsync(); // restart
+        }
+
         void App_Startup(object sender, StartupEventArgs e)
         {
-            App.Log("app startup");
-       
+            App.Log("app startup: " + System.IO.Path.GetFileNameWithoutExtension(
+                System.Reflection.Assembly.GetEntryAssembly().Location));
 
+            
+ 
+            try
+            {
+                Xoware.IpcAnonPipe.PipeClient.Send_Msg("RAISE");
+                App.Log("Already Running.  Raise message sent");
+                Application.Current.Shutdown(0);
+                return;
+            }
+            catch (Exception ex)
+            { 
+                // this is supposed to occur when not already running
+                Console.WriteLine("Exception:\n    {0}", ex.Message);
+            }
 
+            pipe_serverserv_bw.DoWork += PipeServerWorker_DoWork;
+            pipe_serverserv_bw.RunWorkerCompleted += PipeServerWorker_Completed;
+            pipe_serverserv_bw.RunWorkerAsync();
+
+            Console.WriteLine("App: " +System.IO.Path.GetFileNameWithoutExtension(
+                 System.Reflection.Assembly.GetEntryAssembly().Location));
+            Console.WriteLine("App2: " + 
+                 System.Reflection.Assembly.GetEntryAssembly().Location);
+
+            if (System.Diagnostics.Process.GetProcessesByName(
+               System.IO.Path.GetFileNameWithoutExtension(
+               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1) 
+            {
+                Keep_Running = false;
+                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
+                Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+                { Application.Current.Shutdown(0); }));
+                System.Windows.MessageBox.Show("The XOkey App is already running please check the system tray");
+                return;
+
+            }
+            Xoware.NetUtil.DNS.Remove_XOkey_DNS(); // Now disconneced at startup
+
+            this.StartupUri = new System.Uri("MainWindow.xaml", System.UriKind.Relative);
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
             Check_Interfaces();
@@ -188,7 +281,7 @@ namespace EK_App
                 else if (n.OperationalStatus == OperationalStatus.Down
                  && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
                 {
-                    App.Log("ExoKey Down");
+                    App.Log("XOkey Down");
                 }
 
             }
@@ -202,48 +295,50 @@ namespace EK_App
         {
             Check_Interfaces();
         }
-        void Raise_Window()
+        public static void Raise_Window()
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
+            try
             {
-                App.Log("App: RaisingWindow");
-                if (Application.Current.MainWindow == null)
+                System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
                 {
-                    if (Globals.ek == null)
+                    App.Log("App: RaisingWindow");
+                    if (Application.Current.MainWindow == null)
                     {
-                        Application.Current.MainWindow = new MainWindow();
-                        Application.Current.MainWindow.Show();
-                        Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                    //    if (Globals.ek == null)
+                        {
+                            Application.Current.MainWindow = new MainWindow();
+                            Application.Current.MainWindow.Show();
+                            Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                        }
+
+                        return;
                     }
 
-                     return;
-                }
-   
-                Application.Current.MainWindow.Show();
-                if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
-                    Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
-                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
-            }));
+                    Application.Current.MainWindow.Show();
+                    if (Application.Current.MainWindow.WindowState == System.Windows.WindowState.Minimized)
+                        Application.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
+                    Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in Raise_Window: " + ex.Message);
+                Console.WriteLine("Exception in Raise_Window: " + ex.StackTrace.ToString());
+            }
         }
         private App()
         {
-
+            AppDomain.CurrentDomain.UnhandledException += EKExceptionHandler.UnhandledException;
+            Application.Current.DispatcherUnhandledException += EKExceptionHandler.App_DispatcherUnhandledException;
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
             ProcessArgs();
-            /*
-            if (System.Diagnostics.Process.GetProcessesByName(
-                System.IO.Path.GetFileNameWithoutExtension(
-                System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
-            {
-                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
-                Application.Current.Shutdown(0);
-                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
-                return;
+          
+            CefExample.Init(Cef_LogFile, App.Debug);    
+        }
 
-            } */
-
-            CefExample.Init(Cef_LogFile, App.Debug);
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
 
         }
     }

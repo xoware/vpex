@@ -18,7 +18,7 @@
         <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
     </ContextMenu>
     
-    <taskbar:TaskbarIcon x:Key="ExoKeyNotifyIcon"
+    <taskbar:TaskbarIcon x:Key="XOkeyNotifyIcon"
               IconSource="vpex.ico"
               ToolTipText="Double-click for window, right-click for menu"
               DoubleClickCommand="{Binding ShowWindowCommand}"

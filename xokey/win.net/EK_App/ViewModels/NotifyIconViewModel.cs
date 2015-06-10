@@ -26,8 +26,8 @@ namespace EK_App.NotifyIconViewModels
             enable_proc.StartInfo.UseShellExecute = false;
             enable_proc.StartInfo.RedirectStandardOutput = true;
             enable_proc.StartInfo.FileName = "schtasks";
-            enable_proc.StartInfo.Arguments = "/create /sc onlogon /F /tn ExoKey /rl highest /tr \"\\\"" +
-                System.Reflection.Assembly.GetExecutingAssembly().Location  + "\\\" --log c:\\exokey.log \" ";
+            enable_proc.StartInfo.Arguments = "/create /sc onlogon /F /tn XOkey /rl highest /tr \"\\\"" +
+                System.Reflection.Assembly.GetExecutingAssembly().Location  + "\\\" --log c:\\XOkey.log \" ";
 
             enable_proc.Start();
             // Do not wait for the child process to exit befor
@@ -47,7 +47,7 @@ namespace EK_App.NotifyIconViewModels
             enable_proc.StartInfo.UseShellExecute = false;
             enable_proc.StartInfo.RedirectStandardOutput = true;
             enable_proc.StartInfo.FileName = "schtasks";
-            enable_proc.StartInfo.Arguments = "/delete /F /TN ExoKey";
+            enable_proc.StartInfo.Arguments = "/delete /F /TN XOkey";
 
             enable_proc.Start();
             // Do not wait for the child process to exit befor
@@ -88,9 +88,11 @@ namespace EK_App.NotifyIconViewModels
 
         private bool CanShowWindow()
         {
-            if (Application.Current == null || Application.Current.MainWindow == null)
+            if (Application.Current == null)
                 return false;
 
+            if (Application.Current.MainWindow == null)
+                return true;
 
             return Application.Current.MainWindow.Visibility != Visibility.Visible;
         }
@@ -107,7 +109,8 @@ namespace EK_App.NotifyIconViewModels
                     CanExecuteFunc = () => CanShowWindow(),
                     CommandAction = () =>
                     {
-                        Application.Current.MainWindow.Visibility = Visibility.Visible;
+                        App.Raise_Window();
+                        //Application.Current.MainWindow.Visibility = Visibility.Visible;
                     }
                 };
                 /*
@@ -162,7 +165,14 @@ namespace EK_App.NotifyIconViewModels
         {
             get
             {
-                return new DelegateCommand { CommandAction = () => Application.Current.Shutdown() };
+                
+                return new DelegateCommand { CommandAction = () => {
+                    try {
+                        Xoware.IpcAnonPipe.PipeClient.Send_Msg("EXIT");
+                    } catch {
+                    }
+                    Application.Current.Shutdown();
+                } };
             }
         }
 

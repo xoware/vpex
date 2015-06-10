@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EK_App</RootNamespace>
-    <AssemblyName>EK_App</AssemblyName>
+    <AssemblyName>XOkey_App</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -91,6 +91,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -101,6 +102,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -138,6 +140,7 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Windows.Forms.DataVisualization.Design" />
@@ -163,12 +166,17 @@
     <Compile Include="Mvvm\McastHeartBeatData.cs" />
     <Compile Include="Mvvm\DelegateCommand.cs" />
     <Compile Include="Mvvm\DelegateCommandT.cs" />
-    <Compile Include="Mvvm\ExoKey.cs" />
+    <Compile Include="Mvvm\XOkey.cs" />
     <Compile Include="Mvvm\LogMsg.cs" />
     <Compile Include="Mvvm\NetShare.cs" />
     <Compile Include="Mvvm\ViewModelBase.cs" />
     <Compile Include="NotificationWindow.xaml.cs">
       <DependentUpon>NotificationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -235,6 +243,14 @@
       <Project>{23ee5140-2c2c-4b53-a954-10b08dca6bd6}</Project>
       <Name>EK.BrowserSubprocess</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IpcAnonPipe\IpcAnonPipe.csproj">
+      <Project>{e5f84885-7adb-4642-bbee-1f031bb6844b}</Project>
+      <Name>IpcAnonPipe</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NetUtil\NetUtil.csproj">
+      <Project>{021290be-c1fd-430d-99cf-c80066fafdb9}</Project>
+      <Name>NetUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Routing\Routing.csproj">
       <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
       <Name>Routing</Name>
@@ -293,6 +309,15 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BuildDate.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <UnmanagedPlatform>x64</UnmanagedPlatform>
@@ -320,7 +345,10 @@
     <Error Condition="!Exists('..\packages\cef.redist.3.1650.1562-pre3\build\cef.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.3.1650.1562-pre3\build\cef.redist.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"
+    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"
 copy /Y  "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\*.dll"   "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>echo %25date%25 %25time%25 &gt; "$(ProjectDir)\Resources\BuildDate.txt"</PreBuildEvent>
   </PropertyGroup>
 </Project>

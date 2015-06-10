@@ -6,7 +6,7 @@
     <ProductVersion>3.8</ProductVersion>
     <ProjectGuid>01b93a05-d068-4fc0-9039-fc7b4bc93b06</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>ExoKey Host Application Setup</OutputName>
+    <OutputName>XOkey Host Application Setup</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -38,8 +38,8 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 6E5CCE05AF516E305EDBE3CB8E2F2306C8C3D2F5  /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
-"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\ExoKey Host Application Setup.msi"</PostBuildEvent>
+    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
+"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\XOkey Host Application Setup.msi"</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

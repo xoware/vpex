@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="ExoKey USB Ethernet Driver" Language="1033" Version="1.0.0.0" Manufacturer="Xoware Inc." UpgradeCode="be1500a1-2200-4663-9ca0-079397b4d4d0">
+	<Product Id="*" Name="XOkey USB Ethernet Driver" Language="1033" Version="1.0.0.0" Manufacturer="Xoware Inc." UpgradeCode="be1500a1-2200-4663-9ca0-079397b4d4d0">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate />
 
-		<Feature Id="ProductFeature" Title="ExoKey USB Ethernet Driver" Level="1">
+		<Feature Id="ProductFeature" Title="XOkey USB Ethernet Driver" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
 		</Feature>
 
@@ -14,7 +14,7 @@
                       ExeCommand='"[INSTALLFOLDER]\DPInst.exe" /SW /SA /C' Return='ignore' />
 
     <CustomAction Id='UnInstall_Driver' Execute='deferred' Directory='INSTALLFOLDER' Impersonate='no'
-                ExeCommand='"[INSTALLFOLDER]\DPInst.exe" /Q /U exokey.inf' Return='ignore' />
+                ExeCommand='"[INSTALLFOLDER]\DPInst.exe" /Q /U xokey.inf' Return='ignore' />
 
       <InstallExecuteSequence>
         <Custom  Action="Install_Driver" After="InstallFiles">NOT Installed</Custom>
@@ -28,7 +28,7 @@
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			<Directory Id="ProgramFilesFolder">
         <Directory Id="XoWareDir" Name="XoWare">				
-          <Directory Id="INSTALLFOLDER" Name="ExoKey USB Ethernet Driver" />
+          <Directory Id="INSTALLFOLDER" Name="XOkey USB Ethernet Driver" />
         </Directory>
       </Directory>
 		</Directory>
@@ -55,12 +55,12 @@
         <Condition>NOT VersionNT64</Condition>
       </Component>
       
-      <Component Id="exokey_inf_x86" Guid="*">
-        <File Id="exokey.inf_x86"  Name="exokey.inf" Vital="yes" DiskId="1"  Source="x86\exokey.inf" />
+      <Component Id="xokey_inf_x86" Guid="*">
+        <File Id="xokey.inf_x86"  Name="xokey.inf" Vital="yes" DiskId="1"  Source="x86\xokey.inf" />
         <Condition>NOT VersionNT64</Condition>
       </Component>
-      <Component Id="exokey_cat_x86" Guid="*">
-        <File Id="exokey.cat_x86"  Name="exokeyx86.cat" Vital="yes" DiskId="1"  Source="x86\exokeyx86.cat" />
+      <Component Id="xokey_cat_x86" Guid="*">
+        <File Id="xokey.cat_x86"  Name="xokeyx86.cat" Vital="yes" DiskId="1"  Source="x86\xokeyx86.cat" />
         <Condition>NOT VersionNT64</Condition>
       </Component>
       
@@ -69,15 +69,22 @@
         <Condition>VersionNT64</Condition>
       </Component>
       
-      <Component Id="exokey_inf_x64" Guid="*">
-        <File Id="exokey.inf_x64"  Name="exokey.inf" Vital="yes" DiskId="1"  Source="x64\exokey.inf" />
+      <Component Id="xokey_inf_x64" Guid="*">
+        <File Id="xokey.inf_x64"  Name="xokey.inf" Vital="yes" DiskId="1"  Source="x64\xokey.inf" />
         <Condition>VersionNT64</Condition>
       </Component>
-      <Component Id="exokey_cat_x64" Guid="*">
-        <File Id="exokey.cat_x64"  Name="exokeyx64.cat" Vital="yes" DiskId="1"  Source="x64\exokeyx64.cat" />
+      <Component Id="xokey_cat_x64" Guid="*">
+        <File Id="xokey.cat_x64"  Name="xokeyx64.cat" Vital="yes" DiskId="1"  Source="x64\xokeyx64.cat" />
         <Condition>VersionNT64</Condition>
       </Component>
 
+      <!-- registry entry to state that the item has been installed-->
+      <Component Id="cmp_WriteToRegistry" Guid="9F29FCE3-27EB-4568-BE53-51468225AB54">
+        <RegistryKey Root="HKLM"  Key="Software\xoware"
+              Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="integer" Name="XOkey_USB_Ethernet_Driver" Value="1" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
     </ComponentGroup>
 	</Fragment>
 

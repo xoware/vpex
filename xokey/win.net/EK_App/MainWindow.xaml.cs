@@ -28,77 +28,13 @@ namespace EK_App
             InitializeComponent();
             DataContext = this;
      
-
             BrowserTabs = new ObservableCollection<BrowserTabViewModel>();
 
- //           CommandBindings.Add(new CommandBinding(ApplicationCommands.New, OpenNewTab));
-  //          CommandBindings.Add(new CommandBinding(ApplicationCommands.Close, CloseTab));
 
             Loaded += MainWindowLoaded;
 
-          //  Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
-
-          //  NetworkChange.NetworkAddressChanged += new
-        //      NetworkAddressChangedEventHandler(AddressChangedCallback);
-
-
-            if (System.Diagnostics.Process.GetProcessesByName(
-               System.IO.Path.GetFileNameWithoutExtension(
-               System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1)
-            {
-                App.Log("Already Running:" + System.Reflection.Assembly.GetEntryAssembly().Location);
-                Application.Current.Shutdown(0);
-                System.Windows.MessageBox.Show("The ExoKey App is already running please check the system tray");
-                return;
-
-            } 
-
-
         }
-        /*
-        void Check_Interfaces()
-        {
-           
-            NetworkInterface EK_Interface = null;
-           
-            NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
-            foreach (NetworkInterface n in adapters)
-            {
-       //         System.Console.WriteLine(n.Name + " : " + n.Description + " is " + n.OperationalStatus);
-
-                if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware"))
-                {
-                    EK_Interface = n;
-
-                    if (n.OperationalStatus == OperationalStatus.Up)
-                    {
-                        if (EK_Is_Up == false)
-                        {
-                            Raise_Window();
-                        }
-
-                        EK_Is_Up = true;
-                    }
-                }
-                else if (n.OperationalStatus == OperationalStatus.Down
-                 && (n.Description.Contains("XoWare") || (n.Description.Contains("x.o.ware"))))
-                {
-                    App.Log("ExoKey Down");
-                }
-               
-            }
-            if (EK_Interface == null)
-            {
-                EK_Is_Up = false;
-            }
-        }
-         * */
-        /*
-        void AddressChangedCallback(object sender, System.EventArgs e)
-        {
-            Check_Interfaces();
-        }
-        */
+     
         private void CloseTab(object sender, ExecutedRoutedEventArgs e)
         {
             if (BrowserTabs.Count > 0)
@@ -136,32 +72,19 @@ namespace EK_App
             CreateNewTab(CefExample.DefaultUrl, App.Debug, App.Debug);
 
             if (Globals.ek == null)
-                Globals.ek = new ExoKey(null, BrowserTabs[0]);
+                Globals.ek = new XOkey(null, BrowserTabs[0]);
+            else
+            {
+                // reasign browser to EK thread and restart detection
+                Globals.ek.Set_Browser(BrowserTabs[0]);
+                Globals.ek.Force_Restart_Detction = true;
+            }
 
             Application.Current.MainWindow.Visibility = System.Windows.Visibility.Hidden;
          //   ek.Browser.InvokeExecuteJavaScript("console.log('MainWindowLoaded');");
         //    Check_Interfaces();
         }
-      /*
-        void Raise_Window()
-        {
-           
-            System.Windows.Application.Current.Dispatcher.Invoke( new System.Action(() =>
-            {
-                App.Log("MainWindow: RaisingWindow");
-                if (Application.Current.MainWindow == null)
-
-                {
-
-                    if (Globals.ek == null)
-                        Application.Current.MainWindow = new MainWindow();
-                    return;
-                }
-                Application.Current.MainWindow.Show();
-                Application.Current.MainWindow.Visibility = System.Windows.Visibility.Visible;
-            }));
-        }
-            */
+  
         private void CreateNewTab(string url = DefaultUrlForAddedTabs, bool showSideBar = false, bool showConsoleMessage = false)
         {
             BrowserTabViewModel bt = new BrowserTabViewModel(url) { 
@@ -175,10 +98,16 @@ namespace EK_App
             App.Log("OnClosing");
         }
 
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        // This is called when closing or hiding the main UI
+        private void MainWindow_Closing(object sender, CancelEventArgs e)  
         {
-            App.Log("MainWindow_Closing");         
-            
+            App.Log("MainWindow_Closing");
+            if (Globals.ek != null)
+            {
+                Globals.ek.Force_Restart_Detction = true;
+                Globals.ek.Browser = null;  // detach browser from running EK thread
+            }
+            Xoware.NetUtil.DNS.Remove_XOkey_DNS(); // Now disconneced
             //Hide Window
             Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
             {
@@ -186,8 +115,6 @@ namespace EK_App
                 return null;
             }, null);
             //Do not close application
-            e.Cancel = true;
-
 
             /*
 
