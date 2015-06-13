@@ -389,7 +389,7 @@ namespace EK_App.Mvvm
                     IPEndPoint Server = new IPEndPoint(IPAddress.Parse(IP_Addr_Str), 0);
                     Set_Sever_IPEndpoint(Server);
                     Set_EK_State(XOkeyState.XOkeyState_Connected);
-                    SetStatusMsg("Connected to ExoNet at " + IP_Addr_Str);
+                    SetStatusMsg("Connected to XOnet at " + IP_Addr_Str);
 
                     Set_EK_State(XOkeyState.XOkeyState_Connected);
                 }
@@ -400,7 +400,7 @@ namespace EK_App.Mvvm
                         Remove_Routes();
 
                     Set_EK_State(XOkeyState.XOkeyState_Disconnected);
-                    SetStatusMsg("Not connected to ExoNet");
+                    SetStatusMsg("Not connected to XOnet");
                 }
                 Last_Vpn_Status = DateTime.Now;
             }
@@ -1814,7 +1814,7 @@ namespace EK_App.Mvvm
                     //System.Windows.Application.Current.MainWindow,
                   MessageBox.Show(
                       "Your network traffic is no longer encrypted by the XOkey",
-                       "Disconnected from ExoNet", MessageBoxButton.OK, MessageBoxImage.Warning,
+                       "Disconnected from XOnet", MessageBoxButton.OK, MessageBoxImage.Warning,
                        MessageBoxResult.OK,  MessageBoxOptions.ServiceNotification );
 
                     Run_Route_Cmd("DELETE 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString());
