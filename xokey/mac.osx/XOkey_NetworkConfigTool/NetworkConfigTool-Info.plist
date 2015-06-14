@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>XOkey.NetworkConfigTool</string>
+	<key>CFBundleIdentifier</key>
+	<string>XOkey.NetworkConfigTool</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>SMAuthorizedClients</key>
+	<array>
+		<string>identifier &quot;xoware.XOkey&quot; and certificate leaf[subject.CN] = &quot;XOkey on Mac&quot;</string>
+	</array>
+</dict>
+</plist>
