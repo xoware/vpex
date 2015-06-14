@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="XOkey USB Ethernet Driver" Language="1033" Version="1.0.0.0" Manufacturer="Xoware Inc." UpgradeCode="be1500a1-2200-4663-9ca0-079397b4d4d0">
+	<Product Id="*" Name="XOkey USB Ethernet Driver" Language="1033" Version="1.0.0.0" Manufacturer="x.o.ware, Inc." UpgradeCode="be1500a1-2200-4663-9ca0-079397b4d4d0">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -20,7 +20,7 @@
         <Custom  Action="Install_Driver" After="InstallFiles">NOT Installed</Custom>
 
         <Custom Action="UnInstall_Driver" Before="RemoveFiles">Installed</Custom>
-  
+        <ScheduleReboot After="InstallFinalize"/>
       </InstallExecuteSequence>
 	</Product>
 

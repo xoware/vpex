@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 	<Product Id="*" Name="XOkey_Host_Application" Language="1033" Version="!(bind.FileVersion.$(var.EK_App.TargetFileName))" Manufacturer="x.o.ware, Inc." UpgradeCode="6b60c82d-4722-441f-a573-70765a1af96a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"  InstallPrivileges="elevated" />
 
@@ -39,21 +40,26 @@
                Name="Install"
                       Type="raw" />
     </Property>
+    <!--
+    <Property Id="HAS_USB_ETHERNET">
+      <RegistrySearch Id="USB_Ethernet_Search" Type="raw" Root="HKLM" Key="SOFTWARE\xoware\XOkey_USB_Ethernet_Driver" />
+    </Property>
+-->
+
+    
      <InstallExecuteSequence>
       <Custom Action='AddStartupTask'    After='InstallFinalize'>NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
-  <!--       <Custom Action="DeleteStartupTask" Before='InstallFinalize'>
-          Installed AND NOT UPGRADINGPRODUCTCODE</Custom> -->
-
-       <ScheduleReboot After="InstallFinalize"/>
+      <Custom Action="DeleteStartupTask" Before='InstallFinalize'></Custom>
+       <!--     <Custom Action='StartDriverInstaller'    After='InstallFiles'>NOT HAS_USB_ETHERNET</Custom> -->
+      
      </InstallExecuteSequence>
-   <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
- <!--   <CustomAction Id='DeleteStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /delete /F /TN XOkey ;' Return='ignore' />
+     <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
 
- <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER'   ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
-
- <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn XOkey /rl highest /tr  &quot;\&quot;[INSTALLFOLDER]XOkey_App.exe&quot;\&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />  
- <CustomAction Id='AddStartupTask' Directory='TARGETDIR' Execute='deferred' Impersonate='no'  ExeCommand='&quot;[SystemFolder]SCHTASKS.EXE&quot; /create /F /sc onlogon /tn XOkey /rl highest /TR &quot;[SystemFolder]calc.exe&quot;  /RU &quot;NT Authority\System&quot;' Return='check' />
--->
+   <!-- Delete old startup task-->
+     <CustomAction Id='DeleteStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]SCHTASKS.EXE /delete /F /TN ExoKey' Return='asyncNoWait' />
+    <!--
+    <CustomAction Id='StartDriverInstaller' Directory='INSTALLFOLDER'  Execute="deferred" PatchUninstall='no'  ExeCommand='[SystemFolder]msiexec.exe /i  $(var.driver-install.TargetFileName)' Return='check' />
+ -->
 	</Product>
 
 
@@ -82,7 +88,8 @@
     </Directory>
 	</Fragment>
   <Fragment>
-   
+    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="XOkey_USB_Ethernet_Driver"
+                        Variable="XOkey_USB_Ethernet_Driver" Result="exists" />
   </Fragment>
 
 	<Fragment>
@@ -159,6 +166,10 @@
       <Component Id="vpexIco" Guid="*">
           <File Source="$(var.EK_App.ProjectDir)\vpex.ico" />
       </Component>
+      <Component Id="DriverInstall" Guid="*">
+        <File Source="$(var.driver-install.TargetPath)" />
+      </Component>
+     
       <!--
       <Component Id="XoKeyApi.dll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/XoKeyApi.dll" />
