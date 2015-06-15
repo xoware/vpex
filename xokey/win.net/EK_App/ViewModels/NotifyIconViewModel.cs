@@ -17,8 +17,8 @@ namespace EK_App.NotifyIconViewModels
         System.ComponentModel.BackgroundWorker CreateStartupWorker = null;
         System.ComponentModel.BackgroundWorker DeleteStartupWorker = null;
 
-        // This event handler is where the time-consuming work is done. 
-        private void Enable_Startup_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+
+        private void Exec_Schtasks(String Args)
         {
             // Start the child process.
             Process enable_proc = new Process();
@@ -26,8 +26,9 @@ namespace EK_App.NotifyIconViewModels
             enable_proc.StartInfo.UseShellExecute = false;
             enable_proc.StartInfo.RedirectStandardOutput = true;
             enable_proc.StartInfo.FileName = "schtasks";
-            enable_proc.StartInfo.Arguments = "/create /sc onlogon /F /tn XOkey /rl highest /tr \"\\\"" +
-                System.Reflection.Assembly.GetExecutingAssembly().Location  + "\\\" --log c:\\XOkey.log \" ";
+            enable_proc.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            enable_proc.StartInfo.CreateNoWindow = true;
+            enable_proc.StartInfo.Arguments = Args;
 
             enable_proc.Start();
             // Do not wait for the child process to exit befor
@@ -39,24 +40,23 @@ namespace EK_App.NotifyIconViewModels
             System.Console.WriteLine("schtasks" + output);
         }
 
+        // This event handler is where the time-consuming work is done. 
+        private void Enable_Startup_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            String Args = "/create /sc onlogon /F /tn XOkey /rl highest /tr \"\\\"" +
+                 System.Reflection.Assembly.GetExecutingAssembly().Location + "\\\" --log c:\\XOkey.log \" ";
+
+            Exec_Schtasks(Args);
+            Exec_Schtasks("/delete /F /TN ExoKey");  // Try to delete old name
+        }
+
         private void Disable_Startup_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            // Start the child process.
-            Process enable_proc = new Process();
-            // Redirect the output stream of the child process.
-            enable_proc.StartInfo.UseShellExecute = false;
-            enable_proc.StartInfo.RedirectStandardOutput = true;
-            enable_proc.StartInfo.FileName = "schtasks";
-            enable_proc.StartInfo.Arguments = "/delete /F /TN XOkey";
 
-            enable_proc.Start();
-            // Do not wait for the child process to exit befor
-            // reading to the end of its redirected stream.
-            // p.WaitForExit();
-            // Read the output stream first and then wait.
-            string output = enable_proc.StandardOutput.ReadToEnd();
-            enable_proc.WaitForExit();
-            System.Console.WriteLine("schtasks" + output);
+
+            Exec_Schtasks("/delete /F /TN XOkey");
+            Exec_Schtasks("/delete /F /TN ExoKey");  // Try to delete old name
+          
         }
         public void Enable_Startup()
         {

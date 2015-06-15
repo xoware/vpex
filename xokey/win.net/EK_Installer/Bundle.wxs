@@ -2,6 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
   <Bundle Name="x.o.ware XOkey" Version="$(var.BuildVersion)"  Manufacturer="x.o.ware, Inc." UpgradeCode="ab691316-6596-4b28-a649-cc0299e92622">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
@@ -16,21 +17,30 @@
     <!--
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4FullVersion" />
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Net4x64FullVersion" Win64="yes" />
-     Determine what items are installed in the event of an upgrade-->
+     Determine what items are installed in the event of an upgrade
     <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="XOkey_USB_Ethernet_Driver" Variable="XOkey_USB_Ethernet_Driver" Result="exists" />
+    -->
 		<Chain>
 			<!-- TODO: Define the list of chained packages. -->
 			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
       
-      
-      
+     
       <PackageGroupRef Id="NetFx451Redist" />
-      <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"  Vital="yes">
-        <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
-      </MsiPackage>
+      <PackageGroupRef Id="XOkeyDriverPackage" />
       <MsiPackage  Id="EK_App"  Compressed="yes"  SourceFile="$(var.EK_HostApp_Setup.TargetPath)"  Vital="yes">
         <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
       </MsiPackage>
 		</Chain>
 	</Bundle>
+  <Fragment>
+       <util:RegistrySearch Root="HKLM" Key="SOFTWARE\xoware" Value="XOkey_USB_Ethernet_Driver"
+                            Variable="XOkey_USB_Ethernet_Driver" Result="exists" />
+       <PackageGroup Id="XOkeyDriverPackage">
+
+          <MsiPackage  Id="DriverSetup"  Compressed="yes"  SourceFile="$(var.driver-install.TargetPath)"
+              Permanent="yes" Visible="yes"  Vital="yes" InstallCondition="XOkey_USB_Ethernet_Driver = 0">
+            <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
+          </MsiPackage>
+        </PackageGroup>
+  </Fragment>
 </Wix>
