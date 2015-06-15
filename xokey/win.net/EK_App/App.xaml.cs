@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.ServiceModel.Dispatcher; // ExceptionHandler
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Net.NetworkInformation;
 using Hardcodet.Wpf.TaskbarNotification;
 using System.ComponentModel; // background worker
@@ -204,12 +205,90 @@ namespace EK_App
 
             pipe_serverserv_bw.RunWorkerAsync(); // restart
         }
+        private static void PreLoad(string path)
+        {
+            //S.O. NOTE: ELIDED - ALL EXCEPTION HANDLING FOR BREVITY
+
+            //get all .dll files from the specified path and load the lot
+            FileInfo[] files = null;
+            //you might not want recursion - handy for localised assemblies 
+            //though especially.
+            files = new DirectoryInfo(path).GetFiles("*.dll",
+                SearchOption.AllDirectories);
+
+            System.Reflection.AssemblyName a = null;
+            string s = null;
+            foreach (var fi in files)
+            {
+                s = fi.FullName;
+                App.Log("Trying " + s);
+                try 
+                {
+
+                   
+
+                    //now get the name of the assembly you've found, without loading it
+                    //though (assuming .Net 2+ of course).
+                    a = System.Reflection.AssemblyName.GetAssemblyName(s);
+                    //sanity check - make sure we don't already have an assembly loaded
+                    //that, if this assembly name was passed to the loaded, would actually
+                    //be resolved as that assembly.  Might be unnecessary - but makes me
+                    //happy :)
+
+
+                    AppDomain currentDomain = AppDomain.CurrentDomain;
+	
+            	    //Make an array for the list of assemblies.
+	        	    Assembly[] assems = currentDomain.GetAssemblies();
+	
+        		    //List the assemblies in the current application domain.
+	        	    Console.WriteLine("List of assemblies loaded in current appdomain:");
+                    foreach (Assembly assem in assems)
+                    {
+
+                        try
+                        {
+                            App.Log("assem:" + assem.ToString());
+                            System.Reflection.Assembly.Load(assem.GetName());
+                        } catch
+                        {
+                            continue;
+                        }
+                        break;
+                    }
+                    /*
+                    if (!AppDomain.CurrentDomain.GetAssemblies().Any(assembly =>
+                      System.Reflection.AssemblyName.ReferenceMatchesDefinition(a, assembly.GetName())))
+                    {
+                        //crucial - USE THE ASSEMBLY NAME.
+                        //in a web app, this assembly will automatically be bound from the 
+                        //Asp.Net Temporary folder from where the site actually runs.
+                        System.Reflection.Assembly.Load(a);
+                    }
+                     * */
+                    App.Log("loaded " + s);
+                 } 
+                catch
+                {
+                    continue;
+                }
+            }
+        }
+        private static void Load_Dlls(object state)
+        {
+            App.Log("Starting DLL Load");
+            GC.KeepAlive(typeof(CefSharp.CefBrowserBase));
+            GC.KeepAlive(typeof(CefSharp.Internals.CefSubprocess));
+            GC.KeepAlive(typeof(CefSharp.Example.CefExample));
+            PreLoad(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+            App.Log("Finished DLL Load");
+        }
 
         void App_Startup(object sender, StartupEventArgs e)
         {
             App.Log("app startup: " + System.IO.Path.GetFileNameWithoutExtension(
                 System.Reflection.Assembly.GetEntryAssembly().Location));
-
+            App.Log(System.Reflection.Assembly.GetEntryAssembly().Location);
             
  
             try
@@ -252,6 +331,11 @@ namespace EK_App
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
             Check_Interfaces();
+            if (!EK_Is_Up)
+            {
+                // Key is unplugged, get started on background loading
+                System.Threading.ThreadPool.QueueUserWorkItem(Load_Dlls);
+            }
         }
 
         void Check_Interfaces()
