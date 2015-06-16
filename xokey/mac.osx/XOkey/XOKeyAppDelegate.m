@@ -354,6 +354,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //  Setup disconnect notification
     disconnNote = [[NSUserNotification alloc]init];
+    //disconnNote.contentImage = [NSImage imageNamed:@"XO_Ware_PNG_256.png"];
     [[NSUserNotificationCenter defaultUserNotificationCenter]setDelegate:self];
     
     //  Initialize and enumerate the bus to find the XOkey and setup callback functions for PnP
@@ -413,7 +414,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Autolayout engine must occur on the main thread.
         dispatch_async(dispatch_get_main_queue(),
             ^(void){
-                NSTimer* timer = [NSTimer timerWithTimeInterval:1.8 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
+                NSTimer* timer = [NSTimer timerWithTimeInterval:1.5 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
                 [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
         });
     }

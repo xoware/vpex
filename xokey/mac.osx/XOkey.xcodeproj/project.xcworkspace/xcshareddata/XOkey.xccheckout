@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>77EAB06D-11E1-4619-A7C5-ED08398F991B</string>
 	<key>IDESourceControlProjectName</key>
-	<string>project</string>
+	<string>XOkey</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>5B984212916942052B1F715BF8700EB89323DDE2</key>
 		<string>github.com:xoware/vpex.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>xokey/mac.osx/XOkey.xcodeproj/project.xcworkspace</string>
+	<string>xokey/mac.osx/XOkey.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>5B984212916942052B1F715BF8700EB89323DDE2</key>

@@ -15,10 +15,8 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="XOkeyAppDelegate">
             <connections>
-                <outlet property="closeModalWindow" destination="Q36-iE-OdU" id="TfC-Ii-wh5"/>
                 <outlet property="ek_ConnectedDisplay" destination="lml-7s-bFq" id="oq5-iM-oos"/>
                 <outlet property="ek_WebView" destination="VlX-67-WjO" id="zdG-4m-4G1"/>
-                <outlet property="waitView" destination="1Wo-VS-RWy" id="Lkv-7F-YOI"/>
                 <outlet property="waitWindow" destination="ShR-Po-JT5" id="y8l-lj-En7"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -111,7 +109,7 @@
         <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="868" height="627"/>
+            <rect key="contentRect" x="380" y="139" width="868" height="627"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="868" height="627"/>
@@ -123,8 +121,8 @@
                             <nil key="identifier"/>
                         </webPreferences>
                     </webView>
-                    <button misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lml-7s-bFq">
-                        <rect key="frame" x="362" y="600" width="147" height="15"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="lml-7s-bFq">
+                        <rect key="frame" x="361" y="598" width="148" height="18"/>
                         <buttonCell key="cell" type="radio" title="XOkey Plugged In" bezelStyle="regularSquare" imagePosition="left" alignment="left" enabled="NO" inset="2" id="0tT-wF-9t4">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -164,7 +162,7 @@
                         <imageCell key="cell" controlSize="mini" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="xo_ware_top_banner" id="y2e-jW-nzC"/>
                     </imageView>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Q36-iE-OdU">
-                        <rect key="frame" x="240" y="38" width="74" height="20"/>
+                        <rect key="frame" x="240" y="35" width="74" height="29"/>
                         <buttonCell key="cell" type="bevel" title="Close" bezelStyle="regularSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Fa4-1q-9zP">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
