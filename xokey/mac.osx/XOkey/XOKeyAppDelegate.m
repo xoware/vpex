@@ -745,7 +745,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 
 //Create the helper tool then connect to it.
 -(BOOL)initializeNetworkTool{
-    BOOL createTool = true;
+    BOOL toolsDifferent = false;
+    BOOL newTool = false;
     //  1) Detect if the network tool exists
     if ([[NSFileManager defaultManager]fileExistsAtPath:@"/Library/PrivilegedHelperTools/XOkey.NetworkConfigTool"]) {
         //  1a) Check if the network tool installed has changed compared to the bundle version
@@ -761,15 +762,18 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //      Comapre the 2 digests. If different, remove the current tool and reinstall. If the same, submit to SMJobLess
         if ([installedToolSha1 isEqualToString:bundleToolSha1]) {
             XOkeyLog(@"Network tools are the same!");
-            createTool = false;
+            toolsDifferent = false;
         }else{
             XOkeyLog(@"Network tools are different!");
-            createTool = true;
+            toolsDifferent = true;
         }
 
+    }else{
+        // Tool does not exist in directory
+        newTool = true;
     }
     // 2) Create the tool if it doesn't exist or the SHA-1 digest of the installed tool is different than the bundle tool's.
-    if (createTool) {
+    if (toolsDifferent) {
         NSString * output = nil;
         NSString * processErrorDescription = nil;
         BOOL success = [self runProcessAsAdministrator:@"/bin/rm"
@@ -785,7 +789,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     }
     
     NSError *error = nil;
-    if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error newTool:createTool]) {
+    if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error newTool:(toolsDifferent | newTool)]) {
         XOkeyLog([NSString stringWithFormat:@"Failed to create network config tool. Error: %@ / %d", [error localizedFailureReason], (int) [error code]]);
         return NO;
     }else{
