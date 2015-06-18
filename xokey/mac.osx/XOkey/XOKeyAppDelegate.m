@@ -354,7 +354,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //  Setup disconnect notification
     disconnNote = [[NSUserNotification alloc]init];
-    //disconnNote.contentImage = [NSImage imageNamed:@"XO_Ware_PNG_256.png"];
     [[NSUserNotificationCenter defaultUserNotificationCenter]setDelegate:self];
     
     //  Initialize and enumerate the bus to find the XOkey and setup callback functions for PnP
@@ -375,6 +374,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //Present the wait window
     [self openWaitWindow];
+    
+    //Turn off modal dialog view from blocking the app from closing
+    [self.modalDialogView.window setPreventsApplicationTerminationWhenModal:NO];
 }
 
 #pragma mark Callbacks and Other

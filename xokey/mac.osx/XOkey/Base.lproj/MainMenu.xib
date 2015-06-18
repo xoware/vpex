@@ -16,6 +16,7 @@
             <connections>
                 <outlet property="ek_ConnectedDisplay" destination="lml-7s-bFq" id="oq5-iM-oos"/>
                 <outlet property="ek_WebView" destination="VlX-67-WjO" id="zdG-4m-4G1"/>
+                <outlet property="modalDialogView" destination="1Wo-VS-RWy" id="PH1-mp-MCj"/>
                 <outlet property="waitWindow" destination="ShR-Po-JT5" id="y8l-lj-En7"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
