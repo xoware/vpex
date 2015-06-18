@@ -412,7 +412,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Device has appeared, close the waiting window. Sleep a bit in order to let
         //webkit load the page before the dialog is closed. Note, function calls to the
         //Autolayout engine must occur on the main thread.
-        dispatch_async(dispatch_get_main_queue(),
+        dispatch_async(networkQueue,
             ^(void){
                 NSTimer* timer = [NSTimer timerWithTimeInterval:1.5 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
                 [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
