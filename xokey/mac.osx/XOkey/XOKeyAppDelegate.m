@@ -664,6 +664,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [self closeWaitWindow:nil];
 }
 
+//Protocol method to close the application when the last window of the app closes
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication{
+    return true;
+}
+
 #pragma mark Authorization functions
 
 //Create empty authorization reference.
@@ -869,6 +874,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 - (void)applicationWillTerminate:(NSNotification *)aNotification{
     //Remove ExoNet routes from the routing table
     [self removeExoNetRoute];
+    
     //Network tool will force quit when rm'd
     [[myConnection remoteObjectProxy]uninstallNetworkTool];
     [myConnection invalidate];
