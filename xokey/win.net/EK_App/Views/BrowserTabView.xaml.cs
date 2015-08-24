@@ -15,6 +15,7 @@ namespace EK_App.Views
             InitializeComponent();
 
             browser.RequestHandler = new RequestHandler();
+            browser.LifeSpanHandler = new LifeSpanHandler();
         }
 
         private void OnTextBoxGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
