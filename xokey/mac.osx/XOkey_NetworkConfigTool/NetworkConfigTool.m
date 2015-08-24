@@ -256,10 +256,12 @@
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-F",/*PF_CONF_PATH*/@"all"]];
      //Unload the network tool from launchd
     [self XOkeyLog:@"Unloading the network tool from launchd"];
-    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"-w",@"unload",@"XOkey.NetworkConfigTool"]];
+    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"unload",@"/Library/LaunchDaemons/XOkey.NetworkConfigTool.plist"]];
     //Remove the XOkey pf rules
     [self XOkeyLog:@"Removing XOkey pf config file from /etc"];
     [NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:@[@"/etc/XOkey-pf.conf"]];
+    //Close the config tool
+    [NSApp terminate:nil];
     
     /*              *** Only remove the network tool and its plist when the SHA-1 digest is different ***
     //Remove the launchd plist

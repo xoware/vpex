@@ -19,7 +19,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>3</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
@@ -33,7 +33,7 @@
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>XOkey.NetworkConfigTool</key>
-		<string>identifier &quot;XOkey.NetworkConfigTool&quot; and certificate leaf[subject.CN] = &quot;XOkey on Mac&quot;</string>
+		<string>identifier "XOkey.NetworkConfigTool" and certificate leaf[subject.CN] = "XOkey on Mac"</string>
 	</dict>
 </dict>
 </plist>

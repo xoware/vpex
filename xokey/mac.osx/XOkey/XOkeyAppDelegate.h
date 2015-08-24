@@ -80,5 +80,6 @@ void XOkeyLog(NSString* text);
 @property (weak) IBOutlet WebView *ek_WebView;
 @property (atomic, copy,   readwrite) NSData *authorization;
 @property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
+@property (weak) IBOutlet NSView *modalDialogView;
 
 @end

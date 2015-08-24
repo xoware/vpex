@@ -24,6 +24,7 @@
 		CE2EBF8C191BE9CD007FACFB /* usbObject.m in Sources */ = {isa = PBXBuildFile; fileRef = CE2EBF8B191BE9CD007FACFB /* usbObject.m */; };
 		CE2EBF8E191C18E5007FACFB /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE2EBF8D191C18E5007FACFB /* WebKit.framework */; };
 		CE2EBF911922C63E007FACFB /* webViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE2EBF901922C63E007FACFB /* webViewDelegate.m */; };
+		CE37BEE21B2F93EF0076C338 /* XO_Ware_PNG_512.png in Resources */ = {isa = PBXBuildFile; fileRef = CE37BEE11B2F93EF0076C338 /* XO_Ware_PNG_512.png */; };
 		CE63A569194BC52B0062A10A /* statusDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE63A568194BC52B0062A10A /* statusDelegate.m */; };
 		CEAFB9DD192E6FD6001EAE12 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEC098D01926B29B009774E7 /* Foundation.framework */; };
 		CEAFB9E0192E6FD6001EAE12 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CEAFB9DF192E6FD6001EAE12 /* main.m */; };
@@ -91,6 +92,7 @@
 		CE2EBF8D191C18E5007FACFB /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		CE2EBF8F1922C63E007FACFB /* webViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = webViewDelegate.h; sourceTree = "<group>"; };
 		CE2EBF901922C63E007FACFB /* webViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = webViewDelegate.m; sourceTree = "<group>"; };
+		CE37BEE11B2F93EF0076C338 /* XO_Ware_PNG_512.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = XO_Ware_PNG_512.png; sourceTree = "<group>"; };
 		CE63A567194BC52B0062A10A /* statusDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = statusDelegate.h; sourceTree = "<group>"; };
 		CE63A568194BC52B0062A10A /* statusDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = statusDelegate.m; sourceTree = "<group>"; };
 		CEAFB9DC192E6FD6001EAE12 /* XOkey.NetworkConfigTool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XOkey.NetworkConfigTool; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -224,6 +226,7 @@
 		CEBA99991982B24800EEDB98 /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				CE37BEE11B2F93EF0076C338 /* XO_Ware_PNG_512.png */,
 				CE1876391B29362D00478FAB /* XO_Ware_PNG_16.png */,
 				CE18763A1B29362D00478FAB /* XO_Ware_PNG_32.png */,
 				CE18763B1B29362D00478FAB /* XO_Ware_PNG_64.png */,
@@ -280,7 +283,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = ExoKey;
-				LastUpgradeCheck = 0600;
+				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = x.o.ware;
 			};
 			buildConfigurationList = CE2EBF4E191BE7E2007FACFB /* Build configuration list for PBXProject "XOkey" */;
@@ -318,6 +321,7 @@
 				CE1876281B28EFDE00478FAB /* NetworkConfigTool-Launchd.plist in Resources */,
 				CE1876431B29362D00478FAB /* XO_Ware_PNG_256.png in Resources */,
 				CE1876401B29362D00478FAB /* XO_Ware_PNG_32.png in Resources */,
+				CE37BEE21B2F93EF0076C338 /* XO_Ware_PNG_512.png in Resources */,
 				CE1876411B29362D00478FAB /* XO_Ware_PNG_64.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -464,6 +468,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XOkey/XOkey-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/XOkey/XOkey-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -477,6 +482,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XOkey/XOkey-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/XOkey/XOkey-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

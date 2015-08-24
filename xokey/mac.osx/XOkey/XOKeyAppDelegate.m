@@ -374,6 +374,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //Present the wait window
     [self openWaitWindow];
+    
+    //Turn off modal dialog view from blocking the app from closing
+    [self.modalDialogView.window setPreventsApplicationTerminationWhenModal:NO];
 }
 
 #pragma mark Callbacks and Other
@@ -411,9 +414,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Device has appeared, close the waiting window. Sleep a bit in order to let
         //webkit load the page before the dialog is closed. Note, function calls to the
         //Autolayout engine must occur on the main thread.
-        dispatch_async(dispatch_get_main_queue(),
+        dispatch_async(networkQueue,
             ^(void){
-                NSTimer* timer = [NSTimer timerWithTimeInterval:1.8 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
+                NSTimer* timer = [NSTimer timerWithTimeInterval:1.5 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
                 [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
         });
     }
@@ -661,6 +664,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [self closeWaitWindow:nil];
 }
 
+//Protocol method to close the application when the last window of the app closes
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication{
+    return true;
+}
+
 #pragma mark Authorization functions
 
 //Create empty authorization reference.
@@ -744,7 +752,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 
 //Create the helper tool then connect to it.
 -(BOOL)initializeNetworkTool{
-    BOOL createTool = true;
+    BOOL toolsDifferent = false;
+    BOOL newTool = false;
     //  1) Detect if the network tool exists
     if ([[NSFileManager defaultManager]fileExistsAtPath:@"/Library/PrivilegedHelperTools/XOkey.NetworkConfigTool"]) {
         //  1a) Check if the network tool installed has changed compared to the bundle version
@@ -760,15 +769,18 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //      Comapre the 2 digests. If different, remove the current tool and reinstall. If the same, submit to SMJobLess
         if ([installedToolSha1 isEqualToString:bundleToolSha1]) {
             XOkeyLog(@"Network tools are the same!");
-            createTool = false;
+            toolsDifferent = false;
         }else{
             XOkeyLog(@"Network tools are different!");
-            createTool = true;
+            toolsDifferent = true;
         }
 
+    }else{
+        // Tool does not exist in directory
+        newTool = true;
     }
     // 2) Create the tool if it doesn't exist or the SHA-1 digest of the installed tool is different than the bundle tool's.
-    if (createTool) {
+    if (toolsDifferent) {
         NSString * output = nil;
         NSString * processErrorDescription = nil;
         BOOL success = [self runProcessAsAdministrator:@"/bin/rm"
@@ -784,7 +796,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     }
     
     NSError *error = nil;
-    if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error newTool:createTool]) {
+    if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error newTool:(toolsDifferent | newTool)]) {
         XOkeyLog([NSString stringWithFormat:@"Failed to create network config tool. Error: %@ / %d", [error localizedFailureReason], (int) [error code]]);
         return NO;
     }else{
@@ -862,6 +874,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 - (void)applicationWillTerminate:(NSNotification *)aNotification{
     //Remove ExoNet routes from the routing table
     [self removeExoNetRoute];
+    
     //Network tool will force quit when rm'd
     [[myConnection remoteObjectProxy]uninstallNetworkTool];
     [myConnection invalidate];
