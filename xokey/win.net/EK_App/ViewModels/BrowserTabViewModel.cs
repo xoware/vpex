@@ -147,10 +147,7 @@ namespace EK_App.ViewModels
             }
             catch (Exception e)
             {
-                if (App.Debug)
-                    MessageBox.Show("Error while executing Javascript: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                else
-                    App.Log("Error while executing Javascript: " + e.Message);
+               App.Log("Error while executing Javascript: " + e.Message);
             }
         }
         public void InvokeExecuteJavaScript(string s)
