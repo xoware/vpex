@@ -13,9 +13,11 @@ namespace CefSharp.Example
 
         bool IRequestHandler.OnBeforeBrowse(IWebBrowser browser, IRequest request, bool isRedirect)
         {
+            //Console.WriteLine("Req:" + request.Url);
             return false;
         }
 
+       
         void IRequestHandler.OnPluginCrashed(IWebBrowser browser, string pluginPath)
         {
             // TODO: Add your own code here for handling scenarios where a plugin crashed, for one reason or another.
