@@ -21,6 +21,7 @@
     if (self != nil) {
 
     }
+    //  Set the app delegate as a UIDelegate to handle new window requests
     return self;
 }
 //*******************************************************************
@@ -147,5 +148,29 @@
             [resultListener chooseFilename:[theDoc relativePath]];
         }
     }];
+}
+
+#pragma mark    Delegate methods that allow a URL to be launched by the default user browser
+- (WebView *)webView:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
+{
+    id myDocument = [[NSDocumentController sharedDocumentController] openUntitledDocumentAndDisplay:YES error:nil];
+    WebView* webView;
+    [myDocument webView:webView createWebViewWithRequest:request];
+    return webView;
+}
+
+- (void)webView:(WebView *)sender decidePolicyForNavigationAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener {
+    if( [sender isEqual:self.webViewRef] ) {
+        [listener use];
+    }
+    else {
+        [[NSWorkspace sharedWorkspace] openURL:[actionInformation objectForKey:WebActionOriginalURLKey]];
+        [listener ignore];
+    }
+}
+
+- (void)webView:(WebView *)sender decidePolicyForNewWindowAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request newFrameName:(NSString *)frameName decisionListener:(id<WebPolicyDecisionListener>)listener {
+    [[NSWorkspace sharedWorkspace] openURL:[actionInformation objectForKey:WebActionOriginalURLKey]];
+    [listener ignore];
 }
 @end

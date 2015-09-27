@@ -268,6 +268,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     dispatch_queue_t networkQueue;
     NSWindow* modalWindow;
     NSUserNotification* disconnNote;
+    NSUserNotification* connNote;
 }
 
 
@@ -321,6 +322,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [self.ek_WebView setGroupName:@"MyDocument"];
     statDelegate = [[statusDelegate alloc]init];
     
+    //  Set the webview delegate as a UIDelegate and webview policy delegate to handle new window requests
+    [self.ek_WebView setUIDelegate:webViewDel];
+    [self.ek_WebView setPolicyDelegate:webViewDel];
+    webViewDel.webViewRef = self.ek_WebView;
+    
     //  Accept cookies
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
     
@@ -355,6 +361,12 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     //  Setup disconnect notification
     disconnNote = [[NSUserNotification alloc]init];
     [[NSUserNotificationCenter defaultUserNotificationCenter]setDelegate:self];
+    
+    //  Setup connection notification
+    connNote = [[NSUserNotification alloc]init];
+    
+    //  Register sleep/wake notifications
+    [self fileNotifications];
     
     //  Initialize and enumerate the bus to find the XOkey and setup callback functions for PnP
     XOkeyUSBObject = [[usbObject alloc]init];
@@ -458,9 +470,19 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [routerTask launch];
     NSString* result = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
     result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+    
+    //Detected change in router. Tear down connection if routed to XOnet
     if ([result isNotEqualTo:deviceProperties[ROUTER]]) {
+        
+        NSLog(@"Detected change in router IP from %@ to %@", deviceProperties[ROUTER], result);
+
         //NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
         deviceProperties[ROUTER] = result;
+        
+        //Must tear down path to XOnet if the router IP changed and we are connected
+        if(routedToExoNet){
+            [self removeExoNetRoute];
+        }
     }
 }
 
@@ -521,14 +543,16 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
         result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
         deviceProperties[XOKEY_IP_ADDRESS] = result;
-        
     }
     
     //  3) Check if the host has internet by finding the interface facing the internet.
     [self getActiveInterface];
     if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
     
-    //  4) Check status of VPN server to determine if the EK is connected to the ExoNet
+    //  4) Check for router IP Address
+    [self findRouter];
+    
+    //  5) Check status of VPN server to determine if the EK is connected to the ExoNet
     {
         int VPN_Status = [statDelegate pollStatus];
         
@@ -539,6 +563,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
                 if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
                     [self routeToExoNet:deviceProperties[EXONET_IP]];
                     routedToExoNet = true;
+                    
+                    //Create notification that connection to XOnet has been established
+                    connNote.title = @"Connected to XOnet";
+                    [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
+                    
                     //Minimize the XOkey Window when the connected to a VPN gateway
                     [self.window miniaturize:self];
                     return;
@@ -554,7 +583,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
             //Remove route to ExoNet
             [self removeExoNetRoute];
-            routedToExoNet = false;
         }
         
         //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
@@ -574,8 +602,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 }
 
 -(void)closeWaitWindow:(NSTimer*)timer{
-    // This method has been depracated in OS X 10.10.1
-    //[NSApp endSheet:self.waitWindow];
     [self.window endSheet:self.waitWindow];
 }
 
@@ -587,18 +613,20 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 #pragma mark Sleep, Wake, and Disconnect Notification Handling
 - (void) receiveSleepNote: (NSNotification*) note
 {
-    //Don't really need to do anything
+    //Let the appPoll function handle possible disconnects/changes in router IP
     XOkeyLog([NSString stringWithFormat:@"receiveSleepNote: %@", [note name]]);
 }
 
 - (void) receiveWakeNote: (NSNotification*) note
 {
-    NSLog(@"receiveWakeNote: %@",[note name]);
+    //Let the appPoll function handle possible disconnects/changes in router IP
     XOkeyLog([NSString stringWithFormat:@"receiveWakeNote: %@", [note name]]);
-    //After wake, reset the web view, present the wait window modal dialog box, and manually enumerate the USB ports for the XOkey device
+    
+    [self appPoll:nil];
+    
+    //Webview sometimes infinitely loops loading screen so just reload login page on waking
     [webViewDel connectToXOkey:@""];
-    [self openWaitWindow];
-    [XOkeyUSBObject enumerateUSB];
+
 }
 
 - (void) fileNotifications
@@ -868,6 +896,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Send disconnect notification
         disconnNote.title = @"Disconnected from XOnet";
         [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:disconnNote];
+        
+        routedToExoNet = false;
     }
 }
 

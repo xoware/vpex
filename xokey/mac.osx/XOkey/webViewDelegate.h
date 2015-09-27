@@ -8,10 +8,12 @@
 
 #import <Foundation/Foundation.h>
 #import <Foundation/NSURLConnection.h>
+#import <WebKit/WebKit.h>
 #import "XOkeyAppDelegate.h"
 //  Delegate object to handle the webview connection
 @interface webViewDelegate : NSObject <NSURLConnectionDelegate>
 
+@property WebView* webViewRef;
 -(int)connectToXOkey:(NSString*)path;
 
 @end
