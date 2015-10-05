@@ -248,6 +248,7 @@
 				CE2EBF50191BE7E3007FACFB /* Frameworks */,
 				CE2EBF51191BE7E3007FACFB /* Resources */,
 				CEC099531926CFB7009774E7 /* Copy Files */,
+				CE23B89E1BBE4E060028B0F4 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -283,7 +284,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = ExoKey;
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = x.o.ware;
 			};
 			buildConfigurationList = CE2EBF4E191BE7E2007FACFB /* Build configuration list for PBXProject "XOkey" */;
@@ -327,6 +328,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CE23B89E1BBE4E060028B0F4 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"$INFOPLIST_FILE\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"$INFOPLIST_FILE\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CE2EBF4F191BE7E3007FACFB /* Sources */ = {
@@ -406,6 +423,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "XOkey on Mac";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -469,6 +487,7 @@
 				GCC_PREFIX_HEADER = "XOkey/XOkey-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/XOkey/XOkey-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = xoware.XOkey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -483,6 +502,7 @@
 				GCC_PREFIX_HEADER = "XOkey/XOkey-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/XOkey/XOkey-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = xoware.XOkey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="15A284" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="7706"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="8191"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -118,12 +118,14 @@
                 <subviews>
                     <webView translatesAutoresizingMaskIntoConstraints="NO" id="VlX-67-WjO">
                         <rect key="frame" x="20" y="20" width="828" height="571"/>
+                        <animations/>
                         <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
                             <nil key="identifier"/>
                         </webPreferences>
                     </webView>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="lml-7s-bFq">
                         <rect key="frame" x="361" y="598" width="148" height="18"/>
+                        <animations/>
                         <buttonCell key="cell" type="radio" title="XOkey Plugged In" bezelStyle="regularSquare" imagePosition="left" alignment="left" enabled="NO" inset="2" id="0tT-wF-9t4">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -139,6 +141,7 @@
                     <constraint firstAttribute="trailing" secondItem="lml-7s-bFq" secondAttribute="trailing" constant="361" id="c6o-IR-cT4"/>
                     <constraint firstItem="lml-7s-bFq" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="362" id="dL3-R6-hmJ"/>
                 </constraints>
+                <animations/>
             </view>
         </window>
         <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="ShR-Po-JT5" customClass="NSPanel">
@@ -152,6 +155,7 @@
                 <subviews>
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dGf-At-6QJ" userLabel="XOkey not detected. If the device is plugged in, please wait while the application searches for and configures the device.">
                         <rect key="frame" x="101" y="64" width="352" height="68"/>
+                        <animations/>
                         <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="XOkey not detected. If the device is plugged in, please wait while the application searches for and configures the device." id="sLX-4t-0jk">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -160,10 +164,12 @@
                     </textField>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6s2-Bg-Kja">
                         <rect key="frame" x="151" y="152" width="252" height="82"/>
+                        <animations/>
                         <imageCell key="cell" controlSize="mini" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="xo_ware_top_banner" id="y2e-jW-nzC"/>
                     </imageView>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Q36-iE-OdU">
                         <rect key="frame" x="240" y="35" width="74" height="29"/>
+                        <animations/>
                         <buttonCell key="cell" type="bevel" title="Close" bezelStyle="regularSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Fa4-1q-9zP">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -173,6 +179,7 @@
                         </connections>
                     </button>
                 </subviews>
+                <animations/>
             </view>
         </window>
         <window title="Help" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="neB-MF-F1Z" customClass="NSPanel">
@@ -189,10 +196,12 @@
                         <constraints>
                             <constraint firstAttribute="width" constant="178" id="4h4-Ke-6Fo"/>
                         </constraints>
+                        <animations/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="xo_ware_top_banner" id="pzj-BF-SUs"/>
                     </imageView>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="H8P-On-CM1">
                         <rect key="frame" x="103" y="64" width="343" height="17"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="For more information, please visit:" id="wDM-0X-aWs">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -201,6 +210,7 @@
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="VFk-YS-PB9">
                         <rect key="frame" x="149" y="39" width="114" height="17"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="www.xoware.com" id="28c-T8-1B1">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -221,6 +231,7 @@
                     <constraint firstAttribute="trailing" secondItem="H8P-On-CM1" secondAttribute="trailing" constant="-32" id="jzK-Md-ATV"/>
                     <constraint firstItem="VFk-YS-PB9" firstAttribute="top" secondItem="ks3-ko-Uq1" secondAttribute="bottom" constant="8" symbolic="YES" id="uvc-3J-Nph"/>
                 </constraints>
+                <animations/>
             </view>
             <point key="canvasLocation" x="1053" y="214"/>
         </window>

@@ -79,6 +79,7 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
         kr = (*dev)->GetDeviceVendor(dev, &vendor);
         kr = (*dev)->GetDeviceProduct(dev, &product);
         kr = (*dev)->GetDeviceReleaseNumber(dev, &release);
+    
         if ((vendor != kOurVendorID) || (product != kOurProductID) )//||
             //(release != 1))
         {
@@ -90,9 +91,14 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
             
             //Get BSDDevice name. The IORegistry device database needs time to update so loop until the BSDDevice name in the OS database is not null
             //since we require the BSDDevice name to configure the device with the BSD networking tools.
+            //
+            //10/1/2015: IORegistryEntrySearchCFProperty returns NULL for BSD name. Looks like others have encountered the same issue on the Apple dev forum.
+            //           Not sure if this is a bug or it was specifically implemented for Capitan. Work around is implemented in the USB plugin callback.
+#if 0
             CFStringRef bsdName = nil;
             int retry = 0;
             do{
+                
                 sleep(0.5);
                 bsdName = ( CFStringRef ) IORegistryEntrySearchCFProperty ( usbDevice,
                                                                                    kIOServicePlane,
@@ -101,9 +107,9 @@ void RawDeviceAdded(void *refCon, io_iterator_t iterator){
                                                                                    kIORegistryIterateRecursively );
                 retry++;
                 
-            }while (bsdName == nil);
-             
+            }while (bsdName == nil & retry < 10);
             c_Reference.BSDDeviceName = (__bridge NSMutableString*)(bsdName);
+#endif
             [[NSNotificationCenter defaultCenter]postNotificationName:XOKEY_PLUGIN object:nil];
         }
         kr = IOObjectRelease(usbDevice);

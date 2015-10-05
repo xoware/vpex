@@ -31,6 +31,10 @@
         helperListener = [[NSXPCListener alloc] initWithMachServiceName:kNetworkConfigToolMachServiceName];
         helperListener.delegate = self;
         
+        //Ensure network tool service is started in launchd. Seems to need to be explicitly started now.
+        [self XOkeyLog:@"Starting launchd service XOkey.NetworkConfigTool"];
+        [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"start",@"XOkey.NetworkConfigTool"]];
+        
         //To store DNS Servers prior to setting the EK as the nameserver
         previousDNSServers = [NSMutableArray array];
     }
@@ -41,6 +45,7 @@
 {
     // Tell the XPC listener to start processing requests.
     [helperListener resume];
+    
     // Run the run loop forever.
     [[NSRunLoop currentRunLoop] run];
 }
@@ -71,19 +76,11 @@
             [networkTask setArguments:@[@"set",BSDDeviceName,@"DHCP"]];
             [networkTask setStandardOutput:pipe];
             [networkTask launch];
-            
-            //ipconfig output returns nothing so don't log
-            //NSString* outPut = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-            //[self XOkeyLog:outPut];
         }else{
             //ipconfig set en3 manual 192.168.255.2 255.255.255.252
             [networkTask setArguments:@[@"set",BSDDeviceName,@"manual",ipAddress,mask]];
             [networkTask setStandardOutput:pipe];
             [networkTask launch];
-            
-            //ipconfig output returns nothing so don't log
-            //NSString* outPut = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-            //[self XOkeyLog:outPut];
         }
         [self XOkeyLog:[NSString stringWithFormat:@"Succeeded in assigning XOkey the IP Address %@ on endpoint %@",ipAddress,BSDDeviceName]];
     }else{
@@ -136,7 +133,6 @@
     [NSTask launchedTaskWithLaunchPath:@"/sbin/route" arguments:@[@"delete",exoNetIP,routerIP]];
     
     //Reset DNS to default DNS provided by the DHCP server
-    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
     [self resetDNSServers];
 }
 
@@ -156,20 +152,6 @@
 //To setup firewall/IP fowarding
 -(void)setupFirewall:(NSString*)XOkeyEndpoint internetEndpoint:(NSString*)inetEndpoint{
     [self XOkeyLog:@"***Configuring firewall and NAT rules for XOkey***"];
-    //Create the basic XOkey config file
-    
-    // 1) Enable PF
-    //[NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-e"]];
-    /*[self XOkeyLog:@"Enable PF"];
-    NSTask* enablePF = [[NSTask alloc]init];
-    NSPipe* pipe = [NSPipe pipe];
-    [enablePF setLaunchPath:@"/sbin/pfctl"];
-    [enablePF setArguments:@[@"-e"]];
-    [enablePF setStandardOutput:pipe];
-    [enablePF launch];
-    NSString* output = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile]encoding:NSUTF8StringEncoding];
-    [self XOkeyLog:output];
-     */
     
     //1)    Write the config file rules to enable traffic through the EK and NAT rules for the EK
     [self XOkeyLog:[NSString stringWithFormat:@"Writing PF config file for XOkey at path %@",PF_CONF_PATH]];
@@ -179,7 +161,6 @@
         [self XOkeyLog:[NSString stringWithFormat:@"Failed to write PF config file for XOkey at path %@",PF_CONF_PATH]];
         return;
     }
-
     
     //2)    Enable packet forwarding (NAT) for IPv4
     [self XOkeyLog:@"Enable IPv4 packet forwarding (net.inet.ip.forwarding=1)"];
@@ -195,24 +176,6 @@
     //5)    Load the PF configuration file
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-f",PF_CONF_PATH]];
     [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-sr"]];
-
-    /*
-    //Allow all incoming traffic on the XOkey endpoint using IPFW
-    [NSTask launchedTaskWithLaunchPath:@"/sbin/ipfw" arguments:@[@"add",@"allow",@"all",@"from",
-                                                                 @"any",@"to",@"any",@"via",XOkeyEndpoint]];
-    
-    //Enable IPFW using sysctl
-    NSTask* task = [[NSTask alloc]init];
-    NSPipe* pipe = [NSPipe pipe];
-    [task setStandardOutput:pipe];
-    [task setLaunchPath:@"/usr/sbin/sysctl"];
-    [task setArguments:@[@"-w",@"net.inet.ip.fw.enable=1"]];
-    [task launch];
-    NSString* output = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile]encoding:NSUTF8StringEncoding];
-    output = [output stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-    [self XOkeyLog:output];
-     */
-
 }
 
 -(BOOL)writePFConfigFile:(NSString*)XOkeyEndpoint internetEndpoint:(NSString*)inetEndpoint{
@@ -220,15 +183,7 @@
     //NSString* path = @"/etc/XOkey-pf.conf";
     NSString* ruleSet = [NSString stringWithFormat:/*Original rules from /etc/pf.conf*/
                                                     @"# Packet filter and NAT rules for XOkey\n"
-                                                    //"scrub-anchor \"com.apple*\"\n"
-                                                    //"nat-anchor \"com.apple/*\"\n"
-                                                    //"rdr-anchor \"com.apple/*\"\n"
-                                                    "nat on %@ from %@:network to any -> (%@) static-port\n" ,      //New NAT rules for XOkey
-                                                    //"dummynet-anchor \"com.apple/*\"\n"
-                                                    //"anchor \"com.apple/*\"\n"
-                                                    //"load anchor \"com.apple\" from \"/etc/pf.anchors/com.apple\"\n"
-                         
-                                                    /* 
+                                                    "nat on %@ from %@:network to any -> (%@) static-port\n" ,                                                         /*
                                                      **Filter rules for XOkey are not necessary
                                                      **since the defualt behavior is to pass all packets
                                                      **to and from any endpoint/IP.
@@ -253,24 +208,15 @@
 -(void)uninstallNetworkTool{
     //Remove PF rules for EK
     [self XOkeyLog:@"Remove PF rules for XOkey"];
-    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-F",/*PF_CONF_PATH*/@"all"]];
-     //Unload the network tool from launchd
-    [self XOkeyLog:@"Unloading the network tool from launchd"];
-    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"unload",@"/Library/LaunchDaemons/XOkey.NetworkConfigTool.plist"]];
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/pfctl" arguments:@[@"-F", @"all"]];
+    
+     //Stop the service instead of unloading. Unloading seems to lock the service from being launched again
+    [self XOkeyLog:@"Stopping launchd service XOkey.NetworkConfigTool"];
+    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"stop", @"XOkey.NetworkConfigTool"]];
+    
     //Remove the XOkey pf rules
     [self XOkeyLog:@"Removing XOkey pf config file from /etc"];
     [NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:@[@"/etc/XOkey-pf.conf"]];
-    //Close the config tool
-    [NSApp terminate:nil];
-    
-    /*              *** Only remove the network tool and its plist when the SHA-1 digest is different ***
-    //Remove the launchd plist
-    [self XOkeyLog:@"Removing the network tool launchd plist from dir /Library/LaunchDaemons"];
-    [NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:@[@"/Library/LaunchDaemons/XOkey.NetworkConfigTool.plist"]];
-    //Remove the network tool. This will cause a force quit.
-    [self XOkeyLog:@"Removing the network tool from dir /Library/PrivilegedHelperTools"];
-    [NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:@[@"/Library/PrivilegedHelperTools/XOkey.NetworkConfigTool"]];
-     */
 }
 
 //Log text to server application for handling
@@ -294,28 +240,11 @@
     NSString* result = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
     NSArray *arr = [result componentsSeparatedByString:@"\n"];
     previousDNSServers = [NSMutableArray arrayWithArray:arr];
-    //[self XOkeyLog:[NSString stringWithFormat:@"%@",previousDNSServers]];
 }
 
 //Reset DNS Servers to the original nameservers prior to connecting to the XOkey
 -(void)resetDNSServers{
-    //Set DNS server to the one DHCP assigns
-    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
-    //To get DNS servers: scutil --dns | grep "nameserver" | awk '{print $3}' | sort | uniq
-    //NSMutableString* arg = [NSMutableString stringWithString:@"-setdnsservers Wi-Fi "];
-    //NSMutableArray* arg = [NSMutableArray init];
-    //[arg addObject:@"-setdnsservers"];
-    //[arg addObject:@"Wi-Fi"];
-    //for(NSString* dnsServer in previousDNSServers){
-    //    if([dnsServer isNotEqualTo:@""]){
-    //        [arg addObject:dnsServer];
-    //    }
-    //}
-    //[self XOkeyLog:[NSString stringWithFormat:@"%@",arg]];
-    //[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:arg];
-   
     [NSTask launchedTaskWithLaunchPath:@"/usr/sbin/networksetup" arguments:@[@"-setdnsservers",@"Wi-Fi",@"Empty"]];
-
-    
 }
+
 @end

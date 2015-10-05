@@ -36,6 +36,6 @@
 #define VPN_DISCONNECTED            0
 
 //Paths
-#define PF_CONF_PATH    @"/etc/XOKEY-pf.conf"              //PF config file path for XOKEY
+#define PF_CONF_PATH    @"/etc/XOkey-pf.conf"              //PF config file path for XOKEY
 
 #endif
