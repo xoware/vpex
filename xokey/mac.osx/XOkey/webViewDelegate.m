@@ -14,6 +14,8 @@
     //  Private variables.
     NSMutableData* receivedData;
     NSURLConnection* conn;
+
+    //NSURLSession* defaultSession;
 }
 
 -(id)init{
@@ -36,8 +38,7 @@
                                                          diskCapacity:20 * 1024 * 1024
                                                              diskPath:nil];
     [NSURLCache setSharedURLCache:URLCache];
-    
-   
+
     receivedData = [NSMutableData dataWithCapacity: 0];
     NSURL* url = [NSURL URLWithString:@"https://192.168.255.1/ek/login.html"];
     NSURLRequest* request = [NSURLRequest requestWithURL:url];
@@ -48,12 +49,20 @@
     }else{
         XOkeyLog(@"Connecting to https://192.168.255.1");
     }
+    
+//TODO: NSURLSession doesn't work well with custom certifications. Must implement in the future.
+//    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+//    defaultSession = [NSURLSession sessionWithConfiguration:defaultConfigObject delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+//    NSURLSessionDataTask *dataTask = [self->defaultSession dataTaskWithURL: [NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]];
+//    [dataTask resume];
+
     return 1;
 }
+#pragma mark    NSURLConnectionDelegate Methods to handle HTTPS authentication of the certificate.
 
 //  Generic method to load the EK login page in the Webview located in the app deleagate.
 - (void)loadLoginPage{
-    @synchronized(self){
+   // @synchronized(self){
         XOkeyAppDelegate* app = (XOkeyAppDelegate*)[[NSApplication sharedApplication]delegate];
         //Stop loading anything that's currently loading. Could have been the reason that the EK
         //server was periodically freezing. Sleep a bit to let the webkit clear up the session before connecting to the server.
@@ -61,12 +70,8 @@
         //Sleep a bit to let it stoploading
         sleep(0.5);
         [[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
-    }
+   // }
 }
-
-//
-//  NSURLConnectionDelegate Methods to handle HTTPS authentication of the certificate.
-//
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
 {
@@ -79,19 +84,10 @@
 {
     if([challenge.protectionSpace.host isEqualToString:@"192.168.255.1"]){
         [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
-        XOkeyLog(@"Validated XOkey credential.");
-        
-        /*
-            Cancel the NSURLConnection after the delegate has received a response. From there, we cancel the connection and load
-            the XOkey login page via webview.
-         */
     }
 }
 
-//
-//  NSURLConnection delegate methods that are required to be implemented.
-//
-
+#pragma mark    NSURLConnection delegate methods that are required to be implemented.
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     //Cancel the connection since NSURLConnection doesn't handle CS or JS resources. Since the app has now authenticated with the self-signed
@@ -133,24 +129,8 @@
     [receivedData appendData:data];
 }
 
-//To handle JS causing an open file modal dialog to open. resultListener is the UIDelegate
-- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id < WebOpenPanelResultListener >)resultListener
-{
-    //Open panel code comes from the File System Programming Guide from Apple
-    NSOpenPanel* panel = [NSOpenPanel openPanel];
-    // This method displays the panel and returns immediately.
-    // The completion handler is called when the user selects an
-    // item or cancels the panel.
-    [panel beginWithCompletionHandler:^(NSInteger result){
-        if (result == NSFileHandlingPanelOKButton) {
-            NSURL*  theDoc = [[panel URLs] objectAtIndex:0];
-            // Send the filename to the listener (webview)
-            [resultListener chooseFilename:[theDoc relativePath]];
-        }
-    }];
-}
-
-#pragma mark    Delegate methods that allow a URL to be launched by the default user browser
+#pragma mark    Methods that add functionality to webview
+//Delegate methods that allow a URL to be launched by the default user browser
 - (WebView *)webView:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
 {
     id myDocument = [[NSDocumentController sharedDocumentController] openUntitledDocumentAndDisplay:YES error:nil];
@@ -173,4 +153,73 @@
     [[NSWorkspace sharedWorkspace] openURL:[actionInformation objectForKey:WebActionOriginalURLKey]];
     [listener ignore];
 }
+
+//To handle JS causing an open file modal dialog to open. resultListener is the UIDelegate
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id < WebOpenPanelResultListener >)resultListener
+{
+    //Open panel code comes from the File System Programming Guide from Apple
+    NSOpenPanel* panel = [NSOpenPanel openPanel];
+    // This method displays the panel and returns immediately.
+    // The completion handler is called when the user selects an
+    // item or cancels the panel.
+    [panel beginWithCompletionHandler:^(NSInteger result){
+        if (result == NSFileHandlingPanelOKButton) {
+            NSURL*  theDoc = [[panel URLs] objectAtIndex:0];
+            // Send the filename to the listener (webview)
+            [resultListener chooseFilename:[theDoc relativePath]];
+        }
+    }];
+}
+
+#pragma mark    NSURLSession methods to be implemented in the future
+//TODO: NSURLSession doesn't work well with custom certifications. Must implement in the future.
+/*
+- (void)URLSession:(NSURLSession * _Nonnull)session dataTask:(NSURLSessionDataTask * _Nonnull)dataTask didReceiveData:(NSData * _Nonnull)data
+{
+    [receivedData appendData:data];
+    
+}
+- (void)URLSession:(NSURLSession * _Nonnull)session task:(NSURLSessionTask * _Nonnull)task didCompleteWithError:(NSError * _Nullable)error
+{
+    //Reset data buffer. Load login page with UIWebview now that self-signed certificate has been accepted
+    XOkeyAppDelegate* app = (XOkeyAppDelegate*)[[NSApplication sharedApplication]delegate];
+    //Stop loading anything that's currently loading. Could have been the reason that the EK
+    //server was periodically freezing. Sleep a bit to let the webkit clear up the session before connecting to the server.
+    //[[app.ek_WebView mainFrame]stopLoading];
+    //NSURL* url = [NSURL URLWithString:@"https://192.168.255.1"];
+    //[[app.ek_WebView mainFrame]loadData:receivedData MIMEType:@"application/html" textEncodingName:@"utf-8" baseURL:url];
+    //Sleep a bit to let it stoploading
+    //sleep(0.5);
+    //[[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
+    
+    
+    //[receivedData setLength:0];
+    [self loadLoginPage];
+}
+
+- (void)URLSession:(NSURLSession * _Nonnull)session didReceiveChallenge:(NSURLAuthenticationChallenge * _Nonnull)challenge completionHandler:(void (^ _Nonnull)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler{
+    if([challenge.protectionSpace.host isEqualToString:@"192.168.255.1"]){
+        //completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
+        NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+        [[NSURLCredentialStorage sharedCredentialStorage]setCredential:credential forProtectionSpace:[NSURLProtectionSpace shar]];
+        completionHandler(NSURLSessionAuthChallengeUseCredential,credential);
+        
+        [defaultSession finishTasksAndInvalidate];
+        [receivedData setLength:0];
+        
+        // [self loadLoginPage];
+        //[defaultSession finishTasksAndInvalidate];
+        // [receivedData setLength:0];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler{
+    completionHandler(NSURLSessionResponseAllow);
+    [self loadLoginPage];
+}
+//
+*/
 @end

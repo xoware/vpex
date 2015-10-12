@@ -127,7 +127,7 @@ void listenToXOkeyBroadcast(){
 }
  */
 #pragma mark C-level functions
-#define DEBUG_MODE 0            //Logging is completely turned off for release mode
+#define DEBUG_MODE 1            //Logging is completely turned off for release mode
 //Universal logger across all the different objects of the app (including the network tool)
 void XOkeyLog(NSString* text){
 #if DEBUG_MODE
@@ -147,7 +147,7 @@ void XOkeyLog(NSString* text){
         [fileString appendString:text];
         [fileString appendString:@"\n"];
         if (logFileHandle) {
-            //[logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
+            [logFileHandle writeData:[fileString dataUsingEncoding:NSUTF8StringEncoding]];
         }
 
     });
@@ -402,8 +402,20 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Set XOkey connected state to true
         XOkeyConnected = true;
         
+        //Find endpoint name using networksetup
+        NSTask* routerTask = [[NSTask alloc]init];
+        NSPipe* pipe = [[NSPipe alloc]init];
+        NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
+        [routerTask setLaunchPath:@"/bin/sh"];
+        [routerTask setArguments:@[@"-c",arg]];
+        [routerTask setStandardOutput:pipe];
+        [routerTask launch];
+        NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+        BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
+        
         //Set the EK BSD device name and initialize IP address and subnet to default values
-        deviceProperties[XOKEY_ENDPOINT] = XOkeyUSBObject.BSDDeviceName;
+        deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
         deviceProperties[XOKEY_IP_ADDRESS] = DEFAULT_IP;
         deviceProperties[XOKEY_SUBNET] = DEFAULT_SUBNET;
         
@@ -416,7 +428,21 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Setup firewall/NAT rules only when EK is connected
         dispatch_sync(networkQueue,
             ^(void){
+                //Sleep a bit to let networking settings update
                 sleep(3.0);
+                
+                //Find endpoint name using networksetup
+                NSTask* routerTask = [[NSTask alloc]init];
+                NSPipe* pipe = [[NSPipe alloc]init];
+                NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
+                [routerTask setLaunchPath:@"/bin/sh"];
+                [routerTask setArguments:@[@"-c",arg]];
+                [routerTask setStandardOutput:pipe];
+                [routerTask launch];
+                NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+                BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+                XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
+                deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
                 [self setupFirewall];
         });
         
@@ -428,7 +454,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Autolayout engine must occur on the main thread.
         dispatch_async(networkQueue,
             ^(void){
-                NSTimer* timer = [NSTimer timerWithTimeInterval:1.5 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
+                NSTimer* timer = [NSTimer timerWithTimeInterval:1.25 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
                 [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
         });
     }
@@ -463,7 +489,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
      //Determine IP of router.
     NSTask* routerTask = [[NSTask alloc]init];
     NSPipe* pipe = [[NSPipe alloc]init];
-    NSString* arg = @"netstat -rn | grep -E -m 1 'default'| awk '{print $2}'";
+    NSString* arg = @"netstat -rn | grep -E -m 1 'default' | awk '{print $2}'";
     [routerTask setLaunchPath:@"/bin/sh"];
     [routerTask setArguments:@[@"-c",arg]];
     [routerTask setStandardOutput:pipe];
@@ -474,15 +500,16 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     //Detected change in router. Tear down connection if routed to XOnet
     if ([result isNotEqualTo:deviceProperties[ROUTER]]) {
         
-        NSLog(@"Detected change in router IP from %@ to %@", deviceProperties[ROUTER], result);
-
-        //NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
-        deviceProperties[ROUTER] = result;
+        NSString* errMsg = [NSString stringWithFormat:@"Detected change in router IP from %@ to %@", deviceProperties[ROUTER], result];
+        XOkeyLog(errMsg);
         
         //Must tear down path to XOnet if the router IP changed and we are connected
         if(routedToExoNet){
             [self removeExoNetRoute];
         }
+        
+        //NSLog(@"Router IP address changed from %@ to %@",deviceProperties[ROUTER],result);
+        deviceProperties[ROUTER] = result;
     }
 }
 
@@ -519,7 +546,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
             deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
             [self removeExoNetRoute];
         }else{
+            //Case where XOkey is the active endpoint and becomes written as the interface to NAT on
             deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
+            NSLog(@"Active endpoint %@", activeEndpoint);
         }
     });
 }
@@ -535,7 +564,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         NSTask* endpointTask = [[NSTask alloc]init];
         NSPipe* pipe = [NSPipe pipe];
         NSString* arg;
-        arg = [NSString stringWithFormat:@"ifconfig %@ | grep -E 'inet' |egrep '[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}\\.[[:digit:]]{1,3}'| awk '{ print $2}'",deviceProperties[XOKEY_ENDPOINT]];
+        arg = [NSString stringWithFormat:@"ifconfig %@ | grep 'inet' | tail -1 | awk '{print $2}'", deviceProperties[XOKEY_ENDPOINT]];
         [endpointTask setLaunchPath:@"/bin/sh"];
         [endpointTask setArguments:@[@"-c",arg]];
         [endpointTask setStandardOutput:pipe];
@@ -566,6 +595,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
                     
                     //Create notification that connection to XOnet has been established
                     connNote.title = @"Connected to XOnet";
+                    [[NSUserNotificationCenter defaultUserNotificationCenter]removeScheduledNotification:disconnNote];
                     [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
                     
                     //Minimize the XOkey Window when the connected to a VPN gateway
@@ -613,6 +643,10 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 #pragma mark Sleep, Wake, and Disconnect Notification Handling
 - (void) receiveSleepNote: (NSNotification*) note
 {
+    
+    //Webview sometimes infinitely loops loading screen so just reload login page on waking
+    [webViewDel connectToXOkey:@""];
+
     //Let the appPoll function handle possible disconnects/changes in router IP
     XOkeyLog([NSString stringWithFormat:@"receiveSleepNote: %@", [note name]]);
 }
@@ -623,10 +657,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     XOkeyLog([NSString stringWithFormat:@"receiveWakeNote: %@", [note name]]);
     
     [self appPoll:nil];
-    
-    //Webview sometimes infinitely loops loading screen so just reload login page on waking
-    [webViewDel connectToXOkey:@""];
-
 }
 
 - (void) fileNotifications
@@ -667,8 +697,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
             //Setup firewall/NAT rules
             dispatch_sync(networkQueue,
                 ^(void){
-                    XOkeyLog(@"Sleep a bit to let EK ip addres update before setting up firewall/NAT rules.");
-                    sleep(2.0);
+                    XOkeyLog(@"Sleep a bit to let EK ip address update before setting up firewall/NAT rules.");
+                    sleep(3.0);
                     [self setupFirewall];
             });
         }
@@ -731,7 +761,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 	} else {
         CFErrorRef  cfError;
         //Remove the job if it exists.
-        //@deprecated SMJobRemove has been deprecated and now causes com.apple.xpc.lanchd to crash
         //SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError);
         
         
@@ -908,6 +937,20 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     //Network tool will force quit when rm'd
     [[myConnection remoteObjectProxy]uninstallNetworkTool];
     [myConnection invalidate];
+    
+    //Close log file
+    [logFileHandle closeFile];
+    //Remove tool from launchd
+//    CFErrorRef cfError;
+//    SMJobRemove(kSMDomainSystemLaunchd, (CFStringRef)kNetworkConfigToolMachServiceName, self->_authRef, true, &cfError);
+//
+//    if (SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError)) {
+//        XOkeyLog(@"Succeeded in removing network tool from launchd");
+//    } else {
+//        NSString* errString = [NSString stringWithFormat:@"Failed to remove tool using SMJobRemove with error %@", CFErrorCopyDescription(cfError)];
+//        XOkeyLog(errString);
+//    }
+
 }
 
 //
