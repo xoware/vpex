@@ -173,8 +173,8 @@ namespace EK_App.Mvvm
 
             
 
-            State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Main);
-            State_Machine_Thread.Name = "EK_StateMachine";
+            State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Wrapper);
+            State_Machine_Thread.Name = "EK";
             State_Machine_Thread.Start();
 
 
@@ -673,6 +673,28 @@ namespace EK_App.Mvvm
 
 //                if (Browser != null)
 //                    InvokeExecuteJavaScript("console.log('starting XOkey')");
+            }
+        }
+        private void State_Machine_Thread_Wrapper()
+        {
+            while (Keep_Running)
+            {
+                try
+                {
+                    State_Machine_Thread_Main();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        Send_Log_Msg("Except: " + ex.ToString(), LogMsg.Priority.Emergency);
+                        EKExceptionHandler.Send_Exception(ex);
+                    }
+                    catch
+                    {
+
+                    }
+                }
             }
         }
         private void Set_EK_State(XOkeyState New_State)

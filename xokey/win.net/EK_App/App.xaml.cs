@@ -444,6 +444,7 @@ namespace EK_App
             Application.Current.DispatcherUnhandledException += EKExceptionHandler.App_DispatcherUnhandledException;
             ExceptionHandler.AsynchronousThreadExceptionHandler = new EKExceptionHandler();
 
+
             ProcessArgs();
           
             CefExample.Init(Cef_LogFile, App.Debug);    
