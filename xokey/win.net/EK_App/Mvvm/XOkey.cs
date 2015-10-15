@@ -241,6 +241,10 @@ namespace EK_App.Mvvm
                         InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
                 }
             }
+            if (!Has_Internet_Access)
+            {
+                Send_Log_Msg("Unable to ping internet");
+            }
         }
 
         // parse something like // "\\KARL-PC\root\cimv2:Win32_PnPEntity.DeviceID="USB\\VID_29B7&PID_0101\\123"
@@ -353,12 +357,21 @@ namespace EK_App.Mvvm
 
             //   return devices;
         }
+
+        private void Check_And_Reload_If_No_Login_Button()
+        {
+            InvokeExecuteJavaScript("setInterval(function(){  if(!document.getElementById('login_button'))  "
+                       + "{ document.location.href='https://192.168.137.2/'; }}, 1000);");
+        }
+
         private void Url_Changed(String url)
         {
             if (url.Contains("/ek/login"))
             {
                 Login_State = XOkeyLoginState.XOkeyLoginState_Loggedout;
                 SetStatusMsg("Please login.");
+                Check_And_Reload_If_No_Login_Button();
+                
             }
             else if (url.Contains("/ek/vpex"))
             {
@@ -372,8 +385,7 @@ namespace EK_App.Mvvm
             else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Debug, "Retry load UI");
-                InvokeExecuteJavaScript("setInterval(function(){ "
-                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                Check_And_Reload_If_No_Login_Button();
             }
         }
         private void Process_Browswer_Console_Msg(String msg)
@@ -620,8 +632,7 @@ namespace EK_App.Mvvm
                             Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
                             InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-success');"
                               + "$('#status_windows_ics').text('OK');");
-                            InvokeExecuteJavaScript("setInterval(function(){ "
-                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                            Check_And_Reload_If_No_Login_Button();
                         }
 
                     }
@@ -655,8 +666,7 @@ namespace EK_App.Mvvm
                     if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                     {
                         Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
-                        InvokeExecuteJavaScript("setInterval(function() { "
-                               + " document.location.href='https://192.168.137.2/'; }, 2500);");
+                        Check_And_Reload_If_No_Login_Button();
                     }
                 }
                 else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
@@ -664,12 +674,20 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-danger');"
                     + "$('#status_windows_ics').text('Failed');");
                 }
+                else if (Login_State == XOkeyLoginState.XOkeyLoginState_LoadingUi)
+                {
+                    Check_And_Reload_If_No_Login_Button();
+                    if (Keep_Running)
+                        System.Threading.Thread.Sleep(1500);
+                }
 
                 if (Login_State == XOkeyLoginState.XOkeyLoginState_Loggedin)
                     Get_VPN_Status();
 
             next_loop:
-                System.Threading.Thread.Sleep(900);
+
+                if (Keep_Running)
+                    System.Threading.Thread.Sleep(900);
 
 //                if (Browser != null)
 //                    InvokeExecuteJavaScript("console.log('starting XOkey')");

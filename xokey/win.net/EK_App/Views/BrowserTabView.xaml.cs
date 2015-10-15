@@ -16,6 +16,14 @@ namespace EK_App.Views
 
             browser.RequestHandler = new RequestHandler();
             browser.LifeSpanHandler = new LifeSpanHandler();
+            browser.DownloadHandler = new DownloadHandler();
+            browser.LoadError += browser_LoadError;
+
+        }
+
+        void browser_LoadError(object sender, CefSharp.LoadErrorEventArgs e)
+        {
+            App.Log("LoadError" + e.FailedUrl);
         }
 
         private void OnTextBoxGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
