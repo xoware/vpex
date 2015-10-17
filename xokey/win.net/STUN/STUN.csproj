@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F2EAC231-CCB1-4F5F-9C17-EA10E7EA6A21}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>ClassLibrary</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>STUN</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AsyncOP.cs" />
+    <Compile Include="AsyncOP_State.cs" />
+    <Compile Include="Client\STUN_Client.cs" />
+    <Compile Include="Client\STUN_NetType.cs" />
+    <Compile Include="Client\STUN_Result.cs" />
+    <Compile Include="EventArgs.cs" />
+    <Compile Include="IAsyncOP.cs" />
+    <Compile Include="IO\Base64.cs" />
+    <Compile Include="IO\Base64Stream.cs" />
+    <Compile Include="IO\DataSizeExceededException.cs" />
+    <Compile Include="IO\FifoBuffer.cs" />
+    <Compile Include="IO\IncompleteDataException.cs" />
+    <Compile Include="IO\JunkingStream.cs" />
+    <Compile Include="IO\LineSizeExceededException.cs" />
+    <Compile Include="IO\MemoryStreamEx.cs" />
+    <Compile Include="IO\MultiStream.cs" />
+    <Compile Include="IO\PartialStream.cs" />
+    <Compile Include="IO\QuotedPrintableStream.cs" />
+    <Compile Include="IO\ReadWriteControlledStream.cs" />
+    <Compile Include="IO\SizeExceededAction.cs" />
+    <Compile Include="IO\SmartStream.cs" />
+    <Compile Include="Message\STUN_Message.cs" />
+    <Compile Include="Message\STUN_MessageType.cs" />
+    <Compile Include="Message\STUN_t_ChangeRequest.cs" />
+    <Compile Include="Message\STUN_t_ErrorCode.cs" />
+    <Compile Include="Net_Utils.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
