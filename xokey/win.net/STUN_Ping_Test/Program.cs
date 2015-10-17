@@ -16,6 +16,8 @@ namespace STUN_Ping_Test
             {
                 new Tuple<string, int>("ns1.vpex.org", 3478),
                 new Tuple<string, int>("ns2.vpex.org", 3478),
+                new Tuple<string, int>("stun.sipgate.net", 3478), 
+                new Tuple<string, int>("stun.stunprotocol.org", 3478), 
                 new Tuple<string, int>("stun.l.google.com", 19302),
                 new Tuple<string, int>("stun1.l.google.com", 19302),
                 new Tuple<string, int>("stun2.l.google.com", 19302),

@@ -129,6 +129,7 @@
         <File Source="$(var.EK_App.TargetDir)\d3dcompiler_46.dll" />
         <File Source="$(var.EK_App.TargetDir)\devtools_resources.pak" />
         <File Source="$(var.EK_App.TargetDir)\EK.BrowserSubprocess.exe" />
+        <File Source="$(var.EK_App.TargetDir)\STUN.dll" />
         <File Source="$(var.EK_App.TargetDir)\Mantin.Controls.Wpf.Notification.dll" />
         <File Source="$(var.EK_App.TargetDir)\Hardcodet.Wpf.TaskbarNotification.dll" />    
       
