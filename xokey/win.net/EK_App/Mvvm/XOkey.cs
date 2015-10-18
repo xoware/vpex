@@ -149,7 +149,9 @@ namespace EK_App.Mvvm
         bool XOkey_Driver_Found = false;
         bool ICS_Configured = false;
         bool Network_Interfaces_OK = false;
-        bool Has_Internet_Access = false;
+        bool Ping_Test_Pass = false;
+        bool Stun_Test_Pass = false;
+        bool HTTP_Test_Pass = false;
         DateTime Last_Vpn_Status = DateTime.Now;
         System.Threading.Thread State_Machine_Thread = null;
         public EK_App.ViewModels.BrowserTabViewModel Browser = null;
@@ -173,8 +175,8 @@ namespace EK_App.Mvvm
 
             
 
-            State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Main);
-            State_Machine_Thread.Name = "EK_StateMachine";
+            State_Machine_Thread = new System.Threading.Thread(State_Machine_Thread_Wrapper);
+            State_Machine_Thread.Name = "EK";
             State_Machine_Thread.Start();
 
 
@@ -186,7 +188,7 @@ namespace EK_App.Mvvm
                notify.Show("Starting");
            }));*/
         }
-        private void Check_Internet_Access()
+        private void Run_Ping_test()
         {
             string[] Hosts = new string[] { "8.8.8.8",
                 "208.67.222.222",
@@ -214,7 +216,7 @@ namespace EK_App.Mvvm
                     PingReply reply = pingSender.Send(Hosts[i], timeout, buffer, options);
                     if (reply.Status == IPStatus.Success)
                     {
-                        Has_Internet_Access = true;
+                        Ping_Test_Pass = true;
                         Send_Log_Msg(String.Format("Address: {0}", reply.Address.ToString()));
                         Send_Log_Msg(String.Format("RoundTrip time: {0}", reply.RoundtripTime));
                         Send_Log_Msg(String.Format("Time to live: {0}", reply.Options.Ttl));
@@ -226,7 +228,7 @@ namespace EK_App.Mvvm
                     }
                     else
                     {
-                        Has_Internet_Access = false;
+                        Ping_Test_Pass = false;
                     }
 
                 }
@@ -234,13 +236,116 @@ namespace EK_App.Mvvm
                 {
 
 
-                    Has_Internet_Access = false;
+                    Ping_Test_Pass = false;
                     Send_Log_Msg(String.Format("Ping Ex: {0}    Error_Count {1}", ex.Message, Ping_Error_Count));
                     Ping_Error_Count++;
                     if (Ping_Error_Count > 40) 
                         InvokeExecuteJavaScript("if (document.location.href.indexOf('custom://') < 0) document.location.href='custom://cefsharp/home';");
                 }
             }
+            if (!Ping_Test_Pass)
+            {
+                Send_Log_Msg("Unable to ping internet");
+            }
+        }
+
+        public void Test_HTTP_Internet()
+        {
+            // Format of URL, and expected string
+            var ServerTupleList = new List<Tuple<string, string>>
+            {
+                new Tuple<string, string>("http://www.msftncsi.com/ncsi.txt", "Microsoft NCSI"),
+                new Tuple<string, string>("http://www.apple.com/library/test/success.html", "<TITLE>Success</TITLE>"),
+                new Tuple<string, string>("http://captive.apple.com/", "Success"),
+            };
+
+
+
+            foreach (Tuple<string, string> server in ServerTupleList)
+            {
+
+                try
+                {
+                    WebRequest request = WebRequest.Create(server.Item1);
+                    request.Timeout = 2500;
+                    WebResponse response = request.GetResponse();
+                    Console.WriteLine(((HttpWebResponse)response).StatusDescription);
+                    // Get the stream containing content returned by the server.
+                    System.IO.Stream dataStream = response.GetResponseStream();
+                    // Open the stream using a StreamReader for easy access.
+                    System.IO.StreamReader reader = new System.IO.StreamReader(dataStream);
+                    // Read the content.
+                    string responseFromServer = reader.ReadToEnd();
+                    // Display the content.
+                    Send_Log_Msg("HTTP test response: " +responseFromServer);
+                    // Clean up the streams and the response.
+                    if (responseFromServer.Contains(server.Item2))
+                    {
+                        HTTP_Test_Pass = true;
+                        return;
+                    }
+                }
+                catch
+                {
+                    Send_Log_Msg("Error: " + server.Item1);
+                }
+
+            }
+
+            Send_Log_Msg("All HTTP tests failed ");
+            HTTP_Test_Pass = false;
+            return;
+        }
+
+        public LumiSoft.Net.STUN.Message.STUN_Message Test_STUN_Binding()
+        {
+            // try our own servers first fall back to some on the list https://gist.github.com/zziuni/3741933
+            var ServerTupleList = new List<Tuple<string, int>>
+            {
+                new Tuple<string, int>("ns1.vpex.org", 3478),
+                new Tuple<string, int>("ns2.vpex.org", 3478),
+                new Tuple<string, int>("stun.l.google.com", 19302),
+                new Tuple<string, int>("stun1.l.google.com", 19302),
+                new Tuple<string, int>("stun.sipgate.net", 3478), 
+                new Tuple<string, int>("stun.stunprotocol.org", 3478), 
+                new Tuple<string, int>("stun2.l.google.com", 19302),
+                new Tuple<string, int>("stun3.l.google.com", 19302),
+                new Tuple<string, int>("stun4.l.google.com", 19302),
+
+            };
+
+           
+
+            foreach (Tuple<string, int> server in ServerTupleList)
+            {
+
+                try
+                {
+                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+
+                    LumiSoft.Net.STUN.Message.STUN_Message msg = LumiSoft.Net.STUN.Client.STUN_Client.Do_Binding_Request(server.Item1, server.Item2, socket);
+                    socket.Close();
+                    if (msg == null)
+                    {
+                        Send_Log_Msg("STUN blocked: " + server.Item1);
+                    }
+                    else
+                    {
+                        Send_Log_Msg("STUN Success: " + server.Item1);
+                        Stun_Test_Pass = true;
+                        return msg;
+                    }
+                }
+                catch
+                {
+                    Send_Log_Msg("Error: " + server.Item1);
+                }
+
+            }
+            Send_Log_Msg("All UDP STUN tests failed ");
+            Stun_Test_Pass = false;
+            return null;
         }
 
         // parse something like // "\\KARL-PC\root\cimv2:Win32_PnPEntity.DeviceID="USB\\VID_29B7&PID_0101\\123"
@@ -353,12 +458,21 @@ namespace EK_App.Mvvm
 
             //   return devices;
         }
+
+        private void Check_And_Reload_If_No_Login_Button()
+        {
+            InvokeExecuteJavaScript("setInterval(function(){  if(!document.getElementById('login_button'))  "
+                       + "{ document.location.href='https://192.168.137.2/'; }}, 1000);");
+        }
+
         private void Url_Changed(String url)
         {
             if (url.Contains("/ek/login"))
             {
                 Login_State = XOkeyLoginState.XOkeyLoginState_Loggedout;
                 SetStatusMsg("Please login.");
+                Check_And_Reload_If_No_Login_Button();
+                
             }
             else if (url.Contains("/ek/vpex"))
             {
@@ -372,8 +486,7 @@ namespace EK_App.Mvvm
             else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Debug, "Retry load UI");
-                InvokeExecuteJavaScript("setInterval(function(){ "
-                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                Check_And_Reload_If_No_Login_Button();
             }
         }
         private void Process_Browswer_Console_Msg(String msg)
@@ -530,9 +643,9 @@ namespace EK_App.Mvvm
                     goto next_loop;
                 }
 
-                Check_Internet_Access();
+                Run_Ping_test();
 
-                if (!Has_Internet_Access)
+                if (!Ping_Test_Pass)
                 {
                     
                     if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
@@ -554,26 +667,56 @@ namespace EK_App.Mvvm
                         }
                     }
 
-                 //   Check_Internet_Access();
 
-                    if (Has_Internet_Access)
-                    {
-                        // state changed
+                   
+                } 
 
-                        InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-success');"
-                          + "$('#status_internet_connectity').text('OK');");
 
-                        // set EK NS
-                        SetNameservers("XOkey", "8.8.8.8,8.8.4.4");
-                    }
+                if (Ping_Test_Pass)
+                {
+                    InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-success');"
+                      + "$('#status_internet_connectity').text('OK');");
+           
                 }
-
-                if (!Has_Internet_Access && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
+                if (!Ping_Test_Pass && Login_State == XOkeyLoginState.XOkeyLoginState_Init)
                 {
 
                     InvokeExecuteJavaScript("$('#status_internet_connectity').attr('class', 'label label-danger');"
                          + "$('#status_internet_connectity').text('Failed');");
                 }
+
+                Test_STUN_Binding();
+
+                if (Stun_Test_Pass)
+                {
+                    InvokeExecuteJavaScript("$('#status_stun_connectity').attr('class', 'label label-success');"
+                      + "$('#status_stun_connectity').text('OK');");
+                }
+                else
+                {
+                    InvokeExecuteJavaScript("$('#status_stun_connectity').attr('class', 'label label-danger');"
+                         + "$('#status_stun_connectity').text('Failed');");
+                }
+
+                Test_HTTP_Internet();
+                if (HTTP_Test_Pass)
+                {
+                    InvokeExecuteJavaScript("$('#status_http_connectity').attr('class', 'label label-success');"
+                      + "$('#status_http_connectity').text('OK');");
+                }
+                else
+                {
+                    InvokeExecuteJavaScript("$('#status_http_connectity').attr('class', 'label label-danger');"
+                         + "$('#status_http_connectity').text('Failed');");
+                }
+
+                if (Ping_Test_Pass || Stun_Test_Pass || HTTP_Test_Pass)
+                {
+                    // set EK NS
+                    SetNameservers("XOkey", "8.8.8.8,8.8.4.4");
+                }
+
+               
 
 
                 if (!Dependency_Services_Running )
@@ -606,7 +749,7 @@ namespace EK_App.Mvvm
                 }
 
                 if (Network_Interfaces_OK && !ICS_Configured
-                    && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() && Has_Internet_Access)
+                    && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() && (Ping_Test_Pass || Stun_Test_Pass))
                 {
                     Enable_ICS();
 
@@ -620,8 +763,7 @@ namespace EK_App.Mvvm
                             Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
                             InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-success');"
                               + "$('#status_windows_ics').text('OK');");
-                            InvokeExecuteJavaScript("setInterval(function(){ "
-                               + " document.location.href='https://192.168.137.2/'; }, 2000);");
+                            Check_And_Reload_If_No_Login_Button();
                         }
 
                     }
@@ -634,7 +776,7 @@ namespace EK_App.Mvvm
                 if (!Keep_Running)
                     break;
 
-                if (!Has_Internet_Access || !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+                if ((!Ping_Test_Pass && !Stun_Test_Pass && !HTTP_Test_Pass )|| !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
                 {
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-warning');"
                     + "$('#status_windows_ics').text('Waiting for Internet Access');");
@@ -655,8 +797,7 @@ namespace EK_App.Mvvm
                     if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                     {
                         Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
-                        InvokeExecuteJavaScript("setInterval(function() { "
-                               + " document.location.href='https://192.168.137.2/'; }, 2500);");
+                        Check_And_Reload_If_No_Login_Button();
                     }
                 }
                 else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init)
@@ -664,15 +805,45 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_windows_ics').attr('class', 'label label-danger');"
                     + "$('#status_windows_ics').text('Failed');");
                 }
+                else if (Login_State == XOkeyLoginState.XOkeyLoginState_LoadingUi)
+                {
+                    Check_And_Reload_If_No_Login_Button();
+                    if (Keep_Running)
+                        System.Threading.Thread.Sleep(1500);
+                }
 
                 if (Login_State == XOkeyLoginState.XOkeyLoginState_Loggedin)
                     Get_VPN_Status();
 
             next_loop:
-                System.Threading.Thread.Sleep(900);
+
+                if (Keep_Running)
+                    System.Threading.Thread.Sleep(900);
 
 //                if (Browser != null)
 //                    InvokeExecuteJavaScript("console.log('starting XOkey')");
+            }
+        }
+        private void State_Machine_Thread_Wrapper()
+        {
+            while (Keep_Running)
+            {
+                try
+                {
+                    State_Machine_Thread_Main();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        Send_Log_Msg("Except: " + ex.ToString(), LogMsg.Priority.Emergency);
+                        EKExceptionHandler.Send_Exception(ex);
+                    }
+                    catch
+                    {
+
+                    }
+                }
             }
         }
         private void Set_EK_State(XOkeyState New_State)
@@ -944,7 +1115,7 @@ namespace EK_App.Mvvm
 
 
             //  Send_Log_Msg("Received: {0}", bytes);
-            if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP) && Has_Internet_Access && ICS_Configured)
+            if (IP_Reachable && New_IP != null && !New_IP.Equals(XoKey_IP) && Ping_Test_Pass && ICS_Configured)
             {
                 Send_Log_Msg(0, LogMsg.Priority.Info, "New XOkey IP Detected: " + New_IP.ToString());
                 XoKey_IP = New_IP;
@@ -1219,7 +1390,9 @@ namespace EK_App.Mvvm
             Remove_Routes();
             DisableICS();
 
-            Has_Internet_Access = false;
+            Ping_Test_Pass = false;
+            Stun_Test_Pass = false;
+            HTTP_Test_Pass = false;
             Network_Interfaces_OK = false;
             Internet_Interface = null;
             Server_IPEndPoint = null;

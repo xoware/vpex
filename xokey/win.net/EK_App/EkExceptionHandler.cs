@@ -75,33 +75,33 @@ namespace EK_App
 
         public static void Send_Exception(Exception send_ex)
         {
-
-            System.Net.WebResponse response = null;
-
-            System.Net.HttpWebRequest wr = (System.Net.HttpWebRequest)System.Net.WebRequest.Create("http://updates.vpex.org/windows/crash_report.cgi");
-            wr.Method = "POST";
-            wr.Timeout = 30000;
-            wr.ContentType = "application/x-www-form-urlencoded";
-
-            using (var writer = new System.IO.StreamWriter(wr.GetRequestStream()))
-            {
-                writer.Write("version=" + System.Web.HttpUtility.UrlEncode(Properties.Resources.BuildDate) +"&");
-
-                String Trace_Str = "Ex: " + send_ex.ToString();
-
-                if (send_ex.InnerException != null)
-                    Trace_Str += "\nInner Ex: " + send_ex.InnerException.ToString();
-
-                writer.Write("trace=" + System.Web.HttpUtility.UrlEncode(Trace_Str) + "&");
-
-                String Log_Str = System.IO.File.ReadAllText(App.Web_Console_Log_File);
-                writer.Write("log=" + System.Web.HttpUtility.UrlEncode(Log_Str) + "&");
-            }
-
             try
             {
-                response = wr.GetResponse();
+                System.Net.WebResponse response = null;
 
+                System.Net.HttpWebRequest wr = (System.Net.HttpWebRequest)System.Net.WebRequest.Create("http://updates.vpex.org/windows/crash_report.cgi");
+                wr.Method = "POST";
+                wr.Timeout = 30000;
+                wr.ContentType = "application/x-www-form-urlencoded";
+
+                using (var writer = new System.IO.StreamWriter(wr.GetRequestStream()))
+                {
+                    writer.Write("version=" + System.Web.HttpUtility.UrlEncode(Properties.Resources.BuildDate) +"&");
+
+                    String Trace_Str = "Ex: " + send_ex.ToString();
+
+                    if (send_ex.InnerException != null)
+                        Trace_Str += "\nInner Ex: " + send_ex.InnerException.ToString();
+
+                    writer.Write("trace=" + System.Web.HttpUtility.UrlEncode(Trace_Str) + "&");
+
+                    String Log_Str = System.IO.File.ReadAllText(App.Web_Console_Log_File);
+                    writer.Write("log=" + System.Web.HttpUtility.UrlEncode(Log_Str) + "&");
+                }
+
+       
+                response = wr.GetResponse();
+                response.Close(); // cleanup;
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace EK_App
             //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
          
-            response.Close(); // cleanup;
+           
 
         }
         public static void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

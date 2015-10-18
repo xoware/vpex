@@ -255,6 +255,10 @@
       <Project>{61441747-24f4-4d8a-b855-bacf328298f3}</Project>
       <Name>Routing</Name>
     </ProjectReference>
+    <ProjectReference Include="..\STUN\STUN.csproj">
+      <Project>{f2eac231-ccb1-4f5f-9c17-ea10e7ea6a21}</Project>
+      <Name>STUN</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

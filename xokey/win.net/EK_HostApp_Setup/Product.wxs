@@ -48,12 +48,17 @@
 
     
      <InstallExecuteSequence>
+      <Custom Before="InstallInitialize" Action="WixCloseApplications">REMOVE = "ALL"</Custom>
+      <Custom Action='KillApp' Before='InstallValidate'/>
       <Custom Action='AddStartupTask'    After='InstallFinalize'>NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
       <Custom Action="DeleteStartupTask" Before='InstallFinalize'></Custom>
        <!--     <Custom Action='StartDriverInstaller'    After='InstallFiles'>NOT HAS_USB_ETHERNET</Custom> -->
       
      </InstallExecuteSequence>
-     <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
+    <util:CloseApplication Id="CloseApp" CloseMessage="yes" Target="XOkey_App.exe"  Description="XOKey app is still running. Check system try or task manager." RebootPrompt="no" />
+    <CustomAction Id='KillApp' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='taskkill /IM  XOkey_App.exe /T /F' Return='asyncNoWait' />
+
+    <CustomAction Id='AddStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]cmd.exe /C &quot;start /B XOkey_App.exe&quot;' Return='asyncNoWait' /> 
 
    <!-- Delete old startup task-->
      <CustomAction Id='DeleteStartupTask' Directory='INSTALLFOLDER' PatchUninstall='no'  ExeCommand='[SystemFolder]SCHTASKS.EXE /delete /F /TN ExoKey' Return='asyncNoWait' />
@@ -124,6 +129,7 @@
         <File Source="$(var.EK_App.TargetDir)\d3dcompiler_46.dll" />
         <File Source="$(var.EK_App.TargetDir)\devtools_resources.pak" />
         <File Source="$(var.EK_App.TargetDir)\EK.BrowserSubprocess.exe" />
+        <File Source="$(var.EK_App.TargetDir)\STUN.dll" />
         <File Source="$(var.EK_App.TargetDir)\Mantin.Controls.Wpf.Notification.dll" />
         <File Source="$(var.EK_App.TargetDir)\Hardcodet.Wpf.TaskbarNotification.dll" />    
       
