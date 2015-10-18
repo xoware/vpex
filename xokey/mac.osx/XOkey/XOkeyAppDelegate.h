@@ -16,6 +16,7 @@
 #import "webViewDelegate.h"
 #import "NetworkConfigTool.h"
 #import "statusDelegate.h"
+@import SystemConfiguration;
 
 void XOkeyLog(NSString* text);
 @protocol serverProtocol
@@ -39,18 +40,33 @@ void XOkeyLog(NSString* text);
 //GUI
 -(void)initializeGUI;
 
+//Main GUI Actions
+-(IBAction)reconnect:(id)sender;
+- (IBAction)closeModalDialog:(id)sender;
+
+//Wait Window Methods
+-(void)openWaitWindow;
+-(void)closeWaitWindow:(NSTimer*)timer;
+-(void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
+       contextInfo:(void *)contextInfo;
+
+//Methods to control windows
+-(void)openStatusWindow;
+-(void)openMainWindow;
+-(void)windowSelect;
+
 //Network Tool
 -(NSString*) getSha1:(NSString*)toolPath;
 -(void)authorize;
 -(BOOL)initializeNetworkTool;
 -(void)setupFirewall;
 
-//XOkey
+//XOkey configuration methods
 -(void)setXOkeyIP;
 -(void)devProc:(NSNotification*) notification;
+-(void)configureDevice;
 
-//HTTPS Site/Routing
--(void)appPoll:(NSTimer*)timer;
+//Laptop and internet configuration methods
 -(void)findRouter;
 -(void)getActiveInterface;
 
@@ -59,17 +75,9 @@ void XOkeyLog(NSString* text);
 -(void)routeToExoNet:(NSString*)ExoNetIP;
 -(void)removeExoNetRoute;
 
-//Actions
--(IBAction)reconnect:(id)sender;
-- (IBAction)closeModalDialog:(id)sender;
 
-//Wait Window Methods
--(void)openWaitWindow;
--(void)closeWaitWindow:(NSTimer*)timer;
--(void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
-        contextInfo:(void *)contextInfo;
 
-//Methods to Call External Programs
+//Methods to delegate from external objects/network tool
 - (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr newTool:(BOOL)isNewTool;
 - (BOOL) runProcessAsAdministrator:(NSString*)scriptPath withArguments:(NSArray *)arguments
                             output:(NSString **)output errorDescription:(NSString **)errorDescription;
@@ -81,5 +89,14 @@ void XOkeyLog(NSString* text);
 @property (atomic, copy,   readwrite) NSData *authorization;
 @property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
 @property (weak) IBOutlet NSView *modalDialogView;
+
+//Status window
+@property (weak) IBOutlet NSWindow *statusWindow;
+@property (weak) IBOutlet NSTextField *pluginStatus;
+@property (weak) IBOutlet NSTextField *connectionStatus;
+- (IBAction)loginToMainWindow:(id)sender;
+@property (weak) IBOutlet NSButton *statusLoginButton;
+@property (weak) IBOutlet NSTextField *configStatus;
+
 
 @end

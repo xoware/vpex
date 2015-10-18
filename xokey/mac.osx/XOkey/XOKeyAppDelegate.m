@@ -61,71 +61,6 @@
 XOkeyAppDelegate* c_pointer;
 NSFileHandle* logFileHandle;
 
-//Detection of XOkey is done via USB enumeration using IOKit
-/*
-struct XoHeartBeatData
-{
-    uint32_t version;  // version of this struct.  version 1 offset 0
-    uint32_t magic; // magic marker to validate 0xDEADBEEF  offset 4
-    unsigned int num_addr; // offset 8
-    struct in_addr addr[MAX_ADDR];  // My IP 4V addresses // offset 12
-    unsigned int addr_prefix[MAX_ADDR];  //  CIDR  prefix    // netmask
-    uint32_t product_id;
-    time_t time; // once clock is set, this value should never repeat.  Help avoid replay attack.
-    uint32_t rand[2]; // random data for hashing.  Enough to seed signature.
-    uint32_t signature[4]; // Signature(Hash) of above data.
-};
-*/
-
-/*
-//Socket method to detect XOkey
-//Add the while(1) loop for listening for UDP packets on a spearate thread.
-//Listen to broadcast packets.
-void listenToXOkeyBroadcast(){
-    int sd;
-    struct sockaddr_in sa;
-    sd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sd == -1) {
-        XOkeyLog(@"Error creating broadcast socket");
-    }
-    //Zero the memory of sa
-    bzero(&sa, sizeof(sa));
-    
-    //Set sockaddr info
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(1500);
-    sa.sin_addr.s_addr = htons(((239<<8|255)<<8|255)<<8|255);    //239.255.255.255
-    sa.sin_addr.s_addr = INADDR_ANY;
-    
-    //Bind to the socket
-    if (!bind(sd, (struct sockaddr *)&sa, sizeof(sa))) {
-        XOkeyLog(@"Failed to bind socket and listen to XOkey broadcast traffic.");
-        return;
-    }
-#if 0
-    //Fetch the global concurrent queue associated with each Mac process
-    dispatch_queue_t netWorkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
-                                                        0);
-
-    //Use GCD async and concurrent queues instead of threads.
-    dispatch_sync(netWorkQueue, ^(void){
-        while (1) {
-            char buf[101];
-            struct sockaddr from;
-            socklen_t sizeFrom = sizeof(from);
-            
-            //Listen is only used fot connection oriented (TCP) type streams so we use recvfrom instead.
-            ssize_t size = recvfrom(sd, buf, sizeof(buf), 0, &from, &sizeFrom);        //recvfrom blocks
-            XOkeyLog(@"inside dispatch queue");
-
-            buf[100] = '\n';
-            NSLog(@"%s",buf);
-            sleep(2.0);
-        }
-    });
-#endif
-}
- */
 #pragma mark C-level functions
 #define DEBUG_MODE 1            //Logging is completely turned off for release mode
 //Universal logger across all the different objects of the app (including the network tool)
@@ -173,6 +108,38 @@ NSString* findNetworkInterface(struct in_addr* addr){
     return nil;
 }
 
+//
+//  Detect if internet connection exists
+//
+bool detectInternetConnection(){
+    int i;
+    struct hostent *h = NULL;
+
+    //  Determine if the computer can connect to the internet.
+    // some popular hosts on the Internet
+    char * hosts[] = {
+        "www.xoware.com",
+        "www.google.com",
+        "www.amazon.com",
+        NULL, NULL,
+    };
+    
+    //To ensure the domains can be reached (no network issues)
+    for (i = 0; !h && i < 3 && hosts[i]; i++) {
+        h = gethostbyname2(hosts[i], AF_INET);
+        if (h==NULL) {
+            //ERROR("lookup failed: %s\n", hosts[i]);
+            XOkeyLog([NSString stringWithFormat:@"Failed to fetch info on host: %s",hosts[i]]);
+        }
+    }
+    
+    //  Connection to the internet might not exist
+    if (!h) {
+        return false;
+    }else{
+        return true;
+    }
+}
 /**
  * @brief Get a local IP address that has a route to the internet.
  * do DNS resolution, and try and create a connection to see which source IP gets bound.
@@ -263,6 +230,8 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     BOOL XOkeyConnected;
     BOOL routedToExoNet;
     BOOL networkToolCreated;
+    BOOL internetConnectionExists;
+    BOOL deviceConfigured;
     NSXPCInterface* helperInterface;
     NSXPCConnection *myConnection;
     dispatch_queue_t networkQueue;
@@ -303,6 +272,12 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     //  Traffic isn't initially routed to the ExoNet
     routedToExoNet = false;
     
+    //  Assume there is no internet at first
+    internetConnectionExists = false;
+    
+    //  Device is not initially configured
+    deviceConfigured = false;
+
     //  Network tool needs to be created.
     networkToolCreated = false;
     
@@ -342,7 +317,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //  Begin pre-autorization
     [self authorize];
-    
+
     //  Create the network tool daemon.
     const unsigned int networkToolCreationRetries = 3;
     for (int i = 0; i < networkToolCreationRetries; i++) {
@@ -354,9 +329,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //  Find interface facing the internet. We poll for it but it's initially needed before the PF rule are set
     [self getActiveInterface];
-    
-    //  Listen to broadcast packets from the EK
-    //listenToXOkeyBroadcast();
     
     //  Setup disconnect notification
     disconnNote = [[NSUserNotification alloc]init];
@@ -382,86 +354,213 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 
 //Setup the GUI
 -(void)initializeGUI{
-    self.ek_ConnectedDisplay.state = NSOffState;
+    //Hide initial window
+    //[self.window close];
     
     //Present the wait window
-    [self openWaitWindow];
+    //[self openWaitWindow];
     
     //Turn off modal dialog view from blocking the app from closing
-    [self.modalDialogView.window setPreventsApplicationTerminationWhenModal:NO];
+    //[self.modalDialogView.window setPreventsApplicationTerminationWhenModal:NO];
+    
+    /*
+    //Turn off status window from blocking the app from closing
+    [self.statusWindow setPreventsApplicationTerminationWhenModal:NO];
+    [self.window beginSheet:self.statusWindow completionHandler:^(NSModalResponse response){
+        //Nothing really needs to be done in the wait window
+    }];
+     */
+    //prevent status window from being moved
+    [self.statusWindow setMovable:false];
+    [self windowSelect];
+
 }
 
-#pragma mark Callbacks and Other
+// Button pressed to close status window and show main window
+- (IBAction)loginToMainWindow:(id)sender {
+    [self openMainWindow];
+}
+
+// Open main window
+-(void)openMainWindow{
+    //1) Close status window
+    [self.statusWindow orderOut:self];
+
+    //2) Open main window
+    [self.window center];
+    [self.window orderFront:self];
+}
+
+// Open status window
+-(void)openStatusWindow{
+    //1) Close main window
+    [self.window orderOut:self];
+    
+    //2) Open main window
+    [self.statusWindow center];
+    [self.statusWindow orderFront:self];
+}
+
+
+// To select which window to open based on XOkey and internet connection status
+-(void)windowSelect{
+    //XOkey is plugged in and internet exists
+    if(XOkeyConnected && internetConnectionExists && deviceConfigured){
+        //Enable login button to open main window
+        self.statusLoginButton.enabled = true;
+
+    }
+    //Internet connection is down or XOkey doesn't exist
+    else{
+        //Close main window and disable login button
+        [self openStatusWindow];
+        self.statusLoginButton.enabled = false;
+    }
+}
+
+-(void)openWaitWindow{
+    // This method has been depracated in OS X 10.10.1
+    //[NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
+    // [self.window beginSheet:self.waitWindow completionHandler:^(NSModalResponse response){
+    //Nothing really needs to be done in the wait window
+    //           }];
+}
+
+-(void)closeWaitWindow:(NSTimer*)timer{
+    [self.window endSheet:self.waitWindow];
+}
+
+- (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
+        contextInfo:(void *)contextInfo{
+    [sheet orderOut:self];
+}
+
+#pragma mark Callbacks for USB and Polling
+//  Polling for ExoNet status and changes on the EK
+-(void)appPoll:(NSTimer*)timer{
+    
+    //  Check internet connectivity
+    [self detectInternet];
+    if(!internetConnectionExists) return;
+    
+    //  Check if the host has internet by finding the interface facing the internet.
+    [self getActiveInterface];
+    if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
+    
+    //  Check for router IP Address
+    [self findRouter];
+    
+    //  Check if EK is connected.
+    if (!XOkeyConnected) return;
+    
+    //  Find the IP address of the EK.
+    if (![deviceProperties[XOKEY_ENDPOINT] isEqual: NOT_SET]) {
+        //Update IP Address
+        NSTask* endpointTask = [[NSTask alloc]init];
+        NSPipe* pipe = [NSPipe pipe];
+        NSString* arg;
+        arg = [NSString stringWithFormat:@"ifconfig %@ | grep 'inet' | tail -1 | awk '{print $2}'", deviceProperties[XOKEY_ENDPOINT]];
+        [endpointTask setLaunchPath:@"/bin/sh"];
+        [endpointTask setArguments:@[@"-c",arg]];
+        [endpointTask setStandardOutput:pipe];
+        [endpointTask launch];
+        NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+        result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        deviceProperties[XOKEY_IP_ADDRESS] = result;
+    }
+    
+    
+    //  Check status of VPN server to determine if the EK is connected to the ExoNet
+    {
+        int VPN_Status = [statDelegate pollStatus];
+        
+        //  Case 1: VPN connection is up and  traffic hasn't been routed to the ExoNet
+        if ((VPN_Status == VPN_CONNECTED) & !routedToExoNet) {
+            //Attempt 2 tries to resolve ExoNet host name (DNS)
+            for (UInt16 dnsTry = 0; dnsTry < 2; dnsTry++) {
+                if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
+                    [self routeToExoNet:deviceProperties[EXONET_IP]];
+                    routedToExoNet = true;
+                    
+                    //Create notification that connection to XOnet has been established
+                    connNote.title = @"Connected to XOnet";
+                    [[NSUserNotificationCenter defaultUserNotificationCenter]removeScheduledNotification:disconnNote];
+                    [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
+                    
+                    //Minimize the XOkey Window when the connected to a VPN gateway
+                    if([self.window isVisible]){
+                        [self.window miniaturize:self];
+                    }
+                    return;
+                }
+                //Sleep a bit before retrying.
+                sleep(0.1);
+            }
+            //Failed to resolve DNS.
+            deviceProperties[EXONET_IP] = NOT_SET;
+        }
+        
+        //  Case 2: VPN connection is down and the traffic has been routed to the ExoNet
+        if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
+            //Remove route to ExoNet
+            [self removeExoNetRoute];
+        }
+        
+        //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
+        //if ((VPN_Status == VPN_CONNECTED) & routedToExoNet)
+        
+        //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
+        //if ((VPN_Status == VPN_DISCONNECTED) & !routedToExoNet)
+    }
+}
 
 //Callback function for noification from the USB object that an XOkey object exists
 -(void)devProc:(NSNotification*) notification{
     if([notification.name isEqualToString:XOKEY_PLUGIN]){
         XOkeyLog(@"***XOkey plugin event received.***");
-        self.ek_ConnectedDisplay.state = NSOnState;
-
+        
+        //Update label for XOkey plugin to green
+        _pluginStatus.backgroundColor = NSColor.greenColor;
+        
         //Set XOkey connected state to true
         XOkeyConnected = true;
         
-        //Find endpoint name using networksetup
-        NSTask* routerTask = [[NSTask alloc]init];
-        NSPipe* pipe = [[NSPipe alloc]init];
-        NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
-        [routerTask setLaunchPath:@"/bin/sh"];
-        [routerTask setArguments:@[@"-c",arg]];
-        [routerTask setStandardOutput:pipe];
-        [routerTask launch];
-        NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-        BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-        XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
-        
-        //Set the EK BSD device name and initialize IP address and subnet to default values
-        deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
-        deviceProperties[XOKEY_IP_ADDRESS] = DEFAULT_IP;
-        deviceProperties[XOKEY_SUBNET] = DEFAULT_SUBNET;
-        
-        //Create the network tool to execute programs requiring root
-        [self setXOkeyIP];
-        
-        //Sleep a bit after setting the IP
-        XOkeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
-
-        //Setup firewall/NAT rules only when EK is connected
-        dispatch_sync(networkQueue,
-            ^(void){
-                //Sleep a bit to let networking settings update
-                sleep(3.0);
-                
-                //Find endpoint name using networksetup
-                NSTask* routerTask = [[NSTask alloc]init];
-                NSPipe* pipe = [[NSPipe alloc]init];
-                NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
-                [routerTask setLaunchPath:@"/bin/sh"];
-                [routerTask setArguments:@[@"-c",arg]];
-                [routerTask setStandardOutput:pipe];
-                [routerTask launch];
-                NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-                BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-                XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
-                deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
-                [self setupFirewall];
-        });
-        
-        //Clear the webview
-        [webViewDel connectToXOkey:@""];
-        
-        //Device has appeared, close the waiting window. Sleep a bit in order to let
-        //webkit load the page before the dialog is closed. Note, function calls to the
-        //Autolayout engine must occur on the main thread.
-        dispatch_async(networkQueue,
-            ^(void){
-                NSTimer* timer = [NSTimer timerWithTimeInterval:1.25 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
-                [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
-        });
+        //Check if network tool exists
+        if (!networkToolCreated) {
+            const unsigned int networkToolCreationRetries = 3;
+            for (int i = 0; i < networkToolCreationRetries; i++) {
+                if([self initializeNetworkTool]){
+                    //Configure the device
+                    [self configureDevice];
+                    break;
+                }
+                XOkeyLog([NSString stringWithFormat:@"Failed to create Network Tool. Trying again: %d",(i+1)]);
+            }
+        }
+        //Configure device if network tool is created
+        else{
+           [self configureDevice];
+        }
     }
     if([notification.name isEqualToString:XOKEY_UNPLUG]){
         XOkeyLog(@"***XOkey unplug event received.***");
+        
+        //Update label for XOkey plugin to red
+        _pluginStatus.backgroundColor = NSColor.redColor;
+        
+        //Update XOkey status to false
         XOkeyConnected = false;
-        self.ek_ConnectedDisplay.state = NSOffState;
+        
+        //Update label for device configured to red
+        _configStatus.backgroundColor = NSColor.redColor;
+        
+        //Update config status to false
+        deviceConfigured = false;
+        
+        //Update window
+        [self windowSelect];
+        
+        //Update url to blank
         NSURL* url = [NSURL URLWithString:@"about:blank"];
         NSURLRequest* req = [NSURLRequest requestWithURL:url];
         [[self.ek_WebView mainFrame] loadRequest:req];
@@ -481,10 +580,80 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:disconnNote];
         
         //Re-open the waiting window
-        [self openWaitWindow];
+        //[self openWaitWindow];
     }
 }
 
+-(void)configureDevice{
+    //Find endpoint name using networksetup
+    NSTask* routerTask = [[NSTask alloc]init];
+    NSPipe* pipe = [[NSPipe alloc]init];
+    NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
+    [routerTask setLaunchPath:@"/bin/sh"];
+    [routerTask setArguments:@[@"-c",arg]];
+    [routerTask setStandardOutput:pipe];
+    [routerTask launch];
+    NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+    BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+    XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
+    
+    //Set the EK BSD device name and initialize IP address and subnet to default values
+    deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
+    deviceProperties[XOKEY_IP_ADDRESS] = DEFAULT_IP;
+    deviceProperties[XOKEY_SUBNET] = DEFAULT_SUBNET;
+    
+    //Create the network tool to execute programs requiring root
+    [self setXOkeyIP];
+    
+    //Sleep a bit after setting the IP
+    XOkeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
+    
+    //Setup firewall/NAT rules only when EK is connected
+    dispatch_sync(networkQueue,
+                  ^(void){
+                      //Sleep a bit to let networking settings update
+                      sleep(3.5);
+                      
+                      //Find endpoint name using networksetup
+                      NSTask* routerTask = [[NSTask alloc]init];
+                      NSPipe* pipe = [[NSPipe alloc]init];
+                      NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
+                      [routerTask setLaunchPath:@"/bin/sh"];
+                      [routerTask setArguments:@[@"-c",arg]];
+                      [routerTask setStandardOutput:pipe];
+                      [routerTask launch];
+                      NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+                      BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+                      XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
+                      deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
+                      [self setupFirewall];
+                  });
+    
+    
+    
+    //Clear the webview
+    [webViewDel connectToXOkey:@""];
+    
+    //Device has appeared, close the waiting window. Sleep a bit in order to let
+    //webkit load the page before the dialog is closed. Note, function calls to the
+    //Autolayout engine must occur on the main thread.
+  /*  dispatch_async(networkQueue,
+                   ^(void){
+                       NSTimer* timer = [NSTimer timerWithTimeInterval:1.25 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
+                       [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+                   });
+    */
+    //Device is now configured
+    deviceConfigured = true;
+    
+    //Update label for device configured to green
+    _configStatus.backgroundColor = NSColor.greenColor;
+
+    //Update window
+    [self windowSelect];
+}
+
+#pragma mark Getting Network Information
 -(void)findRouter{
      //Determine IP of router.
     NSTask* routerTask = [[NSTask alloc]init];
@@ -534,110 +703,62 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         deviceProperties[EXONET_IP] = result;
         return true;
     }
-    
 }
 
 -(void)getActiveInterface{
-    dispatch_async(networkQueue, ^(void){
+    //dispatch_async(networkQueue, ^(void){
         struct in_addr nextHop;
         NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
         if (!activeEndpoint){
             // Internet might be down so remove any ExoNet routes if they exist.
             deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
             [self removeExoNetRoute];
+            
         }else{
             //Case where XOkey is the active endpoint and becomes written as the interface to NAT on
             deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
-            NSLog(@"Active endpoint %@", activeEndpoint);
+            //Set connection status to false and change color to red. Load status window
         }
-    });
+    //});
 }
 
-//  Polling for ExoNet status and changes on the EK
--(void)appPoll:(NSTimer*)timer{
-    //  1) First check if EK is connected.
-    if (!XOkeyConnected) return;
-    
-    //  2) Find the IP address of the EK.
-    if (![deviceProperties[XOKEY_ENDPOINT] isEqual: NOT_SET]) {
-        //Update IP Address
-        NSTask* endpointTask = [[NSTask alloc]init];
-        NSPipe* pipe = [NSPipe pipe];
-        NSString* arg;
-        arg = [NSString stringWithFormat:@"ifconfig %@ | grep 'inet' | tail -1 | awk '{print $2}'", deviceProperties[XOKEY_ENDPOINT]];
-        [endpointTask setLaunchPath:@"/bin/sh"];
-        [endpointTask setArguments:@[@"-c",arg]];
-        [endpointTask setStandardOutput:pipe];
-        [endpointTask launch];
-        NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-        result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-        deviceProperties[XOKEY_IP_ADDRESS] = result;
-    }
-    
-    //  3) Check if the host has internet by finding the interface facing the internet.
-    [self getActiveInterface];
-    if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
-    
-    //  4) Check for router IP Address
-    [self findRouter];
-    
-    //  5) Check status of VPN server to determine if the EK is connected to the ExoNet
-    {
-        int VPN_Status = [statDelegate pollStatus];
-        
-        //  Case 1: VPN connection is up and  traffic hasn't been routed to the ExoNet
-        if ((VPN_Status == VPN_CONNECTED) & !routedToExoNet) {
-            //Attempt 2 tries to resolve ExoNet host name (DNS)
-            for (UInt16 dnsTry = 0; dnsTry < 2; dnsTry++) {
-                if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
-                    [self routeToExoNet:deviceProperties[EXONET_IP]];
-                    routedToExoNet = true;
-                    
-                    //Create notification that connection to XOnet has been established
-                    connNote.title = @"Connected to XOnet";
-                    [[NSUserNotificationCenter defaultUserNotificationCenter]removeScheduledNotification:disconnNote];
-                    [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
-                    
-                    //Minimize the XOkey Window when the connected to a VPN gateway
-                    [self.window miniaturize:self];
-                    return;
-                }
-                //Sleep a bit before retrying.
-                sleep(0.1);
+//Called to detect internet connection
+-(void)detectInternet{
+    int static i = 0;
+    int static tryCount = 1;
+    //Only perform detect internet every 15 seconds
+    if(i == tryCount){
+        if(detectInternetConnection()){
+            //Status window is open if internetConnection didn't exist prior
+            if (!internetConnectionExists) {
+                //Set connection status to true and change color to green. Load status window
+                internetConnectionExists = true;
+                self.connectionStatus.backgroundColor = NSColor.greenColor;
+                [self windowSelect];
+                
+                //Only poll for iternet every 9 seconds
+                tryCount = 3;
             }
-            //Failed to resolve DNS.
-            deviceProperties[EXONET_IP] = NOT_SET;
+        }else{
+            //Set connection status to false and change color to red. Load status window
+            internetConnectionExists = false;
+            self.connectionStatus.backgroundColor = NSColor.redColor;
+            [self windowSelect];
+            
+            //Internet is down. Poll for internet every 3 seconds
+            tryCount = 1;
+            
+            //If routed to XOnet, tear down the connection
+            if(routedToExoNet){
+                [self removeExoNetRoute];
+            }
         }
         
-        //  Case 2: VPN connection is down and the traffic has been routed to the ExoNet
-        if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
-            //Remove route to ExoNet
-            [self removeExoNetRoute];
-        }
-        
-        //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
-        //if ((VPN_Status == VPN_CONNECTED) & routedToExoNet)
-        
-        //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
-        //if ((VPN_Status == VPN_DISCONNECTED) & !routedToExoNet)
+        //Reset internet polling counter
+        i = 0;
+    }else{
+        i++;
     }
-}
-
--(void)openWaitWindow{
-    // This method has been depracated in OS X 10.10.1
-    //[NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
-    [self.window beginSheet:self.waitWindow completionHandler:^(NSModalResponse response){
-                //Nothing really needs to be done in the wait window
-                }];
-}
-
--(void)closeWaitWindow:(NSTimer*)timer{
-    [self.window endSheet:self.waitWindow];
-}
-
-- (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
-        contextInfo:(void *)contextInfo{
-    [sheet orderOut:self];
 }
 
 #pragma mark Sleep, Wake, and Disconnect Notification Handling
@@ -686,21 +807,12 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     if (XOkeyConnected) {
         //If the network tool hasn't been created, create it.
         if (!networkToolCreated) {
-            //Set the EK BSD device name and initialize IP address and subnet to default values
-            deviceProperties[XOKEY_ENDPOINT] = XOkeyUSBObject.BSDDeviceName;
-            deviceProperties[XOKEY_IP_ADDRESS] = DEFAULT_IP;
-            deviceProperties[XOKEY_SUBNET] = DEFAULT_SUBNET;
             
             //Create the network tool to execute programs requiring root
-            [self setXOkeyIP];
+            [self initializeNetworkTool];
             
-            //Setup firewall/NAT rules
-            dispatch_sync(networkQueue,
-                ^(void){
-                    XOkeyLog(@"Sleep a bit to let EK ip address update before setting up firewall/NAT rules.");
-                    sleep(3.0);
-                    [self setupFirewall];
-            });
+            //Configure the device
+            [self configureDevice];
         }
         
         //First cancel whatever is loading on the website. The stoploading
@@ -713,7 +825,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         sleep(0.5);
         [webViewDel connectToXOkey:@""];
     }else{
-        [self openWaitWindow];
+        //[self openWaitWindow];
+        //Should never really get here
+        [self windowSelect];
         XOkeyLog(@"XOkey is not connected!");
     }
 }
@@ -782,7 +896,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 		 * is extracted and placed in /Library/LaunchDaemons and then loaded. The
 		 * executable is placed in /Library/PrivilegedHelperTools.
 		 */
-
 		result = (BOOL) SMJobBless(kSMDomainSystemLaunchd, (__bridge CFStringRef)(label), self->_authRef, &cfError);
         if (!result) {
             error = CFBridgingRelease(cfError);
@@ -795,7 +908,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     return result;
 }
 
-#pragma mark Network Tool methods
+#pragma mark Network Tool Methods
 -(NSString*) getSha1:(NSString*)toolPath{
     NSTask* digestTask = [[NSTask alloc]init];
     NSPipe* pipe = [[NSPipe alloc]init];
@@ -855,6 +968,12 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     NSError *error = nil;
     if (![self blessHelperWithLabel:kNetworkConfigToolMachServiceName error:&error newTool:(toolsDifferent | newTool)]) {
         XOkeyLog([NSString stringWithFormat:@"Failed to create network config tool. Error: %@ / %d", [error localizedFailureReason], (int) [error code]]);
+        
+        //Failed to create tool
+        deviceConfigured = false;
+        _configStatus.backgroundColor = NSColor.redColor;
+        [self windowSelect];
+        
         return NO;
     }else{
         XOkeyLog(@"Succeeded in initializing network config tool.");
@@ -877,6 +996,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //To send XPC messages
         myConnection.remoteObjectInterface = helperInterface;
         [myConnection resume];
+        
         return YES;
     }
 }
@@ -940,17 +1060,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     
     //Close log file
     [logFileHandle closeFile];
-    //Remove tool from launchd
-//    CFErrorRef cfError;
-//    SMJobRemove(kSMDomainSystemLaunchd, (CFStringRef)kNetworkConfigToolMachServiceName, self->_authRef, true, &cfError);
-//
-//    if (SMJobRemove(kSMDomainSystemLaunchd,(CFStringRef)kNetworkConfigToolMachServiceName,self->_authRef,true,&cfError)) {
-//        XOkeyLog(@"Succeeded in removing network tool from launchd");
-//    } else {
-//        NSString* errString = [NSString stringWithFormat:@"Failed to remove tool using SMJobRemove with error %@", CFErrorCopyDescription(cfError)];
-//        XOkeyLog(errString);
-//    }
-
 }
 
 //
@@ -998,5 +1107,4 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         return YES;
     }
  }
- 
 @end
