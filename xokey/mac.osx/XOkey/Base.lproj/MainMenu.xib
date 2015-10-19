@@ -15,9 +15,13 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="XOkeyAppDelegate">
             <connections>
-                <outlet property="ek_ConnectedDisplay" destination="lml-7s-bFq" id="oq5-iM-oos"/>
+                <outlet property="configStatus" destination="Pmi-S1-hCS" id="biV-Pq-vYD"/>
+                <outlet property="connectionStatus" destination="Ynq-Gv-06N" id="x1G-UW-aGj"/>
                 <outlet property="ek_WebView" destination="VlX-67-WjO" id="zdG-4m-4G1"/>
                 <outlet property="modalDialogView" destination="1Wo-VS-RWy" id="PH1-mp-MCj"/>
+                <outlet property="pluginStatus" destination="PHv-gp-ej9" id="njX-4Z-n00"/>
+                <outlet property="statusLoginButton" destination="G0j-xV-Jcd" id="pAw-JV-mzO"/>
+                <outlet property="statusWindow" destination="Vc3-it-5Tw" id="eGZ-A5-ep6"/>
                 <outlet property="waitWindow" destination="ShR-Po-JT5" id="y8l-lj-En7"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -107,9 +111,8 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
+        <window title="XOkey" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="380" y="139" width="868" height="627"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="EiT-Mj-1SZ">
@@ -117,29 +120,18 @@
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <webView translatesAutoresizingMaskIntoConstraints="NO" id="VlX-67-WjO">
-                        <rect key="frame" x="20" y="20" width="828" height="571"/>
+                        <rect key="frame" x="20" y="20" width="828" height="587"/>
                         <animations/>
                         <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
                             <nil key="identifier"/>
                         </webPreferences>
                     </webView>
-                    <button translatesAutoresizingMaskIntoConstraints="NO" id="lml-7s-bFq">
-                        <rect key="frame" x="361" y="598" width="148" height="18"/>
-                        <animations/>
-                        <buttonCell key="cell" type="radio" title="XOkey Plugged In" bezelStyle="regularSquare" imagePosition="left" alignment="left" enabled="NO" inset="2" id="0tT-wF-9t4">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                    </button>
                 </subviews>
                 <constraints>
                     <constraint firstItem="VlX-67-WjO" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" id="0A6-Nb-kua"/>
-                    <constraint firstItem="VlX-67-WjO" firstAttribute="top" secondItem="lml-7s-bFq" secondAttribute="bottom" constant="8" id="0Zi-6u-EuF"/>
                     <constraint firstAttribute="trailing" secondItem="VlX-67-WjO" secondAttribute="trailing" constant="20" id="3qH-Z5-TqV"/>
-                    <constraint firstItem="lml-7s-bFq" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="12" id="4Eq-RZ-AWQ"/>
+                    <constraint firstItem="VlX-67-WjO" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="20" id="9qm-hi-YRU"/>
                     <constraint firstAttribute="bottom" secondItem="VlX-67-WjO" secondAttribute="bottom" constant="20" id="EcP-aB-SSt"/>
-                    <constraint firstAttribute="trailing" secondItem="lml-7s-bFq" secondAttribute="trailing" constant="361" id="c6o-IR-cT4"/>
-                    <constraint firstItem="lml-7s-bFq" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="362" id="dL3-R6-hmJ"/>
                 </constraints>
                 <animations/>
             </view>
@@ -184,7 +176,6 @@
         </window>
         <window title="Help" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="neB-MF-F1Z" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" utility="YES"/>
-            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="139" y="81" width="412" height="150"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="wqT-Fl-vpC">
@@ -234,6 +225,98 @@
                 <animations/>
             </view>
             <point key="canvasLocation" x="1053" y="214"/>
+        </window>
+        <window title="XOkey Status" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="Vc3-it-5Tw">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
+            <rect key="contentRect" x="374" y="275" width="618" height="309"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <view key="contentView" id="24E-Ng-Ist">
+                <rect key="frame" x="0.0" y="0.0" width="618" height="309"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OiE-Ue-Puz">
+                        <rect key="frame" x="176" y="127" width="138" height="17"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Detected XOkey" id="vXN-x4-fr0">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oPY-wd-oEe">
+                        <rect key="frame" x="176" y="95" width="138" height="17"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Connected to Internet" id="b0s-H7-cF2">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kxX-a7-MEv">
+                        <rect key="frame" x="176" y="65" width="138" height="17"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Device Configured" id="fwl-Dh-n3C">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PHv-gp-ej9">
+                        <rect key="frame" x="358" y="124" width="83" height="22"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="zRA-VI-cCq">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ynq-Gv-06N">
+                        <rect key="frame" x="358" y="92" width="83" height="22"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="DTu-nS-jPb">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3PH-X4-eSa">
+                        <rect key="frame" x="206" y="175" width="206" height="146"/>
+                        <animations/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="xo_ware_top_banner" id="ibq-Zk-9Xy"/>
+                    </imageView>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="l6V-zw-u3g" userLabel="XOkey not detected. If the device is plugged in, please wait while the application searches for and configures the device.">
+                        <rect key="frame" x="83" y="168" width="452" height="31"/>
+                        <animations/>
+                        <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Please wait while the application searches for and configures the device." id="ewJ-MC-rqM">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Pmi-S1-hCS">
+                        <rect key="frame" x="358" y="62" width="83" height="22"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="v1N-A1-7zu">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="G0j-xV-Jcd">
+                        <rect key="frame" x="269" y="19" width="81" height="32"/>
+                        <animations/>
+                        <buttonCell key="cell" type="push" title="Continue" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="hsP-3e-AkZ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="loginToMainWindow:" target="Voe-Tx-rLC" id="osD-qP-guV"/>
+                        </connections>
+                    </button>
+                </subviews>
+                <animations/>
+            </view>
+            <point key="canvasLocation" x="1198" y="820.5"/>
         </window>
     </objects>
     <resources>
