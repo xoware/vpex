@@ -33,7 +33,7 @@ namespace CefSharp.Example
 //            {
 //                settings.BrowserSubprocessPath = "..\\..\\..\\..\\CefSharp.BrowserSubprocess\\bin\\x86\\Debug\\CefSharp.BrowserSubprocess.exe";
 //            }
-            settings.BrowserSubprocessPath = "EK.BrowserSubprocess.exe";
+            settings.BrowserSubprocessPath = "XOkey_BrowserSubprocess.exe";
 
             settings.RegisterScheme(new CefCustomScheme
             {
