@@ -12,6 +12,8 @@ namespace EK_App.Views
 {
     public partial class BrowserTabView : UserControl
     {
+        DateTime Last_Error;
+
         public BrowserTabView()
         {
             InitializeComponent();
@@ -20,7 +22,7 @@ namespace EK_App.Views
             browser.LifeSpanHandler = new LifeSpanHandler();
             browser.DownloadHandler = new DownloadHandler();
             browser.LoadError += browser_LoadError;
-
+            Last_Error = DateTime.Now;
         }
 
 
@@ -62,17 +64,19 @@ namespace EK_App.Views
         private void Check_And_Reload_If_No_Login_Button()
         {
             InvokeExecuteJavaScript("setInterval(function(){  if(!document.getElementById('login_button'))  "
-                       + "{ document.location.href='https://192.168.137.2/'; }}, 1000);");
+                       + "{ document.location.href='https://192.168.137.2/'; }}, 2500);");
         }
 
         void browser_LoadError(object sender, CefSharp.LoadErrorEventArgs e)
         {
-            App.Log("LoadError: " + e.FailedUrl);
+            App.Log("LoadError: " + e.FailedUrl + "  Code: " + e.ErrorCode);
             try
             {
-                if (e.FailedUrl.Contains("192.168."))
+                TimeSpan elapsedSpan = DateTime.Now - Last_Error; //elapsedSpan.Seconds
+                if (e.FailedUrl.Contains("192.168.") && e.ErrorCode != CefSharp.CefErrorCode.Aborted)
                 {
                     Check_And_Reload_If_No_Login_Button();
+                    Last_Error = DateTime.Now;
                 }
             }
             catch (Exception ex)

@@ -267,7 +267,7 @@ namespace EK_App.Mvvm
                 try
                 {
                     WebRequest request = WebRequest.Create(server.Item1);
-                    request.Timeout = 2500;
+                    request.Timeout = 3000;
                     WebResponse response = request.GetResponse();
                     Console.WriteLine(((HttpWebResponse)response).StatusDescription);
                     // Get the stream containing content returned by the server.
@@ -283,6 +283,10 @@ namespace EK_App.Mvvm
                     {
                         HTTP_Test_Pass = true;
                         return;
+                    }
+                    else
+                    {
+                        Send_Log_Msg("Unexpected HTTP response: " + responseFromServer);
                     }
                 }
                 catch
@@ -462,7 +466,7 @@ namespace EK_App.Mvvm
         private void Check_And_Reload_If_No_Login_Button()
         {
             InvokeExecuteJavaScript("setInterval(function(){  if(!document.getElementById('login_button'))  "
-                       + "{ document.location.href='https://192.168.137.2/'; }}, 1000);");
+                       + "{ document.location.href='https://192.168.137.2/'; }}, 2500);");
         }
 
         private void Url_Changed(String url)
@@ -1178,6 +1182,12 @@ namespace EK_App.Mvvm
                     if (ipAddress.Equals(IPAddress.Parse("127.0.0.1")))
                         continue;
 
+                    if (ipAddress.Equals(IPAddress.Parse("192.168.255.1")))
+                        continue;
+                    if (ipAddress.Equals(IPAddress.Parse("192.168.255.2")))
+                        continue;
+                    if (ipAddress.Equals(IPAddress.Parse("192.168.255.3")))
+                        continue;
 
                     addresses.Add(unicastIPAddress);
                 }
