@@ -633,6 +633,8 @@ namespace EK_App.Mvvm
                         + "$('#status_usb_hw_detected').text('OK');");
 
                     InvokeExecuteJavaScript("$('#status_usb_hw_msg').html('');");
+                    if (!ICS_Configured)
+                        SetNameservers("XOkey", ""); //clear
                 }
 
                 if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && XOkey_Driver_Found)
@@ -713,13 +715,12 @@ namespace EK_App.Mvvm
                     InvokeExecuteJavaScript("$('#status_http_connectity').attr('class', 'label label-danger');"
                          + "$('#status_http_connectity').text('Failed');");
                 }
-
+/*
                 if (Ping_Test_Pass || Stun_Test_Pass || HTTP_Test_Pass)
                 {
-                    // set EK NS
-                    SetNameservers("XOkey", "8.8.8.8,8.8.4.4");
+                    SetNameservers("XOkey", "8.8.8.8,8.8.4.4"); // Set XK NS
                 }
-
+                */
                
 
 
@@ -761,6 +762,7 @@ namespace EK_App.Mvvm
                     if (ICS_Configured)
                     {
                         Check_Intf_Status();
+                        SetNameservers("XOkey", "8.8.8.8,8.8.4.4"); // Set XK NS
 
                         if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                         {
@@ -1712,24 +1714,35 @@ namespace EK_App.Mvvm
         /// </summary>
         /// <param name="nic">NIC address</param>
         /// <param name="dnsServers">Comma seperated list of DNS server addresses</param>
-        /// <remarks>Requires a reference to the System.Management namespace</remarks>
+        /// <remarks>Requires a reference to the System.Management  namespace</remarks>
         public void SetNameservers(string nic, string dnsServers)
         {
-            using (var networkConfigMng = new System.Management.ManagementClass("Win32_NetworkAdapterConfiguration"))
+            try
             {
-                using (var networkConfigs = networkConfigMng.GetInstances())
+                using (var networkConfigMng = new System.Management.ManagementClass("Win32_NetworkAdapterConfiguration"))
                 {
-                    //                   foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Caption"].Equals(nic)))
-                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Description"].ToString().Contains(nic)))
-                    //                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] )) 
+                    using (var networkConfigs = networkConfigMng.GetInstances())
                     {
-                        using (var newDNS = managementObject.GetMethodParameters("SetDNSServerSearchOrder"))
+                        //                   foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Caption"].Equals(nic)))
+                        foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] && objMO["Description"].ToString().Contains(nic)))
+                        //                    foreach (var managementObject in networkConfigs.Cast<ManagementObject>().Where(objMO => (bool)objMO["IPEnabled"] )) 
                         {
-                            newDNS["DNSServerSearchOrder"] = dnsServers.Split(',');
-                            managementObject.InvokeMethod("SetDNSServerSearchOrder", newDNS, null);
+                            using (var newDNS = managementObject.GetMethodParameters("SetDNSServerSearchOrder"))
+                            {
+                                if (dnsServers.Length < 4)
+                                    newDNS["DNSServerSearchOrder"] = new string[0]; // clear
+                                else
+                                    newDNS["DNSServerSearchOrder"] = dnsServers.Split(',');
+                                managementObject.InvokeMethod("SetDNSServerSearchOrder", newDNS, null);
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Debug, "Exception setting DNS " + ex.ToString() + ex.StackTrace.ToString());
+
             }
         }
 
