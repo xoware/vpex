@@ -172,6 +172,7 @@ namespace EK_App
         protected override void OnExit(ExitEventArgs e)
         {
 
+            App.Keep_Running = false;
             if (Globals.ek != null)
             {
                 Globals.ek.Stop();
@@ -189,7 +190,10 @@ namespace EK_App
                 String Data_Read = Xoware.IpcAnonPipe.PipeServer.ExecServer();
 
                 if (Data_Read.Contains("EXIT"))
+                {
                     Keep_Running = false;
+                    App.Keep_Running = false;
+                }
             } catch
             {
 
@@ -414,6 +418,9 @@ namespace EK_App
                 System.Windows.Application.Current.Dispatcher.Invoke(new System.Action(() =>
                 {
                     App.Log("App: RaisingWindow");
+                    if (App.Keep_Running == false)
+                        return; // ignore
+              
                     if (Application.Current.MainWindow == null)
                     {
                     //    if (Globals.ek == null)

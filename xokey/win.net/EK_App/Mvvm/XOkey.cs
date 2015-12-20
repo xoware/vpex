@@ -569,6 +569,7 @@ namespace EK_App.Mvvm
             NetworkChange.NetworkAddressChanged += new
               NetworkAddressChangedEventHandler(AddressChangedCallback);
 
+            NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
            
 
             while (Keep_Running && Browser == null)
@@ -829,6 +830,11 @@ namespace EK_App.Mvvm
 //                if (Browser != null)
 //                    InvokeExecuteJavaScript("console.log('starting XOkey')");
             }
+        }
+
+        void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
+        {
+            Send_Log_Msg("NetworkChange_NetworkAvailabilityChanged: " + e.IsAvailable.ToString());
         }
         private void State_Machine_Thread_Wrapper()
         {
@@ -1476,7 +1482,17 @@ namespace EK_App.Mvvm
         }
         void AddressChangedCallback(object sender, EventArgs e)
         {
+            Send_Log_Msg(1, LogMsg.Priority.Debug, "AddressChangedCallback: " + e.ToString());
             Check_Intf_Status();
+
+            // if connected make sure we still have the route to the GW
+            if (EK_State == XOkeyState.XOkeyState_Connected 
+                && Server_IPEndPoint != null 
+                && Server_IPEndPoint.Address != IPAddress.Any)
+            { 
+                Route_XN_Via_Gateway();
+            }
+
         }
 
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
@@ -2055,6 +2071,20 @@ namespace EK_App.Mvvm
             Server_IPEndPoint = null;
         }
 
+        private void Route_XN_Via_Gateway()
+        {
+            if (Server_IPEndPoint == null || Server_IPEndPoint.Address == IPAddress.Any)
+            {
+                Send_Log_Msg("Load_Routes: Invalid Server IP", LogMsg.Priority.Info);
+                return;
+            }
+
+            default_route = Xoware.RoutingLib.Routing.GetDefaultRoute();
+            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() 
+                   + " MASK 255.255.255.255 "
+                  + default_route.GetForardNextHopIPStr() + " METRIC 55");
+        }
+
         private void Load_Routes()
         {
             if (Server_IPEndPoint == null || Server_IPEndPoint.Address == IPAddress.Any)
@@ -2062,18 +2092,19 @@ namespace EK_App.Mvvm
                 Send_Log_Msg("Load_Routes: Invalid Server IP", LogMsg.Priority.Info);
                 return;
             }
-            default_route = Xoware.RoutingLib.Routing.GetDefaultRoute();
 
             if (XoKey_IP == null)
                 XoKey_IP = IPAddress.Parse("192.168.137.2");
 
-            Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() + " MASK 255.255.255.255 "
-                + default_route.GetForardNextHopIPStr() + " METRIC 55" );
+            Route_XN_Via_Gateway();
             Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
             Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
+
+            // if already been down this way
+            if (Traffic_Routed_To_XoKey == true)
+                return;
+
             Traffic_Routed_To_XoKey = true;
-
-
 
             App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
            () =>
