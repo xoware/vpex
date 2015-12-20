@@ -44,12 +44,6 @@ void XOkeyLog(NSString* text);
 -(IBAction)reconnect:(id)sender;
 - (IBAction)closeModalDialog:(id)sender;
 
-//Wait Window Methods
--(void)openWaitWindow;
--(void)closeWaitWindow:(NSTimer*)timer;
--(void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
-       contextInfo:(void *)contextInfo;
-
 //Methods to control windows
 -(void)openStatusWindow;
 -(void)openMainWindow;
@@ -65,6 +59,7 @@ void XOkeyLog(NSString* text);
 -(void)setXOkeyIP;
 -(void)devProc:(NSNotification*) notification;
 -(void)configureDevice;
+-(void)setDeviceConfigured;
 
 //Laptop and internet configuration methods
 -(void)findRouter;
@@ -84,7 +79,6 @@ void XOkeyLog(NSString* text);
 
 //Properties
 @property (assign) IBOutlet NSWindow *window;
-@property (weak) IBOutlet NSButton *ek_ConnectedDisplay;
 @property (weak) IBOutlet WebView *ek_WebView;
 @property (atomic, copy,   readwrite) NSData *authorization;
 @property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
