@@ -11,9 +11,12 @@
 #import <WebKit/WebKit.h>
 #import "XOkeyAppDelegate.h"
 //  Delegate object to handle the webview connection
-@interface webViewDelegate : NSObject <NSURLConnectionDelegate, WebUIDelegate, WebPolicyDelegate/*, NSURLSessionDelegate, NSURLSessionDataDelegate*/>
+@interface webViewDelegate : NSObject < NSURLConnectionDelegate, WebUIDelegate, WebFrameLoadDelegate, WebPolicyDelegate, NSURLDownloadDelegate
+                                        /*, NSURLSessionDelegate, NSURLSessionDataDelegate*/>
 
 @property WebView* webViewRef;
+@property bool loadLoginPage;
+
 -(int)connectToXOkey:(NSString*)path;
 
 @end

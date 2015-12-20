@@ -253,12 +253,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     networkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                               0);
     
-    //  Initialize file I/O for logging
-    /*NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
-    NSString* theDesktopPath = [paths objectAtIndex:0];
-    NSMutableString* logPath = [NSMutableString stringWithString:theDesktopPath];
-    [logPath appendString:@"/XOkey.log"];
-     */
     //A single log file is now located in /etc/XOkey.log
     NSString* logPath = [NSString stringWithFormat:@"/etc/XOkey.log"];
     if (![[NSFileManager defaultManager]fileExistsAtPath:logPath]) {
@@ -351,29 +345,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 }
 
 #pragma mark GUI Methods
-
 //Setup the GUI
 -(void)initializeGUI{
-    //Hide initial window
-    //[self.window close];
-    
-    //Present the wait window
-    //[self openWaitWindow];
-    
-    //Turn off modal dialog view from blocking the app from closing
-    //[self.modalDialogView.window setPreventsApplicationTerminationWhenModal:NO];
-    
-    /*
-    //Turn off status window from blocking the app from closing
-    [self.statusWindow setPreventsApplicationTerminationWhenModal:NO];
-    [self.window beginSheet:self.statusWindow completionHandler:^(NSModalResponse response){
-        //Nothing really needs to be done in the wait window
-    }];
-     */
     //prevent status window from being moved
     [self.statusWindow setMovable:false];
     [self windowSelect];
-
 }
 
 // Button pressed to close status window and show main window
@@ -401,7 +377,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [self.statusWindow orderFront:self];
 }
 
-
 // To select which window to open based on XOkey and internet connection status
 -(void)windowSelect{
     //XOkey is plugged in and internet exists
@@ -418,21 +393,16 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     }
 }
 
--(void)openWaitWindow{
-    // This method has been depracated in OS X 10.10.1
-    //[NSApp beginSheet:self.waitWindow modalForWindow:_window modalDelegate:self didEndSelector:@selector(didEndSheet:returnCode:contextInfo:) contextInfo:nil];
-    // [self.window beginSheet:self.waitWindow completionHandler:^(NSModalResponse response){
-    //Nothing really needs to be done in the wait window
-    //           }];
-}
-
--(void)closeWaitWindow:(NSTimer*)timer{
-    [self.window endSheet:self.waitWindow];
-}
-
-- (void)didEndSheet:(NSWindow *)sheet returnCode:(NSInteger)returnCode
-        contextInfo:(void *)contextInfo{
-    [sheet orderOut:self];
+//set the device as configured once the webview has loaded
+-(void)setDeviceConfigured{
+    deviceConfigured = !deviceConfigured;
+    
+    //update device configured label color
+    if(deviceConfigured){
+        _configStatus.backgroundColor = NSColor.greenColor;
+    }else{
+        _configStatus.backgroundColor = NSColor.redColor;
+    }
 }
 
 #pragma mark Callbacks for USB and Polling
@@ -468,7 +438,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
         deviceProperties[XOKEY_IP_ADDRESS] = result;
     }
-    
     
     //  Check status of VPN server to determine if the EK is connected to the ExoNet
     {
@@ -551,20 +520,18 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Update XOkey status to false
         XOkeyConnected = false;
         
+        //Update config status to false
+        deviceConfigured = false;
+        
         //Update label for device configured to red
         _configStatus.backgroundColor = NSColor.redColor;
         
-        //Update config status to false
-        deviceConfigured = false;
+        //must load login page on next load for webview
+        webViewDel.loadLoginPage = true;
         
         //Update window
         [self windowSelect];
         
-        //Update url to blank
-        NSURL* url = [NSURL URLWithString:@"about:blank"];
-        NSURLRequest* req = [NSURLRequest requestWithURL:url];
-        [[self.ek_WebView mainFrame] loadRequest:req];
-
         //Clear ExoNet properties
         routedToExoNet = false;
         [self removeExoNetRoute];
@@ -578,9 +545,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         //Launch notification
         disconnNote.title = @"XOkey has been unplugged";
         [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:disconnNote];
-        
-        //Re-open the waiting window
-        //[self openWaitWindow];
     }
 }
 
@@ -609,45 +573,35 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     XOkeyLog(@"Sleep a bit to let EK ip address before connecting to EK.");
     
     //Setup firewall/NAT rules only when EK is connected
-    dispatch_sync(networkQueue,
-                  ^(void){
-                      //Sleep a bit to let networking settings update
-                      sleep(3.5);
-                      
-                      //Find endpoint name using networksetup
-                      NSTask* routerTask = [[NSTask alloc]init];
-                      NSPipe* pipe = [[NSPipe alloc]init];
-                      NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
-                      [routerTask setLaunchPath:@"/bin/sh"];
-                      [routerTask setArguments:@[@"-c",arg]];
-                      [routerTask setStandardOutput:pipe];
-                      [routerTask launch];
-                      NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-                      BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-                      XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
-                      deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
-                      [self setupFirewall];
-                  });
-    
-    
-    
+    dispatch_async(networkQueue,
+      ^(void){
+          //Sleep a bit to let networking settings update
+          sleep(2.5);
+          
+          //Find endpoint name using networksetup
+          NSTask* routerTask = [[NSTask alloc]init];
+          NSPipe* pipe = [[NSPipe alloc]init];
+          NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
+          [routerTask setLaunchPath:@"/bin/sh"];
+          [routerTask setArguments:@[@"-c",arg]];
+          [routerTask setStandardOutput:pipe];
+          [routerTask launch];
+          NSString* BSDDeviceName = [[NSString alloc]initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+          BSDDeviceName = [BSDDeviceName stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+          XOkeyLog([NSString stringWithFormat:@"XOkey endpoint is %@", BSDDeviceName]);
+          deviceProperties[XOKEY_ENDPOINT] = BSDDeviceName;//[NSString stringWithFormat:@"%@", BSDDeviceName];   //XOkeyUSBObject.BSDDeviceName;
+          [self setupFirewall];
+      });
+
     //Clear the webview
     [webViewDel connectToXOkey:@""];
+    sleep(3.0);
     
-    //Device has appeared, close the waiting window. Sleep a bit in order to let
-    //webkit load the page before the dialog is closed. Note, function calls to the
-    //Autolayout engine must occur on the main thread.
-  /*  dispatch_async(networkQueue,
-                   ^(void){
-                       NSTimer* timer = [NSTimer timerWithTimeInterval:1.25 target:self selector:@selector(closeWaitWindow:) userInfo:nil repeats:NO];
-                       [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
-                   });
-    */
-    //Device is now configured
-    deviceConfigured = true;
+    //device configured flag set when webview has loaded
+    //deviceConfigured = true;
     
     //Update label for device configured to green
-    _configStatus.backgroundColor = NSColor.greenColor;
+    //_configStatus.backgroundColor = NSColor.greenColor;
 
     //Update window
     [self windowSelect];
@@ -706,20 +660,18 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 }
 
 -(void)getActiveInterface{
-    //dispatch_async(networkQueue, ^(void){
-        struct in_addr nextHop;
-        NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
-        if (!activeEndpoint){
-            // Internet might be down so remove any ExoNet routes if they exist.
-            deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
-            [self removeExoNetRoute];
-            
-        }else{
-            //Case where XOkey is the active endpoint and becomes written as the interface to NAT on
-            deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
-            //Set connection status to false and change color to red. Load status window
-        }
-    //});
+    struct in_addr nextHop;
+    NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
+    if (!activeEndpoint){
+        // Internet might be down so remove any ExoNet routes if they exist.
+        deviceProperties[ACTIVE_ENDPOINT] = NOT_SET;
+        [self removeExoNetRoute];
+        
+    }else{
+        //Case where XOkey is the active endpoint and becomes written as the interface to NAT on
+        deviceProperties[ACTIVE_ENDPOINT] = activeEndpoint;
+        //Set connection status to false and change color to red. Load status window
+    }
 }
 
 //Called to detect internet connection
@@ -764,7 +716,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 #pragma mark Sleep, Wake, and Disconnect Notification Handling
 - (void) receiveSleepNote: (NSNotification*) note
 {
-    
     //Webview sometimes infinitely loops loading screen so just reload login page on waking
     [webViewDel connectToXOkey:@""];
 
@@ -815,13 +766,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
             [self configureDevice];
         }
         
-        //First cancel whatever is loading on the website. The stoploading
-        //message doesn't seem to work too well so first load a blank page
-        //then send the stopLoading message
-        NSURL* url = [NSURL URLWithString:@"about:blank"];
-        NSURLRequest* req = [NSURLRequest requestWithURL:url];
-        [[self.ek_WebView mainFrame] loadRequest:req];
-        [[self.ek_WebView mainFrame] stopLoading];
         sleep(0.5);
         [webViewDel connectToXOkey:@""];
     }else{
@@ -830,10 +774,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         [self windowSelect];
         XOkeyLog(@"XOkey is not connected!");
     }
-}
-
-- (IBAction)closeModalDialog:(id)sender {
-    [self closeWaitWindow:nil];
 }
 
 //Protocol method to close the application when the last window of the app closes
