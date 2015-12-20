@@ -165,14 +165,22 @@ namespace EK_App.NotifyIconViewModels
         {
             get
             {
-                
-                return new DelegateCommand { CommandAction = () => {
-                    try {
-                        Xoware.IpcAnonPipe.PipeClient.Send_Msg("EXIT");
-                    } catch {
+
+                return new DelegateCommand
+                {
+                    CommandAction = () =>
+                    {
+                        try
+                        {
+                            Xoware.IpcAnonPipe.PipeClient.Send_Msg("EXIT");
+                        }
+                        catch
+                        {
+                            App.Keep_Running = false;
+                            Application.Current.Shutdown();
+                        }
                     }
-                    Application.Current.Shutdown();
-                } };
+                };
             }
         }
 

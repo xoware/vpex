@@ -107,7 +107,14 @@ namespace EK_App
                 Globals.ek.Force_Restart_Detction = true;
                 Globals.ek.Browser = null;  // detach browser from running EK thread
             }
+            App.Log("MainWindow_Closing remove DNS");
             Xoware.NetUtil.DNS.Remove_XOkey_DNS(); // Now disconneced
+
+            // if exiting just return
+            if (App.Keep_Running == false)
+                return;
+
+            App.Log("MainWindow_Closing hide window");
             //Hide Window
             Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Windows.Threading.DispatcherOperationCallback)delegate(object o)
             {
@@ -116,14 +123,6 @@ namespace EK_App
             }, null);
             //Do not close application
 
-            /*
-
-            if (ek != null)
-            {
-                ek.Stop();
-                ek.Dispose();
-            }
-             * */
         }
 
     }
