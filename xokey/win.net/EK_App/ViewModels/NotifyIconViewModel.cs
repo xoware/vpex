@@ -172,6 +172,9 @@ namespace EK_App.NotifyIconViewModels
                     {
                         try
                         {
+                            App.Keep_Running = false;
+                            Application.Current.Shutdown();
+
                             Xoware.IpcAnonPipe.PipeClient.Send_Msg("EXIT");
                         }
                         catch

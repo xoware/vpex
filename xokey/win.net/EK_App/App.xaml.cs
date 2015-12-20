@@ -194,8 +194,11 @@ namespace EK_App
                     Keep_Running = false;
                     App.Keep_Running = false;
                 }
-            } catch
+            } catch (Exception ex)
             {
+                Console.WriteLine("Work done: " + ex.Message);
+                Keep_Running = false;
+                App.Keep_Running = false;
 
             }
         }
