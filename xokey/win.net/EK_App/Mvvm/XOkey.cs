@@ -897,7 +897,7 @@ namespace EK_App.Mvvm
             startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
             startup_bw.RunWorkerAsync();
         }
-         */
+       
         public void DisplayDnsAddresses()
         {
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
@@ -920,7 +920,6 @@ namespace EK_App.Mvvm
                 }
             }
         }
-        /*
         private void startup_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
@@ -1431,6 +1430,8 @@ namespace EK_App.Mvvm
             foreach (NetworkInterface n in adapters)
             {
                 Send_Log_Msg(1, LogMsg.Priority.Debug, n.Name + " : " + n.Description + " is " + n.OperationalStatus);
+  //              IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+  //              IPAddressCollection intf_dnsServers = adapterProperties.DnsAddresses;
 
          
                 if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware")){
@@ -1480,6 +1481,8 @@ namespace EK_App.Mvvm
                     Set_EK_State(XOkeyState.XOkeyState_Unplugged);
             }
         }
+
+        // This callback gets called every time windows changes an interface address or state
         void AddressChangedCallback(object sender, EventArgs e)
         {
             Send_Log_Msg(1, LogMsg.Priority.Debug, "AddressChangedCallback: " + e.ToString());
@@ -1536,53 +1539,7 @@ namespace EK_App.Mvvm
         {
             if (Browser != null)
                 InvokeExecuteJavaScript("jQuery.getJSON('/api/StopVpn');");
-
-            /*
-            WebResponse response = null;
-            System.Diagnostics.Debug.WriteLine("Stop_VPN");
-            if (Session_Cookie.Length < 3)
-            {
-                return;
-            }
-            if (XoKey_IP == null)
-                return;
-
-            HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/StopVpn");
-            wr.Method = "GET";
-            wr.CookieContainer = new CookieContainer();
-            Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
-            wr.CookieContainer.Add(cook);
-
-            try
-            {
-                wr.Timeout = 2000; //Set 2 sec timeout
-                response = wr.GetResponse();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("stop ex " + ex.ToString());
-                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from XOkey " + XoKey_IP.ToString());
-                return;
-            }
-            //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
-
-            try
-            {
-                // Get the stream containing content returned by the server.
-                System.IO.Stream dataStream = response.GetResponseStream();
-
-
-                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
-                object objResp = jsonSerializer.ReadObject(dataStream);
-                XoKeyApi.StopVpnResponse vpn_response = objResp as XoKeyApi.StopVpnResponse;
-
-                Send_Log_Msg("Stop Response: " + vpn_response.ack.msg);
-            }
-            catch
-            {
-
-            }
-             **/
+          
         }
 
         private void Get_VPN_Status()
@@ -2154,7 +2111,7 @@ namespace EK_App.Mvvm
         }
 
         // Disable ICS on any network iterfaces which may no longer be present in the system
-        public void Disable_ICS_WMI()
+        public static void Disable_ICS_WMI()
         {
             ManagementScope scope = new ManagementScope("\\\\.\\ROOT\\Microsoft\\HomeNet");
 
@@ -2173,14 +2130,14 @@ namespace EK_App.Mvvm
             foreach (ManagementObject m in queryCollection)
             {
                 // access properties of the WMI object
-                Send_Log_Msg(String.Format("Connection : {0}", m["Connection"]));
+                App.Log(String.Format("Connection : {0}", m["Connection"]));
 
                 try
                 {
                     PropertyDataCollection properties = m.Properties;
                     foreach(PropertyData  prop in properties)
                     {
-                       Send_Log_Msg(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
+                        App.Log(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
                        if (prop.Name == "IsIcsPrivate" && ((Boolean) prop.Value ) == true)
                        {
                            prop.Value = false;
@@ -2191,7 +2148,7 @@ namespace EK_App.Mvvm
                     
                 } catch (Exception e)
                 {
-                    Send_Log_Msg("ex " + e.Message);
+                    App.Log("ex " + e.Message);
                     continue;
                 }
             }
