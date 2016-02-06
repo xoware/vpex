@@ -48,6 +48,48 @@ namespace EK_App.Mvvm
                 }
             }
         }
+        // Disable ICS on any network iterfaces which may no longer be present in the system
+        public static void Disable_ICS_WMI()
+        {
+            System.Management.ManagementScope scope = new System.Management.ManagementScope("\\\\.\\ROOT\\Microsoft\\HomeNet");
+
+            //create object query
+            System.Management.ObjectQuery query = new System.Management.ObjectQuery("SELECT * FROM HNet_ConnectionProperties ");
+
+            //create object searcher
+            System.Management.ManagementObjectSearcher searcher =
+                                    new System.Management.ManagementObjectSearcher(scope, query);
+
+            //get a collection of WMI objects
+            System.Management.ManagementObjectCollection queryCollection = searcher.Get();
+
+
+            //enumerate the collection.
+            foreach (System.Management.ManagementObject m in queryCollection)
+            {
+                // access properties of the WMI object
+                Console.WriteLine(String.Format("Connection : {0}", m["Connection"]));
+
+                try
+                {
+                    System.Management.PropertyDataCollection properties = m.Properties;
+                    foreach (System.Management.PropertyData prop in properties)
+                    {
+                        Console.WriteLine(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
+                        if (prop.Name == "IsIcsPrivate" && ((Boolean)prop.Value) == true)
+                        {
+                            prop.Value = false;
+                            m.Put();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ex " + e.Message);
+                    continue;
+                }
+            }
+        }
 
         public static NetShare GetCurrentlySharedConnections()
         {
