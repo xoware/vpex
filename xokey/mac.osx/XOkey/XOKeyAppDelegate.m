@@ -594,15 +594,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
       });
 
     //Clear the webview
-    [webViewDel connectToXOkey:@""];
     sleep(3.0);
+    [webViewDel connectToXOkey:@""];
     
-    //device configured flag set when webview has loaded
-    //deviceConfigured = true;
-    
-    //Update label for device configured to green
-    //_configStatus.backgroundColor = NSColor.greenColor;
-
     //Update window
     [self windowSelect];
 }
