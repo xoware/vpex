@@ -368,8 +368,11 @@ namespace EK_App
             Check_Interfaces();
             if (!EK_Is_Up)
             {
+               
                 // Key is unplugged, get started on background loading
                 System.Threading.ThreadPool.QueueUserWorkItem(Load_Dlls);
+                Mvvm.IcsManager.DisableAllShares();
+                Mvvm.IcsManager.Disable_ICS_WMI();
             }
         }
 
@@ -462,7 +465,8 @@ namespace EK_App
 
         private void Application_Exit(object sender, ExitEventArgs e)
         {
-
+            Mvvm.IcsManager.DisableAllShares();
+            Mvvm.IcsManager.Disable_ICS_WMI();
         }
     }
 }
