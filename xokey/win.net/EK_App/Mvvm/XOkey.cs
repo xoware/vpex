@@ -473,19 +473,19 @@ namespace EK_App.Mvvm
         {
             if (url.Contains("/ek/login"))
             {
-                Login_State = XOkeyLoginState.XOkeyLoginState_Loggedout;
+                Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_Loggedout);
                 SetStatusMsg("Please login.");
                 Check_And_Reload_If_No_Login_Button();
                 
             }
             else if (url.Contains("/ek/vpex"))
             {
-                Login_State = XOkeyLoginState.XOkeyLoginState_Loggedin;
+                Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_Loggedin);
                 SetStatusMsg(" ");
             }
             else if (url.Contains("custom://cefsharp"))
             {
-                Login_State = XOkeyLoginState.XOkeyLoginState_Init;
+                Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_Init);
             }
             else if (Login_State == XOkeyLoginState.XOkeyLoginState_Init && ICS_Configured)
             {
@@ -763,7 +763,7 @@ namespace EK_App.Mvvm
                     if (ICS_Configured)
                     {
                         Check_Intf_Status();
-                        SetNameservers("XOkey", "8.8.8.8,8.8.4.4"); // Set XK NS
+                      //  SetNameservers("XOkey", "8.8.8.8,8.8.4.4"); // Set XK NS
 
                         if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                         {
@@ -803,7 +803,7 @@ namespace EK_App.Mvvm
                     }
                     if (Login_State != XOkeyLoginState.XOkeyLoginState_LoadingUi)
                     {
-                        Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
+                        Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_LoadingUi);
                         Check_And_Reload_If_No_Login_Button();
                     }
                 }
@@ -858,6 +858,23 @@ namespace EK_App.Mvvm
                 }
             }
         }
+        private void Set_XOkeyLoginState(XOkeyLoginState new_state)
+        {
+            if (new_state == Login_State)
+                return; // no change
+
+            if (new_state == XOkeyLoginState.XOkeyLoginState_Loggedin)
+            {
+                Set_XK_DNS();
+            }
+            else if (new_state == XOkeyLoginState.XOkeyLoginState_Loggedout)
+            {
+                Set_XK_DNS();
+            }
+
+            Login_State = new_state;
+        }
+
         private void Set_EK_State(XOkeyState New_State)
         {
             if (New_State != EK_State)
@@ -884,10 +901,15 @@ namespace EK_App.Mvvm
                                 Xoware.NetUtil.DNS.Set_Static_Name_Servers((UInt32) ipv4props.Index, "192.168.137.2");
                             }
                         }
+
+                        SetNameservers("XOkey", "8.8.8.8,64.6.64.6");
                     }
                 } else 
                 {
                     Xoware.NetUtil.DNS.Remove_XOkey_DNS();
+
+                    Set_XK_DNS();
+
                 }
             }
         }
@@ -897,7 +919,7 @@ namespace EK_App.Mvvm
             startup_bw.DoWork += new DoWorkEventHandler(startup_DoWork);
             startup_bw.RunWorkerAsync();
         }
-         */
+       
         public void DisplayDnsAddresses()
         {
             NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
@@ -920,7 +942,6 @@ namespace EK_App.Mvvm
                 }
             }
         }
-        /*
         private void startup_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
@@ -1135,7 +1156,7 @@ namespace EK_App.Mvvm
                 if (Browser != null && New_IP.ToString() != "192.168.255.1")
                 {
 
-                    Login_State = XOkeyLoginState.XOkeyLoginState_LoadingUi;
+                    Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_LoadingUi);
                     InvokeExecuteJavaScript("setInterval(function(){ "
                      + " document.location.href='https://" + New_IP.ToString() + "/'; }, 2000);");
                 }
@@ -1403,7 +1424,7 @@ namespace EK_App.Mvvm
             Force_Restart_Detction = false;
             Set_EK_State(XOkeyState.XOkeyState_Disconnected);
 
-            Login_State = XOkeyLoginState.XOkeyLoginState_Init;
+            Set_XOkeyLoginState(XOkeyLoginState.XOkeyLoginState_Init);
             Stop_VPN();
             Remove_Routes();
             DisableICS();
@@ -1431,6 +1452,8 @@ namespace EK_App.Mvvm
             foreach (NetworkInterface n in adapters)
             {
                 Send_Log_Msg(1, LogMsg.Priority.Debug, n.Name + " : " + n.Description + " is " + n.OperationalStatus);
+  //              IPInterfaceProperties adapterProperties = adapter.GetIPProperties();
+  //              IPAddressCollection intf_dnsServers = adapterProperties.DnsAddresses;
 
          
                 if (n.Description.Contains("XoWare") || n.Description.Contains("x.o.ware")){
@@ -1480,19 +1503,28 @@ namespace EK_App.Mvvm
                     Set_EK_State(XOkeyState.XOkeyState_Unplugged);
             }
         }
+
+        // This callback gets called every time windows changes an interface address or state
         void AddressChangedCallback(object sender, EventArgs e)
         {
             Send_Log_Msg(1, LogMsg.Priority.Debug, "AddressChangedCallback: " + e.ToString());
-            Check_Intf_Status();
+            try
+            {
+                Check_Intf_Status();
 
-            // if connected make sure we still have the route to the GW
-            if (EK_State == XOkeyState.XOkeyState_Connected 
-                && Server_IPEndPoint != null 
-                && Server_IPEndPoint.Address != IPAddress.Any)
-            { 
-                Route_XN_Via_Gateway();
+
+                // if connected make sure we still have the route to the GW
+                if (EK_State == XOkeyState.XOkeyState_Connected
+                    && Server_IPEndPoint != null
+                    && Server_IPEndPoint.Address != IPAddress.Any)
+                {
+                    Route_XN_Via_Gateway();
+                }
             }
-
+            catch (Exception ex)
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "Error AddressChangedCallback Exception: " + ex.ToString());
+            }
         }
 
         protected virtual void Send_Log_Msg(string Log_Msg, LogMsg.Priority priority = LogMsg.Priority.Info, int code = 0)
@@ -1536,53 +1568,62 @@ namespace EK_App.Mvvm
         {
             if (Browser != null)
                 InvokeExecuteJavaScript("jQuery.getJSON('/api/StopVpn');");
+          
+        }
 
-            /*
-            WebResponse response = null;
-            System.Diagnostics.Debug.WriteLine("Stop_VPN");
-            if (Session_Cookie.Length < 3)
-            {
-                return;
-            }
-            if (XoKey_IP == null)
+        private void Set_XK_DNS()
+        {
+
+            if (Internet_Interface == null)
                 return;
 
-            HttpWebRequest wr = (HttpWebRequest)WebRequest.Create("https://" + XoKey_IP.ToString() + "/api/StopVpn");
-            wr.Method = "GET";
-            wr.CookieContainer = new CookieContainer();
-            Cookie cook = Cookie_Str_To_Cookie(Session_Cookie);
-            wr.CookieContainer.Add(cook);
-
-            try
-            {
-                wr.Timeout = 2000; //Set 2 sec timeout
-                response = wr.GetResponse();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("stop ex " + ex.ToString());
-                Send_Log_Msg(0, LogMsg.Priority.Warning, "No connection or response from XOkey " + XoKey_IP.ToString());
+            IPInterfaceProperties adapterProperties = Internet_Interface.GetIPProperties();
+            IPAddressCollection dnsServers = adapterProperties.DnsAddresses;
+            if (dnsServers.Count < 1)
                 return;
-            }
-            //    Send_Log_Msg("GetVpnStatus: status=" + ((HttpWebResponse)response).StatusDescription, LogMsg.Priority.Debug);
 
-            try
+            int i = 0;
+            String Primary = "";
+            String Secondary = "";
+            foreach (IPAddress dns in dnsServers)
             {
-                // Get the stream containing content returned by the server.
-                System.IO.Stream dataStream = response.GetResponseStream();
+                Send_Log_Msg("  DNS Servers " + i + " : "+ dns.ToString());
 
-
-                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(XoKeyApi.VpnStatusResponse));
-                object objResp = jsonSerializer.ReadObject(dataStream);
-                XoKeyApi.StopVpnResponse vpn_response = objResp as XoKeyApi.StopVpnResponse;
-
-                Send_Log_Msg("Stop Response: " + vpn_response.ack.msg);
+                if (Primary.Length < 6) {
+                    Primary = dns.ToString();
+                }
+                else if (Secondary.Length < 6)
+                {
+                    Secondary = dns.ToString();
+                }
             }
-            catch
+            if (Secondary.Length < 6)
             {
-
+                Secondary = Primary;
             }
-             **/
+            if (Primary.Length < 7)
+                return;
+
+            String JS_Data = "var data = { 'primary' : '" + Primary + "', 'secondary' : '" + Secondary +"' };"; 
+            String JS_Str = @"
+            jQuery.getJSON('/api/Dns', data, function( response ) {
+            if (!response || response == undefined)
+                return;
+            console.log('DNS Response');
+            console.log(response);
+           
+            }).fail( function(jqxhr, textStatus, error) {
+              var err = textStatus + ' : ' + error;
+              console.log('ERROR:' + err);
+              if (jqxhr && jqxhr.status)
+                console.log('status code' +  jqxhr.status);
+              else
+                console.log('XOkeyStatus=NotReachable');
+
+  
+            });";
+
+             InvokeExecuteJavaScript(JS_Data + JS_Str);
         }
 
         private void Get_VPN_Status()
@@ -2080,6 +2121,11 @@ namespace EK_App.Mvvm
             }
 
             default_route = Xoware.RoutingLib.Routing.GetDefaultRoute();
+            if (default_route == null)
+            {
+                Send_Log_Msg("No Default route", LogMsg.Priority.Error);
+                // below code will throw excepton
+            }
             Run_Route_Cmd("ADD " + Server_IPEndPoint.Address.ToString() 
                    + " MASK 255.255.255.255 "
                   + default_route.GetForardNextHopIPStr() + " METRIC 55");
@@ -2092,30 +2138,37 @@ namespace EK_App.Mvvm
                 Send_Log_Msg("Load_Routes: Invalid Server IP", LogMsg.Priority.Info);
                 return;
             }
+            try
+            {
+                if (XoKey_IP == null)
+                    XoKey_IP = IPAddress.Parse("192.168.137.2");
 
-            if (XoKey_IP == null)
-                XoKey_IP = IPAddress.Parse("192.168.137.2");
+                Route_XN_Via_Gateway();
+                Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
+                Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
 
-            Route_XN_Via_Gateway();
-            Run_Route_Cmd("ADD 0.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
-            Run_Route_Cmd("ADD 128.0.0.0 MASK 128.0.0.0 " + XoKey_IP.ToString() + " METRIC 800");
+                // if already been down this way
+                if (Traffic_Routed_To_XoKey == true)
+                    return;
 
-            // if already been down this way
-            if (Traffic_Routed_To_XoKey == true)
-                return;
+                Traffic_Routed_To_XoKey = true;
 
-            Traffic_Routed_To_XoKey = true;
-
-            App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
-           () =>
-           {
-               var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-  "XOkey",
-  "Connected to: " + Server_IPEndPoint.Address.ToString(),
-  null,
-  Mantin.Controls.Wpf.Notification.NotificationType.Information);
-               toast.Show();
-           }));
+                App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
+               () =>
+               {
+                   var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+      "XOkey",
+      "Connected to: " + Server_IPEndPoint.Address.ToString(),
+      null,
+      Mantin.Controls.Wpf.Notification.NotificationType.Information);
+                   toast.Show();
+               }));
+            }
+            catch (Exception ex)
+            {
+                Send_Log_Msg(0, LogMsg.Priority.Warning, "Error addig routes, Exception " + ex.ToString());
+                Remove_Routes();
+            }
 
         }
         private void Set_Sever_IPEndpoint(IPEndPoint Server)
@@ -2154,7 +2207,7 @@ namespace EK_App.Mvvm
         }
 
         // Disable ICS on any network iterfaces which may no longer be present in the system
-        public void Disable_ICS_WMI()
+        public static void Disable_ICS_WMI()
         {
             ManagementScope scope = new ManagementScope("\\\\.\\ROOT\\Microsoft\\HomeNet");
 
@@ -2173,14 +2226,14 @@ namespace EK_App.Mvvm
             foreach (ManagementObject m in queryCollection)
             {
                 // access properties of the WMI object
-                Send_Log_Msg(String.Format("Connection : {0}", m["Connection"]));
+                App.Log(String.Format("Connection : {0}", m["Connection"]));
 
                 try
                 {
                     PropertyDataCollection properties = m.Properties;
                     foreach(PropertyData  prop in properties)
                     {
-                       Send_Log_Msg(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
+                        App.Log(String.Format("name = {0}   ,  value = {1}", prop.Name, prop.Value));
                        if (prop.Name == "IsIcsPrivate" && ((Boolean) prop.Value ) == true)
                        {
                            prop.Value = false;
@@ -2191,7 +2244,7 @@ namespace EK_App.Mvvm
                     
                 } catch (Exception e)
                 {
-                    Send_Log_Msg("ex " + e.Message);
+                    App.Log("ex " + e.Message);
                     continue;
                 }
             }
