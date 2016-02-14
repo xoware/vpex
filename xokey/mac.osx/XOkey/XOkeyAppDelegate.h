@@ -42,7 +42,6 @@ void XOkeyLog(NSString* text);
 
 //Main GUI Actions
 -(IBAction)reconnect:(id)sender;
-- (IBAction)closeModalDialog:(id)sender;
 
 //Methods to control windows
 -(void)openStatusWindow;
@@ -81,8 +80,6 @@ void XOkeyLog(NSString* text);
 @property (assign) IBOutlet NSWindow *window;
 @property (weak) IBOutlet WebView *ek_WebView;
 @property (atomic, copy,   readwrite) NSData *authorization;
-@property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
-@property (weak) IBOutlet NSView *modalDialogView;
 
 //Status window
 @property (weak) IBOutlet NSWindow *statusWindow;

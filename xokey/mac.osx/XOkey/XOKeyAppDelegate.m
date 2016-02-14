@@ -254,9 +254,13 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
                               0);
     
     //A single log file is now located in /etc/XOkey.log
-    NSString* logPath = [NSString stringWithFormat:@"/etc/XOkey.log"];
+    NSString* logPath = [NSString stringWithFormat:@"/Users/Shared/XOkey.log"];
     if (![[NSFileManager defaultManager]fileExistsAtPath:logPath]) {
-        [[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil];
+        if([[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil]){
+            XOkeyLog(@"Success in creating XOkey log file");
+        }else{
+            XOkeyLog(@"Failed in created XOkey log file");
+        }
     }
     logFileHandle = [NSFileHandle fileHandleForUpdatingAtPath:logPath];
     
@@ -550,6 +554,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 
 -(void)configureDevice{
     //Find endpoint name using networksetup
+    sleep(1.5);
     NSTask* routerTask = [[NSTask alloc]init];
     NSPipe* pipe = [[NSPipe alloc]init];
     NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
