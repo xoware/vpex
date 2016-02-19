@@ -4,6 +4,8 @@
 <dict>
 	<key>Label</key>
 	<string>XOkey.NetworkConfigTool</string>
+	<key>StandardOutPath</key>
+	<string>/Users/Shared/XOkey.log</string>
 	<key>MachServices</key>
 	<dict>
 		<key>XOkey.NetworkConfigTool</key>

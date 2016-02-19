@@ -59,6 +59,7 @@ void XOkeyLog(NSString* text);
 -(void)devProc:(NSNotification*) notification;
 -(void)configureDevice;
 -(void)setDeviceConfigured;
+-(BOOL)isRoutedToXOnet;
 
 //Laptop and internet configuration methods
 -(void)findRouter;
@@ -68,7 +69,6 @@ void XOkeyLog(NSString* text);
 -(BOOL)resolveHostName:(NSString*)ExoNetHostName;
 -(void)routeToExoNet:(NSString*)ExoNetIP;
 -(void)removeExoNetRoute;
-
 
 
 //Methods to delegate from external objects/network tool

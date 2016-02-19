@@ -15,6 +15,9 @@
     NSMutableData* receivedData;
 
     //NSURLSession* defaultSession;
+    
+    // flag to incicate if XOkey dns needs to be set to dhcp dns
+    bool setDNSFlag;
 }
 
 -(id)init{
@@ -31,6 +34,9 @@
     //must initially load the login page
     _loadLoginPage = true;
     
+    //flag is initially false since webview loading and the api loading share generic delegate functions
+    setDNSFlag = false;
+    
     return self;
 }
 
@@ -46,7 +52,6 @@
                                                          diskCapacity:20 * 1024 * 1024
                                                              diskPath:nil];
     [NSURLCache setSharedURLCache:URLCache];
-
     receivedData = [NSMutableData dataWithCapacity: 0];
     NSURL* url = [NSURL URLWithString:@"https://192.168.255.1/ek/login.html"];
     NSURLRequest* request = [NSURLRequest requestWithURL:url];
@@ -58,6 +63,7 @@
         XOkeyLog(@"Connecting to https://192.168.255.1");
     }
     
+    
 //TODO: NSURLSession doesn't work well with custom certifications. Must implement in the future.
 //    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
 //    defaultSession = [NSURLSession sessionWithConfiguration:defaultConfigObject delegate:self delegateQueue:[NSOperationQueue mainQueue]];
@@ -66,8 +72,8 @@
 
     return 1;
 }
-#pragma mark    NSURLConnectionDelegate Methods to handle HTTPS authentication of the certificate.
 
+#pragma mark    NSURLConnectionDelegate Methods to handle HTTPS authentication of the certificate.
 //  Generic method to load the EK login page in the Webview located in the app deleagate.
 - (void)webViewloadLoginPage{
     XOkeyAppDelegate* app = (XOkeyAppDelegate*)[[NSApplication sharedApplication]delegate];
@@ -78,37 +84,42 @@
     [[app.ek_WebView mainFrame]loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://192.168.255.1/ek/login.html"]]];
 }
 
-- (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
-{
+- (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace{
     return YES;
 }
 
 //NSURLConnection doesn't fetch resources such ass CSS and JS files. After initial authorization of the XOkey server,
 //cancel the current connection and then reconnect to the server using WebView which handles all the resource fetching.
-- (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
-{
+- (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge{
     if([challenge.protectionSpace.host isEqualToString:@"192.168.255.1"]){
         [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
     }
 }
 
 #pragma mark    NSURLConnection delegate methods that are required to be implemented.
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    //Cancel the connection since NSURLConnection doesn't handle CS or JS resources. Since the app has now authenticated with the self-signed
-    //XOkey, connect to the webserver with Webkit.
-    [connection cancel];
-    [receivedData setLength:0];
-    
-    //Released the connection and data resources since they are no longer needed.
-    //WebView handles fetching the files.
-    receivedData = nil;
-    [self webViewloadLoginPage];
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response{
+    if (setDNSFlag) {
+        setDNSFlag = false;
+        XOkeyLog([NSString stringWithFormat:@"%@", response]);
+    }else{
+        //Cancel the connection since NSURLConnection doesn't handle CS or JS resources. Since the app has now authenticated with the self-signed
+        //XOkey, connect to the webserver with Webkit.
+        [connection cancel];
+        [receivedData setLength:0];
+        
+        //Released the connection and data resources since they are no longer needed.
+        //WebView handles fetching the files.
+        receivedData = nil;
+        
+        //xokey dns must be set to dhcp dns after login
+        setDNSFlag = true;
+        
+        [self webViewloadLoginPage];
+    }
 }
 
 - (void)connection:(NSURLConnection *)connection
-  didFailWithError:(NSError *)error
-{
+  didFailWithError:(NSError *)error{
     receivedData = nil;
     
     XOkeyLog([NSString stringWithFormat:@"Connection failed! Error - %@ %@",
@@ -116,21 +127,21 @@
           [[error userInfo] objectForKey:NSURLErrorFailingURLStringErrorKey]]);
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-    //Should really never reach here.
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection{
     receivedData = nil;
+    
+    //only reach here from changing dns
+    setDNSFlag = false;
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data{
     [receivedData appendData:data];
 }
 
 #pragma mark    Webview methods
 - (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame{
-    XOkeyLog(@"finished loading webview");
-    
+    //XOkeyLog(@"finished loading webview");
+    XOkeyLog(@"Finished request");
     //  Set the app delegate as a UIDelegate to handle new window requests
     if (_loadLoginPage) {
         XOkeyAppDelegate* app = (XOkeyAppDelegate*)[[NSApplication sharedApplication]delegate];
@@ -141,8 +152,7 @@
 }
 
 //Delegate methods that allow a URL to be launched by the default user browser
-- (WebView *)webView:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
-{
+- (WebView *)webView:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request{
     id myDocument = [[NSDocumentController sharedDocumentController] openUntitledDocumentAndDisplay:YES error:nil];
     WebView* webView;
     [myDocument webView:webView createWebViewWithRequest:request];
@@ -168,8 +178,7 @@
 - (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type
         request:(NSURLRequest *)request
           frame:(WebFrame *)frame
-decisionListener:(id < WebPolicyDecisionListener >)listener
-{
+decisionListener:(id < WebPolicyDecisionListener >)listener{
     XOkeyLog(type);
     if([type isEqualToString:@"text/plain"]){
         //download resource
@@ -193,6 +202,17 @@ decisionListener:(id < WebPolicyDecisionListener >)listener
         destinationFileName = [[homeDirectory stringByAppendingPathComponent:@"Desktop"] stringByAppendingPathComponent:filename];
         [downLoad setDestination:destinationFileName allowOverwrite:YES];
     }
+    //HTML site loaded so set XOkey DNS to DHCP DNS via firmware API
+    else if([type isEqualToString:@"text/html"] && [[[request URL]absoluteString]  isEqual: @"https://192.168.255.1/ek/vpex.htmc"]){
+        XOkeyLog([NSString stringWithFormat:@"%@",request]);
+        
+        //only set dns flag once
+        XOkeyAppDelegate* app = (XOkeyAppDelegate*)[[NSApplication sharedApplication]delegate];
+        if(setDNSFlag && ![app isRoutedToXOnet]){
+            XOkeyLog(@"Setting XOkey DNS to system DNS");
+            [self setXOKeyDNS_DHCP];
+        }
+    }
 }
 
 //To handle JS causing an open file modal dialog to open. resultListener is the UIDelegate
@@ -211,6 +231,78 @@ decisionListener:(id < WebPolicyDecisionListener >)listener
         }
     }];
 }
+
+#pragma mark    Methods to set XOkey internal DNS (not system DNS)
+//generic method to set the XOkey internal DNS to first and second argument
+-(void)setXOkeyDNS:(NSString*)first secondDNSServer:(NSString*)second{
+    XOkeyLog(first);
+    XOkeyLog(second);
+    setDNSFlag = true;
+    receivedData = [NSMutableData dataWithCapacity: 0];
+    NSString* urlStr = [NSString stringWithFormat:@"https://192.168.255.1/api/Dns?primary=%@&secondary=%@", first, second];
+    NSURL* url = [NSURL URLWithString:urlStr];
+    NSURLRequest* request = [NSURLRequest requestWithURL:url];
+    NSURLConnection* conn = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+    if (!conn) {
+        XOkeyLog(@"Failed to connect to");
+    }else{
+        XOkeyLog([NSString stringWithFormat:@"Connecting to %@", urlStr]);
+    }
+}
+
+//set the XOkey internal DNS to system assigned via DHCP
+-(void)setXOKeyDNS_DHCP{
+    //get current DNS list
+    NSTask* endpointTask = [[NSTask alloc]init];
+    NSPipe* pipe = [NSPipe pipe];
+    NSString* arg = @"scutil --dns | grep nameserver";
+    [endpointTask setLaunchPath:@"/bin/sh"];
+    [endpointTask setArguments:@[@"-c", arg]];
+    [endpointTask setStandardOutput:pipe];
+    [endpointTask launch];
+    NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+    NSArray* dnsList = [result componentsSeparatedByString:@"\n"];
+    
+    //extract first 2 DNS servers
+    NSMutableString* firstDNSServer = [NSMutableString stringWithString:@""];
+    NSMutableString* secondDNSServer = [NSMutableString stringWithString:@""];
+    int count = 0;
+    for (NSString* entry in dnsList) {
+        NSArray *needle = [entry componentsSeparatedByString:@": "];
+        
+        //second column contains DNS ip address
+        if([needle count] > 1){
+            //XOkeyLog([NSString stringWithFormat:@"%@", needle[1]]);
+            if(count == 0){
+                firstDNSServer = [NSMutableString stringWithFormat:@"%@", needle[1]];
+            }else{
+                secondDNSServer = [NSMutableString stringWithFormat:@"%@", needle[1]];
+            }
+            count++;
+        }
+        
+        //check if first 2 DNS servers have been found
+        if(count >= 2)
+            break;
+    }
+    
+    //no valid DNS found
+    if([firstDNSServer length] == 0)
+        return;
+    //only one DNS server found
+    if([secondDNSServer length] == 0)
+        secondDNSServer = [NSMutableString stringWithFormat:@"%@", firstDNSServer];
+    
+    //set XOkey dns to system DNS assigned via DHCP
+    [self setXOkeyDNS:firstDNSServer secondDNSServer:secondDNSServer];
+}
+
+//set the XOkey internal DNS to XOnet DNS/Google DNS
+-(void)setXOkeyDNS_Google{
+    //set XOkey dns to Google and Verisign
+    [self setXOkeyDNS:@"8.8.8.8" secondDNSServer:@"64.6.64.6"];
+}
+
 
 #pragma mark    NSURLSession methods to be implemented in the future
 //TODO: NSURLSession doesn't work well with custom certifications. Must implement in the future.
