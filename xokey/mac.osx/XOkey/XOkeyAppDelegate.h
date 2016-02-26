@@ -42,7 +42,6 @@ void XOkeyLog(NSString* text);
 
 //Main GUI Actions
 -(IBAction)reconnect:(id)sender;
-- (IBAction)closeModalDialog:(id)sender;
 
 //Methods to control windows
 -(void)openStatusWindow;
@@ -60,6 +59,7 @@ void XOkeyLog(NSString* text);
 -(void)devProc:(NSNotification*) notification;
 -(void)configureDevice;
 -(void)setDeviceConfigured;
+-(BOOL)isRoutedToXOnet;
 
 //Laptop and internet configuration methods
 -(void)findRouter;
@@ -71,7 +71,6 @@ void XOkeyLog(NSString* text);
 -(void)removeExoNetRoute;
 
 
-
 //Methods to delegate from external objects/network tool
 - (BOOL)blessHelperWithLabel:(NSString *)label error:(NSError **)errorPtr newTool:(BOOL)isNewTool;
 - (BOOL) runProcessAsAdministrator:(NSString*)scriptPath withArguments:(NSArray *)arguments
@@ -81,8 +80,6 @@ void XOkeyLog(NSString* text);
 @property (assign) IBOutlet NSWindow *window;
 @property (weak) IBOutlet WebView *ek_WebView;
 @property (atomic, copy,   readwrite) NSData *authorization;
-@property (unsafe_unretained) IBOutlet NSPanel *waitWindow;
-@property (weak) IBOutlet NSView *modalDialogView;
 
 //Status window
 @property (weak) IBOutlet NSWindow *statusWindow;

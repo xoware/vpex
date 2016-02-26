@@ -249,14 +249,18 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     //  Configure GUI
     [self initializeGUI];
     
-    //  Get global concurrent queue
-    networkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
-                              0);
+    //TODO:  create serial network queue
+    networkQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0);
+    //dispatch_queue_create("xoware.networkqueue", DISPATCH_QUEUE_SERIAL);
     
     //A single log file is now located in /etc/XOkey.log
-    NSString* logPath = [NSString stringWithFormat:@"/etc/XOkey.log"];
+    NSString* logPath = [NSString stringWithFormat:@"/Users/Shared/XOkey.log"];
     if (![[NSFileManager defaultManager]fileExistsAtPath:logPath]) {
-        [[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil];
+        if([[NSFileManager defaultManager]createFileAtPath:logPath contents:nil attributes:nil]){
+            XOkeyLog(@"Success in creating XOkey log file");
+        }else{
+            XOkeyLog(@"Failed in created XOkey log file");
+        }
     }
     logFileHandle = [NSFileHandle fileHandleForUpdatingAtPath:logPath];
     
@@ -300,7 +304,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
     
     //  Setup timer to check for IP address changes from DHCP server and to poll the VPN status.
-    [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
+    [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(appPoll:) userInfo:nil repeats:YES];
     
     //  Setup notifications for PnP events
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(devProc:) name:XOKEY_PLUGIN object:nil];
@@ -408,79 +412,91 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 #pragma mark Callbacks for USB and Polling
 //  Polling for ExoNet status and changes on the EK
 -(void)appPoll:(NSTimer*)timer{
-    
-    //  Check internet connectivity
-    [self detectInternet];
-    if(!internetConnectionExists) return;
-    
-    //  Check if the host has internet by finding the interface facing the internet.
-    [self getActiveInterface];
-    if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
-    
-    //  Check for router IP Address
-    [self findRouter];
-    
-    //  Check if EK is connected.
-    if (!XOkeyConnected) return;
-    
-    //  Find the IP address of the EK.
-    if (![deviceProperties[XOKEY_ENDPOINT] isEqual: NOT_SET]) {
-        //Update IP Address
-        NSTask* endpointTask = [[NSTask alloc]init];
-        NSPipe* pipe = [NSPipe pipe];
-        NSString* arg;
-        arg = [NSString stringWithFormat:@"ifconfig %@ | grep 'inet' | tail -1 | awk '{print $2}'", deviceProperties[XOKEY_ENDPOINT]];
-        [endpointTask setLaunchPath:@"/bin/sh"];
-        [endpointTask setArguments:@[@"-c",arg]];
-        [endpointTask setStandardOutput:pipe];
-        [endpointTask launch];
-        NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-        result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
-        deviceProperties[XOKEY_IP_ADDRESS] = result;
-    }
-    
-    //  Check status of VPN server to determine if the EK is connected to the ExoNet
-    {
-        int VPN_Status = [statDelegate pollStatus];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        //  Check internet connectivity
+        [self detectInternet];
+        if(!internetConnectionExists) return;
         
-        //  Case 1: VPN connection is up and  traffic hasn't been routed to the ExoNet
-        if ((VPN_Status == VPN_CONNECTED) & !routedToExoNet) {
-            //Attempt 2 tries to resolve ExoNet host name (DNS)
-            for (UInt16 dnsTry = 0; dnsTry < 2; dnsTry++) {
-                if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
-                    [self routeToExoNet:deviceProperties[EXONET_IP]];
-                    routedToExoNet = true;
-                    
-                    //Create notification that connection to XOnet has been established
-                    connNote.title = @"Connected to XOnet";
-                    [[NSUserNotificationCenter defaultUserNotificationCenter]removeScheduledNotification:disconnNote];
-                    [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
-                    
-                    //Minimize the XOkey Window when the connected to a VPN gateway
-                    if([self.window isVisible]){
-                        [self.window miniaturize:self];
+        //  Check if the host has internet by finding the interface facing the internet.
+        [self getActiveInterface];
+        if ([deviceProperties[ACTIVE_ENDPOINT]  isEqual: NOT_SET]) return;
+        
+        //  Check for router IP Address
+        [self findRouter];
+        
+        //  Check if EK is connected.
+        if (!XOkeyConnected) return;
+        
+        //  Find the IP address of the EK.
+        if (![deviceProperties[XOKEY_ENDPOINT] isEqual: NOT_SET]) {
+            //Update IP Address
+            NSTask* endpointTask = [[NSTask alloc]init];
+            NSPipe* pipe = [NSPipe pipe];
+            NSString* arg;
+            arg = [NSString stringWithFormat:@"ifconfig %@ | grep 'inet' | tail -1 | awk '{print $2}'", deviceProperties[XOKEY_ENDPOINT]];
+            [endpointTask setLaunchPath:@"/bin/sh"];
+            [endpointTask setArguments:@[@"-c",arg]];
+            [endpointTask setStandardOutput:pipe];
+            [endpointTask launch];
+            NSString* result =[[NSString alloc] initWithData:[[pipe fileHandleForReading]readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+            result = [result stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+            deviceProperties[XOKEY_IP_ADDRESS] = result;
+        }
+        
+        //  Check status of VPN server to determine if the EK is connected to the ExoNet
+        {
+            int VPN_Status = [statDelegate pollStatus];
+            
+            //  Case 1: VPN connection is up and  traffic hasn't been routed to the ExoNet
+            if ((VPN_Status == VPN_CONNECTED) & !routedToExoNet) {
+                //Attempt 2 tries to resolve ExoNet host name (DNS)
+                for (UInt16 dnsTry = 0; dnsTry < 2; dnsTry++) {
+                    if([self resolveHostName:(NSString*)statDelegate.exoNetHostName]){
+                        //change XOkey internal DNS
+                        [webViewDel setXOkeyDNS_Google];
+                        
+                        //route to XOnet
+                        [self routeToExoNet:deviceProperties[EXONET_IP]];
+                        routedToExoNet = true;
+                        
+                        //Create notification that connection to XOnet has been established
+                        connNote.title = @"Connected to XOnet";
+                        [[NSUserNotificationCenter defaultUserNotificationCenter]removeScheduledNotification:disconnNote];
+                        [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:connNote];
+                        
+                        //Minimize the XOkey Window when the connected to a VPN gateway
+                        if([self.window isVisible]){
+                            [self.window miniaturize:self];
+                        }
+                        return;
                     }
-                    return;
+                    //Sleep a bit before retrying.
+                    sleep(0.1);
                 }
-                //Sleep a bit before retrying.
-                sleep(0.1);
+                //Failed to resolve DNS.
+                deviceProperties[EXONET_IP] = NOT_SET;
             }
-            //Failed to resolve DNS.
-            deviceProperties[EXONET_IP] = NOT_SET;
+            
+            //  Case 2: VPN connection is down and the traffic has been routed to the ExoNet
+            if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
+                //Remove route to ExoNet
+                [self removeExoNetRoute];
+                
+                //sleep a bit to let DHCP assign a DNS to laptop
+                sleep(1.0);
+                
+                //change back XOkey internal DNS to that assigned via DHCP
+                if(XOkeyConnected)
+                    [webViewDel setXOKeyDNS_DHCP];
+            }
+            
+            //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
+            //if ((VPN_Status == VPN_CONNECTED) & routedToExoNet)
+            
+            //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
+            //if ((VPN_Status == VPN_DISCONNECTED) & !routedToExoNet)
         }
-        
-        //  Case 2: VPN connection is down and the traffic has been routed to the ExoNet
-        if ((VPN_Status == VPN_DISCONNECTED) & routedToExoNet) {
-            //Remove route to ExoNet
-            [self removeExoNetRoute];
-        }
-        
-        //  Case 3: If the VPN is up and default traffic already routed to the ExoNet, do nothing
-        //if ((VPN_Status == VPN_CONNECTED) & routedToExoNet)
-        
-        //  Case 4: If the VPN is down and the traffic was never routed to the ExoNet, do nothing
-        //if ((VPN_Status == VPN_DISCONNECTED) & !routedToExoNet)
-    }
+    });
 }
 
 //Callback function for noification from the USB object that an XOkey object exists
@@ -550,6 +566,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 
 -(void)configureDevice{
     //Find endpoint name using networksetup
+    sleep(1.5);
     NSTask* routerTask = [[NSTask alloc]init];
     NSPipe* pipe = [[NSPipe alloc]init];
     NSString* arg = @"networksetup -listallhardwareports | grep -A 1 \"XOkey\" | grep \"Device\" | awk '{print $2}'";
@@ -653,6 +670,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     }
 }
 
+//get endpoint facing the internet
 -(void)getActiveInterface{
     struct in_addr nextHop;
     NSString* activeEndpoint = XoUtil_getInternetSrcAddr(&nextHop);
@@ -698,6 +716,9 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
             if(routedToExoNet){
                 [self removeExoNetRoute];
             }
+            
+            //reset DHCP server in case XOkey remains as DHCP server
+            [[myConnection remoteObjectProxy]resetDNSServers];
         }
         
         //Reset internet polling counter
@@ -705,6 +726,11 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
     }else{
         i++;
     }
+}
+
+//return routed state
+-(BOOL)isRoutedToXOnet{
+    return routedToExoNet;
 }
 
 #pragma mark Sleep, Wake, and Disconnect Notification Handling
@@ -776,7 +802,6 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
 }
 
 #pragma mark Authorization functions
-
 //Create empty authorization reference.
 -(void)authorize{
     OSStatus status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &self->_authRef);
@@ -980,6 +1005,7 @@ NSString* XoUtil_getInternetSrcAddr(struct in_addr *addr)
         disconnNote.title = @"Disconnected from XOnet";
         [[NSUserNotificationCenter defaultUserNotificationCenter]deliverNotification:disconnNote];
         
+        XOkeyLog(@"Removing XOkey route to XOnet");
         routedToExoNet = false;
     }
 }

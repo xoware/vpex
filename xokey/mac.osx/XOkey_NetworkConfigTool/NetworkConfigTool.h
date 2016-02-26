@@ -82,6 +82,9 @@
 //For uninstalling the helper tool. rm will force quit the current running app. SMJobSubmit has a few issues
 //TODO: Implement SMJobSubmit instead which will submit the job to launchd without requiring creating the app in any dirs
 -(void)uninstallNetworkTool;
+
+//reset dns servers
+-(void)resetDNSServers;
 @end
 
 // The following is the interface to the class that implements the helper tool.
