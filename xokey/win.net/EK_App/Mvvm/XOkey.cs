@@ -865,11 +865,11 @@ namespace EK_App.Mvvm
 
             if (new_state == XOkeyLoginState.XOkeyLoginState_Loggedin)
             {
-                Set_XK_DNS();
+                Set_XK_DNS_To_Internet_Intf();
             }
             else if (new_state == XOkeyLoginState.XOkeyLoginState_Loggedout)
             {
-                Set_XK_DNS();
+                Set_XK_DNS_To_Internet_Intf();
             }
 
             Login_State = new_state;
@@ -903,12 +903,13 @@ namespace EK_App.Mvvm
                         }
 
                         SetNameservers("XOkey", "8.8.8.8,64.6.64.6");
+                        Set_XK_DNS("8.8.8.8", "64.6.64.6");
                     }
                 } else 
                 {
                     Xoware.NetUtil.DNS.Remove_XOkey_DNS();
 
-                    Set_XK_DNS();
+                    Set_XK_DNS_To_Internet_Intf();
 
                 }
             }
@@ -1571,38 +1572,17 @@ namespace EK_App.Mvvm
           
         }
 
-        private void Set_XK_DNS()
+        private void Set_XK_DNS(String Primary, String Secondary)
         {
 
-            if (Internet_Interface == null)
-                return;
-
-            IPInterfaceProperties adapterProperties = Internet_Interface.GetIPProperties();
-            IPAddressCollection dnsServers = adapterProperties.DnsAddresses;
-            if (dnsServers.Count < 1)
-                return;
-
-            int i = 0;
-            String Primary = "";
-            String Secondary = "";
-            foreach (IPAddress dns in dnsServers)
-            {
-                Send_Log_Msg("  DNS Servers " + i + " : "+ dns.ToString());
-
-                if (Primary.Length < 6) {
-                    Primary = dns.ToString();
-                }
-                else if (Secondary.Length < 6)
-                {
-                    Secondary = dns.ToString();
-                }
-            }
             if (Secondary.Length < 6)
             {
                 Secondary = Primary;
             }
             if (Primary.Length < 7)
                 return;
+
+            Send_Log_Msg("Setting XK  DNS Servers " + Primary + " : " + Secondary.ToString());
 
             String JS_Data = "var data = { 'primary' : '" + Primary + "', 'secondary' : '" + Secondary +"' };"; 
             String JS_Str = @"
@@ -1624,6 +1604,43 @@ namespace EK_App.Mvvm
             });";
 
              InvokeExecuteJavaScript(JS_Data + JS_Str);
+        }
+
+        private void Set_XK_DNS_To_Internet_Intf()
+        {
+
+            if (Internet_Interface == null)
+                return;
+
+            IPInterfaceProperties adapterProperties = Internet_Interface.GetIPProperties();
+            IPAddressCollection dnsServers = adapterProperties.DnsAddresses;
+            if (dnsServers.Count < 1)
+                return;
+
+            int i = 0;
+            String Primary = "";
+            String Secondary = "";
+            foreach (IPAddress dns in dnsServers)
+            {
+                Send_Log_Msg("  DNS Servers " + i + " : " + dns.ToString());
+
+                if (Primary.Length < 6)
+                {
+                    Primary = dns.ToString();
+                }
+                else if (Secondary.Length < 6)
+                {
+                    Secondary = dns.ToString();
+                }
+            }
+            if (Secondary.Length < 6)
+            {
+                Secondary = Primary;
+            }
+            if (Primary.Length < 7)
+                return;
+
+            Set_XK_DNS(Primary, Secondary);
         }
 
         private void Get_VPN_Status()
@@ -1776,6 +1793,8 @@ namespace EK_App.Mvvm
         {
             try
             {
+                Send_Log_Msg(0, LogMsg.Priority.Debug, "DNS SetNameservers " + nic.ToString() + " " + dnsServers.ToString());
+
                 using (var networkConfigMng = new System.Management.ManagementClass("Win32_NetworkAdapterConfiguration"))
                 {
                     using (var networkConfigs = networkConfigMng.GetInstances())
@@ -1798,7 +1817,7 @@ namespace EK_App.Mvvm
             }
             catch (Exception ex)
             {
-                Send_Log_Msg(0, LogMsg.Priority.Debug, "Exception setting DNS " + ex.ToString() + ex.StackTrace.ToString());
+                Send_Log_Msg(0, LogMsg.Priority.Error, "Exception setting DNS " + ex.ToString() + ex.StackTrace.ToString());
 
             }
         }
