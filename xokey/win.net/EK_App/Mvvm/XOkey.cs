@@ -897,8 +897,9 @@ namespace EK_App.Mvvm
                             Xoware.NetUtil.DNS_Config cfg = Xoware.NetUtil.DNS.Get_DNS_Config(ipv4props.Index.ToString());
                             if (!cfg.Static)
                             {
-                                // If not static use EK
-                                Xoware.NetUtil.DNS.Set_Static_Name_Servers((UInt32) ipv4props.Index, "192.168.137.2");
+                                // If not static use EKc
+                              //  Xoware.NetUtil.DNS.Set_Static_Name_Servers((UInt32) ipv4props.Index, "192.168.137.2");
+                                Xoware.NetUtil.DNS.Set_DHCP_Name_Servers(Internet_Interface.Name);
                             }
                         }
 
@@ -2105,7 +2106,7 @@ namespace EK_App.Mvvm
 
            
             Traffic_Routed_To_XoKey = false;
-            if (Server_IPEndPoint != null)
+            if (Server_IPEndPoint != null && App.Keep_Running && Keep_Running)
             {
                 App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
                 () =>
@@ -2114,12 +2115,16 @@ namespace EK_App.Mvvm
                     //            notify.Show("Disconnected");
                     try
                     {
-                        var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-                         "XOkey",
-                         "Disconnected",
-                         null,
-                         Mantin.Controls.Wpf.Notification.NotificationType.Information);
-                        toast.Show();
+
+                        if (App.Keep_Running)
+                        {
+                            var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+                             "XOkey",
+                             "Disconnected",
+                             null,
+                             Mantin.Controls.Wpf.Notification.NotificationType.Information);
+                            toast.Show();
+                        }
                     }
                     catch
                     {
@@ -2175,12 +2180,16 @@ namespace EK_App.Mvvm
                 App.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(
                () =>
                {
-                   var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
-      "XOkey",
-      "Connected to: " + Server_IPEndPoint.Address.ToString(),
-      null,
-      Mantin.Controls.Wpf.Notification.NotificationType.Information);
-                   toast.Show();
+
+                   if (App.Keep_Running)
+                   {
+                       var toast = new Mantin.Controls.Wpf.Notification.ToastPopUp(
+                          "XOkey",
+                          "Connected to: " + Server_IPEndPoint.Address.ToString(),
+                          null,
+                          Mantin.Controls.Wpf.Notification.NotificationType.Information);
+                       toast.Show();
+                   }
                }));
             }
             catch (Exception ex)
