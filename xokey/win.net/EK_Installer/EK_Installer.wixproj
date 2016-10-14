@@ -87,8 +87,8 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>"C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ib "!(TargetPath)" -o "$(TargetDir)\engine.exe"
-signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\engine.exe"
+signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\engine.exe"
 "C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -ab "$(TargetDir)\engine.exe" "!(TargetPath)" -o "$(TargetDir)\XOkey_Installer.exe"
-signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\XOkey_Installer.exe"</PostBuildEvent>
+signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\XOkey_Installer.exe"</PostBuildEvent>
   </PropertyGroup>
 </Project>

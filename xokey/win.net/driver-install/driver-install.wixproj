@@ -27,11 +27,11 @@
   <PropertyGroup>
     <PreBuildEvent>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x86
 "C:\Program Files (x86)\Windows Kits\8.1\bin\x86\Inf2Cat"  /os:Vista_X86,7_X86,7_X64,8_X86,8_X64 /driver:$(ProjectDir)\x64
-signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode "$(ProjectDir)\x64\xokeyx64.cat"
-signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(ProjectDir)\x86\xokeyx86.cat"</PreBuildEvent>
+signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode "$(ProjectDir)\x64\xokeyx64.cat"
+signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(ProjectDir)\x86\xokeyx86.cat"</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
+    <PostBuildEvent>signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
 "C:\Program Files (x86)\WiX Toolset v3.8\bin\insignia.exe" -im "$(TargetDir)\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
   <!--

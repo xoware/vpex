@@ -140,7 +140,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>signtool sign /sha1 c08066ff4996414cf5f8310d950e3bb8cc113abc /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
