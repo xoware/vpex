@@ -40,6 +40,10 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.PowerShell.5.ReferenceAssemblies.1.0.0\lib\net4\System.Management.Automation.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -71,6 +75,9 @@
     <Compile Include="Message\STUN_t_ChangeRequest.cs" />
     <Compile Include="Message\STUN_t_ErrorCode.cs" />
     <Compile Include="Net_Utils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>

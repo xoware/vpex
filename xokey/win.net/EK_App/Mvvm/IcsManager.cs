@@ -23,6 +23,23 @@ namespace EK_App.Mvvm
         }
         public static void DisableAllShares()
         {
+            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "Disable_ICS.exe";
+            startInfo.Arguments = " ";
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true; 
+            process.StartInfo = startInfo;
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            Console.WriteLine("PS Output: " + output);
+        }
+        /*
+        public static void DisableAllShares()
+        {
             INetSharingEveryConnectionCollection connections = SharingManager.EnumEveryConnection;
             foreach (INetConnection con in connections)
             {
@@ -48,6 +65,7 @@ namespace EK_App.Mvvm
                 }
             }
         }
+         */ 
         // Disable ICS on any network iterfaces which may no longer be present in the system
         public static void Disable_ICS_WMI()
         {

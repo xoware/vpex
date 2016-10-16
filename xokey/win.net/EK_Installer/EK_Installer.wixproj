@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.rtf" />
+    <Content Include="packages.config" />
     <Content Include="xo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

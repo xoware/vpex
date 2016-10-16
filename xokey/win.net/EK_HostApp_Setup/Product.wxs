@@ -129,6 +129,7 @@
         <File Source="$(var.EK_App.TargetDir)\d3dcompiler_43.dll" />
         <File Source="$(var.EK_App.TargetDir)\d3dcompiler_46.dll" />
         <File Source="$(var.EK_App.TargetDir)\devtools_resources.pak" />
+        <File Source="$(var.EK_App.TargetDir)\Disable_ICS.exe" />
         <File Source="$(var.EK_App.TargetDir)\XOkey_BrowserSubprocess.exe" />
         <File Source="$(var.EK_App.TargetDir)\STUN.dll" />
         <File Source="$(var.EK_App.TargetDir)\Mantin.Controls.Wpf.Notification.dll" />
@@ -162,7 +163,7 @@
         <File Source="$(var.EK_App.TargetDir)\msvcr120.dll" />
       </Component>
       <Component Id="NetUtil" Guid="*">      
-         <File Source="$(var.EK_App.TargetDir)/NetUtil.dll" />
+         <File Source="$(var.EK_App.TargetDir)/Xoware.NetUtil.dll" />
       </Component>
       <Component Id="RoutingDll" Guid="*">      
          <File Source="$(var.EK_App.TargetDir)/Routing.dll" />
@@ -197,14 +198,14 @@
       <Component Id="WriteToRegistryGroup" Guid="{F7A8864B-4595-4029-B4CF-46DDB77D44BE}">
         <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
         <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\GroupPolicy"
-            Action="createAndRemoveOnUninstall">
+            ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
           <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
         </RegistryKey>
       </Component>
       <Component Id="WriteToRegistryLocal" Guid="{B5543560-5327-496D-8283-08993D0DF2BC}">
         <Condition>(VersionNT64 >= 602) OR (VersionNT >= 602)</Condition>
         <RegistryKey Root="HKLM"  Key="Software\Policies\Microsoft\Windows\WcmSvc\Local"
-              Action="createAndRemoveOnUninstall">
+              ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
         <RegistryValue Type="integer" Name="fMinimizeConnections" Value="0" KeyPath="yes"/>
         </RegistryKey>
       </Component>

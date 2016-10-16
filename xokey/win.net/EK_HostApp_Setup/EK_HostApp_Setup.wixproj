@@ -50,6 +50,9 @@
       <Name>WixUtilExtension</Name>
     </WixExtension>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
     <PostBuildEvent>signtool sign /sha1 b09c612952851439a4ffc36c278bac2961afa5ac /t http://timestamp.comodoca.com/authenticode  "$(TargetDir)\cab1.cab"
