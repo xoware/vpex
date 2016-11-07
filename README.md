@@ -1,12 +1,16 @@
-vpex
+Desktop Clients
 ====
 
-vpex client
+Windows and OS X Clients
 
-For Desktop Client:
+See 
+* xokey/win.net   windows .NET  c# code
+* xokey/mac.osx   OSX clients
 
-cd desktop
-./setup_build_environment
-mkdir -p ./build.dir/out
-./setup_p2_makensis
-./build
+
+Both clients in general:
+  1.  Share internet connection to xokey
+  2.  Display interface to xokey
+  3.  XoKey starts ipsec connection to xonet
+  4.  Computer routes traffic though xokey
+  5.  Xokey encrypts traffice to xonet
