@@ -1,2 +1,0 @@
-#!/bin/sh
-for PID in `ps x | grep openvpn | grep -v grep | grep -v /bin/sh | awk '{ print $1 }'`; do kill $PID; done
